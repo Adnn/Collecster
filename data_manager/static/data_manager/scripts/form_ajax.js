@@ -59,7 +59,7 @@ function main_function()
             }
             else
             {
-                $.ajax("http://localhost:8000/OO/ajax/concept/empty_admin_formset/html/",
+                $.ajax("/data_manager/ajax/concept/empty_admin_formset/html/",
                        { success: inserter.bind(undefined, "#collecster_release_specifics")})
             }
         })

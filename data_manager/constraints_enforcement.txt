@@ -12,3 +12,11 @@ In particular for b), even if data was posted for other formsets, it would not b
 This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
 
 It appears there is no need for custom validation to enforce the correct Specific composition.
+
+# Tweaking the Admin interface to fit the applicaiont #
+
+* Removing the '+' sign on formsets (allowing to add more forms)
+** set the FormSet class 'max_num' attribute to the number of displayed forms.
+
+* Removing the 'delete' checkbox on formset forms
+** set the AdminInline class 'can_delete' attribute to false. 

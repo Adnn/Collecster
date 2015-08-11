@@ -53,13 +53,10 @@ def get_concept_inlines(concept_id):
 
 
 def dynamic_release_inlines(request, obj):
+    concept_id = 0
     if obj is not None:
-        print("Obj concept: {}".format(obj.concept))
         concept_id = obj.concept.pk
-    #elif isinstance(request, CollecsterAugmentedRequest):
-    elif hasattr(request, "collecster_payload"):
+    elif hasattr(request, "collecster_payload") and "concept" in request.collecster_payload:
         concept_id = request.collecster_payload["concept"]
-    else:
-        return []
 
-    return get_concept_inlines(concept_id)
+    return get_concept_inlines(concept_id) if concept_id != 0 else []
