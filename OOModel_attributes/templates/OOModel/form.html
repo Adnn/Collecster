@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Display a formset</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h2>Formset:</h2>
+        </div>
+
+        <form action="{{ request.path }}" method="post">
+            {% csrf_token %}
+            {{ formset.non_form_errors }}
+            {{ formset.as_p }} 
+            <input type="submit" value="Add" />
+        </form>
+
+        <div id="inline_attributes" class="jumbotron">
+        </div>
+    </div>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Ajax Proto</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script>
+        function inserter(data)
+        {
+            var content = JSON.parse(data)
+            $("#attributes").empty()
+            $.each(content, function(k, val)
+            {
+                $("#attributes").append("<p>" + val['attribute__name'] + ": </p>")
+            })
+        }
+
+        $(document).ready(function()
+        {
+            $("#selecta").change(function(){
+                var id = parseInt($("#selecta").prop("selectedIndex")) + 1
+                $.ajax("http://localhost:8000/OO_attrib/ajax/release/" + id  + "/",
+                       {
+                            success: inserter
+                       })
+            })
+        })
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h2>Ajax proto</h2>
+        </div>
+
+        <div>
+            There must be at least 2 releases in the database for the example to work.
+        </div>
+        <select id="selecta" name="release"> <!-- onchange="doTheQuery()"> -->
+            <option>Release 1</option>
+            <option>Release 2</option>
+        </select>
+
+        <div id="attributes" class="jumbotron">
+        </div>
+    </div>
+
+</body>
+</html>

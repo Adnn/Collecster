@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Add instance form</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script>
+        function inserter_bkp(data)
+        {
+            var content = JSON.parse(data)
+            $("#attributes").empty()
+            $.each(content, function(k, val)
+            {
+                $("#attributes").append("<p>" + val['attribute__name'] + ": </p>")
+                //$.each(val, function(k, v)
+                //{
+                //    $("#attributes").append("<p>" + v + ": </p>")
+                //})
+            })
+        }
+
+        function inserter(html_content)
+        {
+            $("#attributes").empty()
+            $("#attributes").append(html_content)
+        }
+
+        $(document).ready(function()
+        {
+            // 'id_${field_name}' id is assigned by Django by default.
+            $("#id_release").change(function(){
+                var id = $("#id_release").val()
+                $.ajax("http://localhost:8000/OO/ajax/release/" + id  + "/attribute_form/html/",
+                       {
+                            success: inserter
+                       })
+            })
+        })
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h2>Add instance</h2>
+        </div>
+
+        {{ form.as_p }} 
+
+        <div id="attributes" class="jumbotron">
+            {{ attribute_formset.as_p }} 
+        </div>
+
+        <div id="inline_attributes" class="jumbotron">
+            {{ inline_attribute_formset.as_p }} 
+        </div>
+    </div>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>

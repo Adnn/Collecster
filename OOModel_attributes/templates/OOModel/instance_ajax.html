@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Add instance form</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script>
+        function cleaner()
+        {
+            $("#attributes").empty()
+        }
+        function inserter(html_content)
+        {
+            cleaner()
+            $("#attributes").append(html_content)
+        }
+
+        $(document).ready(function()
+        {
+            // 'id_${field_name}' id is assigned by Django by default.
+            $("#id_release").change(
+                function()
+                {
+                    var id = $("#id_release").val()
+                    if (id)
+                    {
+                        $.ajax("http://localhost:8000/OO_attrib/ajax/release/" + id  + "/attribute_form/html/",
+                               {
+                                    success: inserter
+                               })
+                    }
+                    else
+                    {
+                        cleaner()
+                    }
+                })
+        })
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h2>Add instance</h2>
+        </div>
+
+        <form action="{{ request.path }}" method="post">
+            {% csrf_token %}
+            {{ instance_form.as_p }} 
+
+            <div id="attributes" class="jumbotron">
+                {{ attribute_formset.as_p }} 
+            </div>
+            <input type="submit" value="Add" />
+        </form>
+    </div>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>

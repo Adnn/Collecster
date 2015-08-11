@@ -1,0 +1,14 @@
+This project is very dynamic in the formsets its presenting on the admin pages. This implies a need for custom validation of the constraints, to protect against (in increasing order of interest):
+* Bugs in the code
+* Forged forms submission
+
+# Enforcing Specific on Release and Occurence #
+1.a) There must be a formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurence).
+1.b) There must not be any formset for a Specific that is not corresponding to the nature(s).
+This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
+In particular for b), even if data was posted for other formsets, it would not be assigned to anything.
+
+2) In each Specific's formset, there must be exactly ONE form
+This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
+
+It appears there is no need for custom validation to enforce the correct Specific composition.
