@@ -42,13 +42,16 @@ class Release(ReleaseDeploymentBase):
 
     def __str__(self):
         return ("{}".format(self.name if self.name else self.concept))
-    
 
 
-###########
-## Instance
-###########
+#############
+## Occurrence
+#############
 
-class Instance(models.Model):
-    release = models.ForeignKey(Release)
+class Occurrence(models.Model):
+    release     = models.ForeignKey(Release)
+    #owner       = models.ForeignKey(Person) #TODO
+        ## Some automatic date fields
+    add_date        = models.DateTimeField(auto_now_add=True)
+    lastmodif_date  = models.DateTimeField(auto_now=True)
 

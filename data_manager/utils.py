@@ -41,12 +41,12 @@ def admininline_factory(Model, Inline):
     #wdb.set_trace() 
     #return tp
 
-def get_concept_inlines(concept_id):
+def get_concept_inlines(concept_id, specifics_retriever):
     # todo: make it span all natures
     nature_set = Concept.objects.get(pk=concept_id).all_nature_tuple
 
     AdminInlines = []
-    for ReleaseSpecific in conf.ConceptNature.get_release_specifics(nature_set):
+    for ReleaseSpecific in specifics_retriever(nature_set):
         AdminInlines.append(admininline_factory(ReleaseSpecific, admin.StackedInline))
 
     return AdminInlines
@@ -59,4 +59,13 @@ def dynamic_release_inlines(request, obj):
     elif hasattr(request, "collecster_payload") and "concept" in request.collecster_payload:
         concept_id = request.collecster_payload["concept"]
 
-    return get_concept_inlines(concept_id) if concept_id != 0 else []
+    return get_concept_inlines(concept_id, conf.ConceptNature.get_release_specifics) if concept_id != 0 else []
+
+def dynamic_occurrence_inlines(request, obj):
+    concept_id = 0
+    if obj is not None:
+        concept_id = obj.release.concept.pk
+    elif hasattr(request, "collecster_payload") and "concept" in request.collecster_payload:
+        concept_id = request.collecster_payload["concept"]
+
+    return get_concept_inlines(concept_id, conf.ConceptNature.get_occurrence_specifics) if concept_id != 0 else []

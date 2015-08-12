@@ -1,5 +1,11 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+
 import collections
+
+#TODEL
+import wdb
+
 
 
 class ReleaseDeploymentBase(models.Model):
@@ -12,6 +18,19 @@ class ReleaseDeploymentBase(models.Model):
     #region  = models.CharField(max_length=2, choices=Region.CHOICES, blank=True) #TODO
     version = models.CharField(max_length=20, blank=True) 
     #working_condition = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
+
+
+class InstanceDeploymentBase(models.Model):
+    class Meta:
+        abstract = True
+
+    price = models.FloatField(blank=True, null=True)
+    #origin = models.CharField(max_length=2, choices=Origin.get_choices()) #TODO
+    notes = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
+    #tag = models.ImageField(upload_to=name_tag, blank=True)
+        ## TODO Should be excluded from _COMBO_PACK, and NOT from immaterial releases (not sure about the last one, what if the included game is barked ?)
+    #working = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
+    blister = models.BooleanField(help_text="Indicates whether the blister is present.")
 
 
 class ReleaseSpecific(object):
@@ -52,6 +71,12 @@ class ReleaseSpecific(object):
         games_playable  = models.ManyToManyField('Concept', blank=True, related_name='playable_demo_set')
         games_video     = models.ManyToManyField('Concept', blank=True, related_name='video_demo_set')
 
+            ## Not sure if it is possible to query the M2M relationship (ValueError wether there is a provided value or not)
+        #def clean(self):
+        #    wdb.set_trace()
+        #    if not self.games_playable and not self.games_video:
+        #        raise ValidationError("The demo must have at least one game, video or playalbe.")
+
     class Memory(AbstractBase):
         capacity    = models.PositiveIntegerField()
         #unit        = models.ForeignKey(MemoryUnit) #TODO
@@ -60,7 +85,7 @@ class ReleaseSpecific(object):
 RelSp = ReleaseSpecific
 
 
-class Category:
+class ReleaseCategory:
     def compose(*args):
         return tuple([element for tupl in args for element in tupl])
 
@@ -68,6 +93,30 @@ class Category:
     HARDWARE    = (RelSp.Hardware,)
     DEMO        = compose(SOFTWARE, (RelSp.Demo,))
     MEMORY      = compose(HARDWARE, (RelSp.Memory,))
+
+
+class OccurrenceSpecific(object):
+    """ OccurrenceSpecific classes are added to Occurrence instances depending on their nature(s) """
+
+    class AbstractBase(models.Model):
+        class Meta:
+            abstract = True
+        release = models.ForeignKey('Occurrence')
+
+    class Console(AbstractBase):
+        region_modded = models.BooleanField()
+        copy_modded = models.BooleanField()
+
+
+OccSp = OccurrenceSpecific
+
+
+class OccurrenceCategory:
+    def compose(*args):
+        return tuple([element for tupl in args for element in tupl])
+
+    EMPTY       = ()
+    CONSOLE     = (OccSp.Console,)
 
 
 class ConceptNature:
@@ -83,17 +132,17 @@ class ConceptNature:
 
     #DATA = {
     #    UIGroup._TOPLEVEL: (
-    #        (CONSOLE,   'Console', Category.HARDWARE),
+    #        (CONSOLE,   'Console', ReleaseCategory.HARDWARE),
     #    ),
     #    UIGroup.SOFT: (
-    #        (GAME,      'Game',    Category.SOFTWARE, UIGroup.SOFT),
+    #        (GAME,      'Game',    ReleaseCategory.SOFTWARE, UIGroup.SOFT),
     #    ),
     #}
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "release_category", "ui_group"])
+    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category"])
     DATA = {
-        CONSOLE:    DataTuple('Console',    Category.HARDWARE,  UIGroup._TOPLEVEL),
-        GAME:       DataTuple('Game',       Category.SOFTWARE,  UIGroup.SOFT),
-        DEMO:       DataTuple('Demo',       Category.DEMO,      UIGroup.SOFT),
+        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE   ),
+        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY     ),
+        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY     ),
     }
 
     @classmethod
@@ -117,17 +166,21 @@ class ConceptNature:
         #    ( "ACCESSORY", (("pad", "pad"), ("gun", "gun")) ),
         #)
 
+
     @classmethod
-    def get_release_specifics(cls, nature_set):
+    def _get_specifics(cls, nature_set, model_name):
         unique_specific_set = collections.OrderedDict()
         for nature in nature_set:
-            for specific in cls.DATA[nature].release_category:
+            for specific in getattr(cls.DATA[nature], "{}_category".format(model_name)):
                 unique_specific_set[specific] = None
-        return unique_specific_set.keys()
+        return unique_specific_set.keys()    
+        
+    @classmethod
+    def get_release_specifics(cls, nature_set):
+        return cls._get_specifics(nature_set, "release")
 
-        #if nature == "console":
-        #    return ConsoleReleaseSpecific
-        #elif nature == "pad" or nature=="gun":
-        #    return AccReleaseSpecific
-                         
+    @classmethod
+    def get_occurrence_specifics(cls, nature_set):
+        return cls._get_specifics(nature_set, "occurrence")
+
 

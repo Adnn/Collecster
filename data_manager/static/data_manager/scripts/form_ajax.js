@@ -25,27 +25,21 @@ function wrapped_inserter(selector)
 function main_function()
 {
     // Prepare the spot for specifics
-    $(".submit-row").before("<div id=\"collecster_release_specifics\"></div>")
+    $(".submit-row").before("<div id=\"collecster_specifics\"></div>")
 
     // 'id_${field_name}' id is assigned by Django by default.
     $("#id_release").change(
         function()
         {
             var id = $("#id_release").val()
-            if (id)
+            if(!id)
             {
-                $.ajax("http://localhost:8000/OO/ajax/release/" + id  + "/admin_formset/html/",
-                       { success: wrapped_inserter("#instanceattribute_set-group") })
-                $.ajax("http://localhost:8000/OO_compo/ajax/release/" + id  + "/admin_formset/html/",
-                       { success: wrapped_inserter("#container_of_set-group") })
+                id = 0
             }
-            else
-            {
-                $.ajax("http://localhost:8000/OO/ajax/release/empty_admin_formset/html/",
-                       { success: wrapped_inserter("#instanceattribute_set-group") })
-                $.ajax("http://localhost:8000/OO_compo/ajax/release/empty_admin_formset/html/",
-                       { success: wrapped_inserter("#container_of_set-group") })
-            }
+            $.ajax("/data_manager/ajax/release/" + id  + "/admin_formset/html/",
+                   { success: inserter.bind(undefined, "#collecster_specifics")})
+            //$.ajax("http://localhost:8000/OO_compo/ajax/release/" + id  + "/admin_formset/html/",
+            //       { success: wrapped_inserter("#container_of_set-group") })
         })
 
     $("#id_concept").change(
@@ -55,12 +49,12 @@ function main_function()
             if (id)
             {
                 $.ajax("/data_manager/ajax/concept/" + id  + "/admin_formset/html/",
-                       { success: inserter.bind(undefined, "#collecster_release_specifics")})
+                       { success: inserter.bind(undefined, "#collecster_specifics")})
             }
             else
             {
                 $.ajax("/data_manager/ajax/concept/empty_admin_formset/html/",
-                       { success: inserter.bind(undefined, "#collecster_release_specifics")})
+                       { success: inserter.bind(undefined, "#collecster_specifics")})
             }
         })
 }

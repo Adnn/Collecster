@@ -8,6 +8,11 @@ from .configuration import ReleaseSpecific
 import wdb
 
 class CollecsterModelAdmin(admin.ModelAdmin):
+    class Media:
+        js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
+              "data_manager/scripts/form_ajax.js",)
+
+
     def get_readonly_fields(self, request, obj=None):
         """ Make the given fields read-only when editing an existing object """
         AdminClass = self.__class__
@@ -69,16 +74,23 @@ class ReleaseAdmin(CollecsterModelAdmin):
     collecster_dynamic_formsets_func = utils.dynamic_release_inlines
     collecster_readonly_edit = ("concept",)
 
-    class Media:
-        js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
-              "data_manager/scripts/form_ajax.js",)
+
+#############
+## Occurrence
+#############
+
+class OccurrenceAdmin(CollecsterModelAdmin):
+    collecster_dynamic_formsets_func = utils.dynamic_occurrence_inlines
+    collecster_readonly_edit = ("release",)
+
 
 ################
 ## Registrations
 ################
 
-admin.site.register(Concept, ConceptAdmin)
-admin.site.register(Release, ReleaseAdmin)
+admin.site.register(Concept,    ConceptAdmin)
+admin.site.register(Release,    ReleaseAdmin)
+admin.site.register(Occurrence, ReleaseAdmin)
 
 # For readonly debug
 admin.site.register(ConceptNature)
