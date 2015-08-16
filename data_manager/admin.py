@@ -41,15 +41,21 @@ class CollecsterModelAdmin(admin.ModelAdmin):
             request.collecster_payload = {"concept": obj.concept.pk}
         return super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
         
-        
 
     def get_inline_instances(self, request, obj=None):
         AdminClass = self.__class__
         added = []
-        if hasattr(AdminClass, "collecster_dynamic_formsets_func"):
-            for AdminInline in AdminClass.collecster_dynamic_formsets_func(request, obj):
-                added.append(AdminInline(self.model, self.admin_site))
-        return super(CollecsterModelAdmin, self).get_inline_instances(request, obj) + added
+        requested_inlines = utils.get_request_payload(request, "inlines_groups")
+        if hasattr(AdminClass, "collecster_dynamic_inline_classes"):
+            filter_func = (lambda x: x in requested_inlines) if requested_inlines else (lambda x: True)
+            for func in [func for group, func in AdminClass.collecster_dynamic_inline_classes.items() if filter_func(group)]:
+                for AdminInline in func(request, obj):
+                    added.append(AdminInline(self.model, self.admin_site))
+
+        if requested_inlines:
+            return added
+        else:
+            return super(CollecsterModelAdmin, self).get_inline_instances(request, obj) + added
 
 
 ##########
@@ -70,8 +76,14 @@ class ConceptAdmin(admin.ModelAdmin):
 ## Release
 ##########
 
+class ReleaseAttributeInline(admin.TabularInline):
+    extra = 3
+    model = ReleaseAttribute
+
+
 class ReleaseAdmin(CollecsterModelAdmin):
-    collecster_dynamic_formsets_func = utils.dynamic_release_inlines
+    inlines = (ReleaseAttributeInline,)
+    collecster_dynamic_inline_classes = {"specific": utils.release_specific_inlines}
     collecster_readonly_edit = ("concept",)
 
 
@@ -80,7 +92,7 @@ class ReleaseAdmin(CollecsterModelAdmin):
 #############
 
 class OccurrenceAdmin(CollecsterModelAdmin):
-    collecster_dynamic_formsets_func = utils.dynamic_occurrence_inlines
+    collecster_dynamic_inline_classes = {"specific": utils.occurrence_specific_inlines}
     collecster_readonly_edit = ("release",)
 
 
@@ -90,7 +102,10 @@ class OccurrenceAdmin(CollecsterModelAdmin):
 
 admin.site.register(Concept,    ConceptAdmin)
 admin.site.register(Release,    ReleaseAdmin)
-admin.site.register(Occurrence, ReleaseAdmin)
+admin.site.register(Occurrence, OccurrenceAdmin)
+
+admin.site.register(Attribute)
+admin.site.register(AttributeCategory)
 
 # For readonly debug
 admin.site.register(ConceptNature)

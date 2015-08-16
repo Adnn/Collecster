@@ -7,11 +7,14 @@ from .admin import ReleaseAdmin, OccurrenceAdmin
 from .models import *
 from .requests import CollecsterAugmentedRequest
 
-def ajax_admin_formset(request, concept_id):
+def ajax_release_specific_admin_formsets(request, concept_id):
     release_adm = ReleaseAdmin(Release, admin.site)
 
     request_with_payload = request
-    request_with_payload.collecster_payload = {"concept": concept_id}
+    request_with_payload.collecster_payload = {
+        "concept": concept_id,
+        "inlines_groups": ("specific",) 
+    }
 
     formsets, inline_instances = release_adm._create_formsets(request_with_payload, release_adm.model(), change=False)
     formsets = release_adm.get_inline_formsets(request, formsets, inline_instances)#, **{"release_id": release_id})
@@ -31,7 +34,10 @@ def ajax_occurrence_specific_admin_formsets(request, release_id):
 
     request_with_payload = request
     release_id = int(release_id)
-    request_with_payload.collecster_payload = {"concept": (Release.objects.get(pk=release_id).concept.pk) if release_id else 0}
+    request_with_payload.collecster_payload = {
+        "concept": (Release.objects.get(pk=release_id).concept.pk) if release_id else 0,
+        "inlines_groups": ("specific",) 
+    }
 
     ## SAME AS ABOVE ##
     formsets, inline_instances = occurrence_adm._create_formsets(request_with_payload, occurrence_adm.model(), change=False)

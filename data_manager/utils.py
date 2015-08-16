@@ -52,7 +52,7 @@ def get_concept_inlines(concept_id, specifics_retriever):
     return AdminInlines
 
 
-def dynamic_release_inlines(request, obj):
+def release_specific_inlines(request, obj):
     concept_id = 0
     if obj is not None:
         concept_id = obj.concept.pk
@@ -61,7 +61,7 @@ def dynamic_release_inlines(request, obj):
 
     return get_concept_inlines(concept_id, conf.ConceptNature.get_release_specifics) if concept_id != 0 else []
 
-def dynamic_occurrence_inlines(request, obj):
+def occurrence_specific_inlines(request, obj):
     concept_id = 0
     if obj is not None:
         concept_id = obj.release.concept.pk
@@ -69,3 +69,11 @@ def dynamic_occurrence_inlines(request, obj):
         concept_id = request.collecster_payload["concept"]
 
     return get_concept_inlines(concept_id, conf.ConceptNature.get_occurrence_specifics) if concept_id != 0 else []
+
+##
+## Request helpers
+##
+def get_request_payload(request, key):
+    if hasattr(request, "collecster_payload") and key in request.collecster_payload:
+        return request.collecster_payload[key] 
+    return None 

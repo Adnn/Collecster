@@ -1,6 +1,7 @@
 from django.db import models
 
 from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase
+from . import enumerations as enum
 
 
 ##########
@@ -27,6 +28,30 @@ class Concept(models.Model):
              + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
     
 
+############
+## Attribute
+############
+
+class AttributeCategory(models.Model):
+    name = models.CharField(max_length=60, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Attribute(models.Model):
+    class Meta:
+        unique_together = ("category", "name")
+
+    category    = models.ForeignKey(AttributeCategory)
+    name        = models.CharField(max_length=60)
+    description = models.CharField(max_length=180, blank=True)
+    value_type  = models.CharField(max_length=enum.AttributeValue.Type.choices_maxlength(),
+                                   choices=enum.AttributeValue.Type.get_choices())
+
+    def __str__(self):
+        return "[{}]{}".format(self.category, self.name)
+
 ##########
 ## Release
 ##########
@@ -44,6 +69,15 @@ class Release(ReleaseDeploymentBase):
         return ("{}".format(self.name if self.name else self.concept))
 
 
+class ReleaseAttribute(models.Model):
+    release     = models.ForeignKey(Release)
+    attribute   = models.ForeignKey(Attribute)
+    note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
+
+    def __str__(self):
+        return ("{}.{} ({})" if self.note else "{}.{}").format(self.release, self.attribute, self.note)
+
+
 #############
 ## Occurrence
 #############
@@ -55,3 +89,15 @@ class Occurrence(models.Model):
     add_date        = models.DateTimeField(auto_now_add=True)
     lastmodif_date  = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return ("Occurrence: {}".format(self.release))
+
+
+class OccurenceAttribute(models.Model):
+    occurrence          = models.ForeignKey(Occurrence)
+    release_attribute   = models.ForeignKey(ReleaseAttribute)
+    # The choices limitation is assigned dynamically, depending on the attribute's value type
+    value               = models.CharField(max_length=enum.AttributeValue.choices_maxlength())
+
+    def __str__(self):
+        return "{}: {}".format(self.release_attribute, self.value)
