@@ -12,7 +12,7 @@ def ajax_release_specific_admin_formsets(request, concept_id):
 
     request_with_payload = request
     request_with_payload.collecster_payload = {
-        "concept": concept_id,
+        "concept_id": concept_id,
         "inlines_groups": ("specific",) 
     }
 
@@ -35,7 +35,7 @@ def ajax_occurrence_specific_admin_formsets(request, release_id):
     request_with_payload = request
     release_id = int(release_id)
     request_with_payload.collecster_payload = {
-        "concept": (Release.objects.get(pk=release_id).concept.pk) if release_id else 0,
+        "concept_id": (Release.objects.get(pk=release_id).concept.pk) if release_id else 0,
         "inlines_groups": ("specific",) 
     }
 
@@ -49,3 +49,16 @@ def ajax_occurrence_specific_admin_formsets(request, release_id):
 
     return HttpResponse("<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets)))
 
+
+def ajax_occurrence_attributes_admin_formsets(request, release_id):
+    request.collecster_payload = { "release_id": release_id }
+
+    occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
+    formsets, inline_instances = occurrence_adm._create_formsets(request, occurrence_adm.model(), change=False)
+    formsets = occurrence_adm.get_inline_formsets(request, formsets, inline_instances)
+
+    rendered_formsets = [] 
+    for inline, wrapped_formset in zip(inline_instances, formsets):
+        rendered_formsets.append(loader.render_to_string(inline.template, {"inline_admin_formset": wrapped_formset}))
+
+    return HttpResponse("<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets)))

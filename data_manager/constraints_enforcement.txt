@@ -13,7 +13,17 @@ This is enforced by min_num = max_num = 1 and validate_min + validate_max, which
 
 It appears there is no need for custom validation to enforce the correct Specific composition.
 
-# Tweaking the Admin interface to fit the applicaiont #
+= Enforcing the Attribute composition of an Occurence=
+1.a) For any Occurence, there must be one and only one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
+1.b) There must not be an OccurrenceAttribute without the corresponding ReleaseAttribute on the Release.
+1.c) The value assigned to the OccurenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
+
+
+= TODO =
+* Implement a constraint that, if the same Attribute is repeated on a given Release, each ReleaseAttribute must have a distinct note
+
+
+= Tweaking the Admin interface to fit the applicaiont =
 
 * Removing the '+' sign on formsets (allowing to add more forms)
 ** set the FormSet class 'max_num' attribute to the number of displayed forms.
@@ -21,5 +31,4 @@ It appears there is no need for custom validation to enforce the correct Specifi
 * Removing the 'delete' checkbox on formset forms
 ** set the AdminInline class 'can_delete' attribute to false. 
 
-= TODO =
-* Implement a constraint that, if the same Attribute is repeated on a given Release, each ReleaseAttribute must have a distinct note
+

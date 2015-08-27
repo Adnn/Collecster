@@ -38,6 +38,8 @@ function main_function()
             }
             $.ajax("/data_manager/ajax/release/" + id  + "/admin_formset/html/",
                    { success: inserter.bind(undefined, "#collecster_specifics")})
+            $.ajax("/data_manager/ajax/release/" + id  + "/attributes_admin_formset/html/",
+                   { success: inserter.bind(undefined, "#occurenceattribute_set-group")})
             //$.ajax("http://localhost:8000/OO_compo/ajax/release/" + id  + "/admin_formset/html/",
             //       { success: wrapped_inserter("#container_of_set-group") })
         })
