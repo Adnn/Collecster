@@ -7,6 +7,8 @@ from . import utils
 from . import widgets 
 from . import enumerations as enums
 
+from functools import partial
+
 ## TODEL ##
 from .configuration import ReleaseSpecific
 import wdb
@@ -74,7 +76,7 @@ class CollecsterModelAdmin(admin.ModelAdmin):
             #if hasattr(FormSet, "collecster_instance_callback"):
             if hasattr(formset, "collecster_instance_callback"):
                 #FormSet.collecster_instance_callback(formset, request, obj) 
-                formset.collecster_instance_callback(request, obj) 
+                formset.collecster_instance_callback(formset, request, obj) 
         return formsets, inlines
         
 
@@ -117,10 +119,16 @@ class ConceptAdmin(admin.ModelAdmin):
 class ReleaseAttributeInline(admin.TabularInline):
     extra = 3
     model = ReleaseAttribute
+    can_delete = False
+
+class ReleaseCustomAttributeInline(admin.TabularInline):
+    extra = 0
+    model = ReleaseCustomAttribute
+    can_delete = False
 
 
 class ReleaseAdmin(CollecsterModelAdmin):
-    inlines = (ReleaseAttributeInline,)
+    inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline)
     collecster_dynamic_inline_classes = {"specific": utils.release_specific_inlines}
     collecster_readonly_edit = ("concept",)
 
@@ -131,14 +139,12 @@ class ReleaseAdmin(CollecsterModelAdmin):
 
 #class OccurrenceAttributeForm(forms.ModelForm):
 #    class Meta:
-#        widgets={"release_attribute": widgets.labelwidget_factory(ReleaseAttribute)}
+#        widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)}
 
-class OccurrenceAttributeFormset(forms.BaseInlineFormSet):
-    collecster_instance_callback = utils.populate_occurrence_attributes
-
+class BaseAttributeFormset(forms.BaseInlineFormSet):
     def clean(self):
         if hasattr(self.instance, "release"):
-            release_attributes = utils.retrieve_release_attributes(self.instance.release)
+            release_attributes = self.retrieve_function(self.instance.release)
 
             forms_count = len(self)
             if forms_count != len(release_attributes):
@@ -148,7 +154,7 @@ class OccurrenceAttributeFormset(forms.BaseInlineFormSet):
 
             errors = []
             for id, (form, release_attr) in enumerate( zip(self, release_attributes) ):
-                if form.cleaned_data["release_attribute"] != release_attr:
+                if form.cleaned_data["release_corresponding_entry"] != release_attr:
                     # \todo Internationalize (see: https://docs.djangoproject.com/en/1.8/ref/forms/validation/#using-validation-in-practice)
                     errors.append(forms.ValidationError("Instanciated release expects %(expected_attr)s attribute at index %(index)s.",
                                                         params={'expected_attr': release_attr, 'index': id},
@@ -158,20 +164,37 @@ class OccurrenceAttributeFormset(forms.BaseInlineFormSet):
                 raise errors
 
 
+def AnyAttributeFormset_factory(classname, retr_func):
+    return type(classname, (BaseAttributeFormset,),
+                {"retrieve_function": retr_func,
+                 "collecster_instance_callback": partial(utils.populate_occurrence_attributes,
+                                                         retrieve_function = retr_func)})
+
+
 
 class OccurrenceAttributeInline(admin.TabularInline):
-    formset = OccurrenceAttributeFormset
+    formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseAttribute))
     model = OccurenceAttribute
     #form = OccurrenceAttributeForm
-    form = modelform_factory(OccurenceAttribute, fields="__all__",
-                             widgets={"release_attribute": widgets.labelwidget_factory(ReleaseAttribute)})
+    form = modelform_factory(OccurenceAttribute, fields=("release_corresponding_entry", "value"),
+                             widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)})
+    can_delete = False
+
+
+class OccurrenceCustomAttributeInline(admin.TabularInline):
+    formset = AnyAttributeFormset_factory("OccurrenceCustomAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseCustomAttribute))
+    model = OccurenceCustomAttribute
+    #form = OccurrenceAttributeForm
+    form = modelform_factory(OccurenceCustomAttribute, fields=("release_corresponding_entry", "value"),
+                             widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseCustomAttribute)})
+    can_delete = False
 
 
 class OccurrenceAdmin(CollecsterModelAdmin):
     collecster_dynamic_inline_classes = {"specific": utils.occurrence_specific_inlines}
     collecster_readonly_edit = ("release",)
 
-    inlines = (OccurrenceAttributeInline,)
+    inlines = (OccurrenceAttributeInline, OccurrenceCustomAttributeInline)
 
 
 ################

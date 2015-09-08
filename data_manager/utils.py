@@ -75,15 +75,15 @@ def occurrence_specific_inlines(request, obj):
 
 
     
-def populate_occurrence_attributes(formset, request, obj):
+def populate_occurrence_attributes(formset, request, obj, retrieve_function):
     if obj and hasattr(obj, "release"):
         release_id = obj.release.pk
     else:
         release_id = get_request_payload(request, "release_id", 0)
     
-    attributes = retrieve_release_attributes(release_id)
+    attributes = retrieve_function(release_id)
     force_formset_size(formset, len(attributes))
-    formset.initial = [{"release_attribute": attrib} for attrib in attributes]
+    formset.initial = [{"release_corresponding_entry": attrib} for attrib in attributes]
     for form, rel_attrib in zip(formset, attributes):
         # This is very important: by default, forms in formsets have empty_permitted set to True
         # Then, a form with no other value than the initial(s) would skip fields validation, not populating cleaned_data     
@@ -119,8 +119,8 @@ def force_formset_size(formset, size):
 
 
 ##
-def retrieve_release_attributes(release_id):
-    return (ReleaseAttribute.objects.filter(release=release_id)) if release_id else []
+def retrieve_any_attributes(AttributeModel, release_id):
+    return (AttributeModel.objects.filter(release=release_id)) if release_id else []
 
 def retrieve_release_composition(release_id):
     return ReleaseComposition.objects.filter(container_release=release_id)

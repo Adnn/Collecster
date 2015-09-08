@@ -12,7 +12,7 @@ def ajax_release_specific_admin_formsets(request, concept_id):
 
     request_with_payload = request
     request_with_payload.collecster_payload = {
-        "concept_id": concept_id,
+        "concept_id": int(concept_id),
         "inlines_groups": ("specific",) 
     }
 
@@ -61,4 +61,4 @@ def ajax_occurrence_attributes_admin_formsets(request, release_id):
     for inline, wrapped_formset in zip(inline_instances, formsets):
         rendered_formsets.append(loader.render_to_string(inline.template, {"inline_admin_formset": wrapped_formset}))
 
-    return HttpResponse("<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets)))
+    return HttpResponse("{}".format("\n".join(rendered_formsets)))

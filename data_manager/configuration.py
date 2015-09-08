@@ -130,6 +130,8 @@ class ConceptNature:
     GAME = "GAME"
     OS = "OS"
 
+    GUN = "GUN"
+
     #DATA = {
     #    UIGroup._TOPLEVEL: (
     #        (CONSOLE,   'Console', ReleaseCategory.HARDWARE),
@@ -143,6 +145,7 @@ class ConceptNature:
         CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE   ),
         GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY     ),
         DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY     ),
+        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY     ),
     }
 
     @classmethod

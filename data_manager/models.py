@@ -39,9 +39,10 @@ class AttributeCategory(models.Model):
         return self.name
 
 
-class Attribute(models.Model):
+class AbstractAttribute(models.Model):
+    """ Abstract class containing all the field for an attribute, to be used by Attribute an ReleaseCustomAttribute """
     class Meta:
-        unique_together = ("category", "name")
+        abstract = True
 
     category    = models.ForeignKey(AttributeCategory)
     name        = models.CharField(max_length=60)
@@ -52,15 +53,21 @@ class Attribute(models.Model):
     def __str__(self):
         return "[{}]{}".format(self.category, self.name)
 
+
+class Attribute(AbstractAttribute):
+    class Meta:
+        unique_together = ("category", "name")
+
+
 ##########
 ## Release
 ##########
 
 class Release(ReleaseDeploymentBase):
-    ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     concept = models.ForeignKey(Concept)
     name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
     date    = models.DateField(blank=True, null=True)
+     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     barcode = models.CharField(max_length=20, blank=True)
     # Todo specificity (text, or list ?)
     # Todo edition ? What is that ?
@@ -78,6 +85,20 @@ class ReleaseAttribute(models.Model):
         return ("{} ({})" if self.note else "{}").format(self.attribute, self.note)
 
 
+class ReleaseCustomAttribute(AbstractAttribute):
+    """ Inherits from AbstractAttribute: the attribute is custom to a single release """
+    release     = models.ForeignKey(Release)
+    note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
+
+    @property
+    def attribute(self):
+        """ Allows a unified access, copied from ReleaseAttribute class """
+        return self
+
+    def __str__(self):
+        return ("{} ({})" if self.note else "{}").format(super(ReleaseCustomAttribute, self).__str__(), self.note)
+
+
 #############
 ## Occurrence
 #############
@@ -93,11 +114,20 @@ class Occurrence(models.Model):
         return ("Occurrence: {}".format(self.release))
 
 
-class OccurenceAttribute(models.Model):
+class OccurenceAnyAttributeBase(models.Model):
+    class Meta:
+        abstract = True
+
     occurrence          = models.ForeignKey(Occurrence)
-    release_attribute   = models.ForeignKey(ReleaseAttribute)
-    # The choices limitation is assigned dynamically, depending on the attribute's value type
+     # The choices limitation is assigned dynamically, depending on the attribute's value type
     value               = models.CharField(max_length=enum.Attribute.Value.choices_maxlength())
 
     def __str__(self):
-        return "{}: {}".format(self.release_attribute, self.value)
+        # release_corresponding_entry should be added by all derived concrete models.
+        return "{}: {}".format(self.release_corresponding_entry, self.value)
+
+class OccurenceAttribute(OccurenceAnyAttributeBase):
+    release_corresponding_entry = models.ForeignKey(ReleaseAttribute)
+
+class OccurenceCustomAttribute(OccurenceAnyAttributeBase):
+    release_corresponding_entry = models.ForeignKey(ReleaseCustomAttribute)

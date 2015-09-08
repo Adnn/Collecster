@@ -1,25 +1,16 @@
-//function cleaner(selector)
-//{
-//    $(selector).empty()
-//}
-function inserter(selector, html_content)
-{
-    //cleaner(selector)
-    //$(selector).append(html_content)
-    $(selector).replaceWith(html_content)
-}
-
 function before(selector, html_content)
 {
     $(selector).before(html_content)
 }
 
-function wrapped_inserter(selector)
+function div_replacer(html_content)
 {
-    return function(html_content)
-    {
-        inserter(selector, html_content)
-    }
+    // For each division at the top level of html_content, find a division with the same id in the dom, and replace
+    // the div in the dom with the corresponding div in html_content.
+    $(html_content).filter("div").each(function(index)
+       {
+           $("#"+this.id).replaceWith(this)
+       })
 }
 
 function main_function()
@@ -36,28 +27,22 @@ function main_function()
             {
                 id = 0
             }
-            $.ajax("/data_manager/ajax/release/" + id  + "/admin_formset/html/",
-                   { success: inserter.bind(undefined, "#collecster_specifics")})
+            $.ajax("/data_manager/ajax/release/" + id  + "/specific_admin_formset/html/",
+                   { success: div_replacer})
             $.ajax("/data_manager/ajax/release/" + id  + "/attributes_admin_formset/html/",
-                   { success: inserter.bind(undefined, "#occurenceattribute_set-group")})
-            //$.ajax("http://localhost:8000/OO_compo/ajax/release/" + id  + "/admin_formset/html/",
-            //       { success: wrapped_inserter("#container_of_set-group") })
+                   { success: div_replacer})
         })
 
     $("#id_concept").change(
         function()
         {
             var id = $("#id_concept").val()
-            if (id)
+            if(!id)
             {
-                $.ajax("/data_manager/ajax/concept/" + id  + "/admin_formset/html/",
-                       { success: inserter.bind(undefined, "#collecster_specifics")})
+                id = 0
             }
-            else
-            {
-                $.ajax("/data_manager/ajax/concept/empty_admin_formset/html/",
-                       { success: inserter.bind(undefined, "#collecster_specifics")})
-            }
+            $.ajax("/data_manager/ajax/concept/" + id  + "/specific_admin_formset/html/",
+                   { success: div_replacer})
         })
 }
 
