@@ -2,8 +2,8 @@ This project is very dynamic in the formsets its presenting on the admin pages. 
 * Bugs in the code
 * Forged forms submission
 
-= Enforcing Specific on Release and Occurence =
-1.a) There must be a formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurence).
+= Enforcing Specific on Release and Occurrence =
+1.a) There must be a formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurrence).
 1.b) There must not be any formset for a Specific that is not corresponding to the nature(s).
 This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
 In particular for b), even if data was posted for other formsets, it would not be assigned to anything.
@@ -13,11 +13,15 @@ This is enforced by min_num = max_num = 1 and validate_min + validate_max, which
 
 It appears there is no need for custom validation to enforce the correct Specific composition.
 
-= Enforcing the Attribute composition of an Occurence=
-1.a) For any Occurence, there must be one and only one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
+= Enforcing the Attribute composition of an Occurrence=
+1.a) For any Occurrence, there must be one and only one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
 1.b) There must not be an OccurrenceAttribute without the corresponding ReleaseAttribute on the Release.
-1.c) The value assigned to the OccurenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
+1.c) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
 
+= Enforcing the Releases and Occurrences composition =
+1) Prevent circular compositions on Release (release A is composed of a release B which is composed of a release A)
+2.a) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
+3) Any occurrence can only be nested in a single occurrence (remove them from the candidates)
 
 = TODO =
 * Implement a constraint that, if the same Attribute is repeated on a given Release, each ReleaseAttribute must have a distinct note

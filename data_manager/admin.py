@@ -127,8 +127,14 @@ class ReleaseCustomAttributeInline(admin.TabularInline):
     can_delete = False
 
 
+class ReleaseCompositionInline(admin.TabularInline):
+    verbose_name = verbose_name_plural = "Release composition"
+    model = Release.nested_releases.through
+    fk_name = 'from_release' # This seems to be the hardcoded name automatically given by Django 
+
+
 class ReleaseAdmin(CollecsterModelAdmin):
-    inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline)
+    inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
     collecster_dynamic_inline_classes = {"specific": utils.release_specific_inlines}
     collecster_readonly_edit = ("concept",)
 
@@ -173,28 +179,53 @@ def AnyAttributeFormset_factory(classname, retr_func):
 
 
 class OccurrenceAttributeInline(admin.TabularInline):
+    model = OccurrenceAttribute
     formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseAttribute))
-    model = OccurenceAttribute
     #form = OccurrenceAttributeForm
-    form = modelform_factory(OccurenceAttribute, fields=("release_corresponding_entry", "value"),
+    form = modelform_factory(OccurrenceAttribute, fields=("release_corresponding_entry", "value"),
                              widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)})
     can_delete = False
 
 
 class OccurrenceCustomAttributeInline(admin.TabularInline):
+    model = OccurrenceCustomAttribute
     formset = AnyAttributeFormset_factory("OccurrenceCustomAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseCustomAttribute))
-    model = OccurenceCustomAttribute
     #form = OccurrenceAttributeForm
-    form = modelform_factory(OccurenceCustomAttribute, fields=("release_corresponding_entry", "value"),
+    form = modelform_factory(OccurrenceCustomAttribute, fields=("release_corresponding_entry", "value"),
                              widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseCustomAttribute)})
     can_delete = False
+
+
+class OccurrenceCompositionFormset(forms.BaseInlineFormSet):
+    collecster_instance_callback = utils.occurrence_composition_queryset
+
+
+class ForceSaveModelForm(forms.ModelForm):
+    """ When a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
+    """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
+    def has_changed(self):
+        return True
+
+class OccurrenceCompositionInline(admin.TabularInline):
+    #model = Occurrence.nested_occurrences.through # Allowd to get the model when it is automatically created by Django
+    model = OccurrenceComposition
+    #verbose_name = verbose_name_plural = "Occurrence composition" # The default name is machine-friendly
+    fk_name = 'from_occurrence' # This seems to be the hardcoded name automatically given by Django 
+    extra   = 0 # on first load, none shown
+    max_num = 0 # and no "+" button
+     ## required to specify the "form population" callback
+    formset = OccurrenceCompositionFormset
+     ## required to specify the lable widget on release_composition
+    form = modelform_factory(OccurrenceComposition, form=ForceSaveModelForm, fields="__all__",
+                             widgets={"release_composition": widgets.labelwidget_factory(ReleaseComposition)})
+    can_delete = False #Remove the delete checkbox on each composition form (on edit page)
 
 
 class OccurrenceAdmin(CollecsterModelAdmin):
     collecster_dynamic_inline_classes = {"specific": utils.occurrence_specific_inlines}
     collecster_readonly_edit = ("release",)
 
-    inlines = (OccurrenceAttributeInline, OccurrenceCustomAttributeInline)
+    inlines = (OccurrenceAttributeInline, OccurrenceCustomAttributeInline, OccurrenceCompositionInline)
 
 
 ################

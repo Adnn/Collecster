@@ -92,6 +92,33 @@ def populate_occurrence_attributes(formset, request, obj, retrieve_function):
         form.fields['value'] = enum.Attribute.Type.to_form_field[rel_attrib.attribute.value_type]
 
 
+def occurrence_composition_queryset(formset, request, obj):
+    if obj and hasattr(obj, "release"):
+        release_id = obj.release.pk
+    else:
+        release_id = get_request_payload(request, "release_id", 0)
+
+    if release_id == 0:
+        force_formset_size(formset, 0)
+    else:
+        #nested_releases = [compo.to_release for compo in retrieve_release_composition(release_id)]
+        #nested_releases = retrieve_release_composition(release_id)
+
+        release_compositions = retrieve_release_composition(release_id)
+        force_formset_size(formset, len(release_compositions))
+            ## Does not help with saving the emtpy forms (only with their initial values)...
+        #formset.validate_min = True
+        #formset.validate_max = True
+        formset.initial = [{"release_composition": compo} for compo in release_compositions]
+
+        for compo, form in zip(release_compositions, formset):
+            release = compo.to_release
+                ## Does not help with empty forms either
+            #form.empty_permitted=False 
+            form.fields["to_occurrence"].queryset  = Occurrence.objects.filter(release=release)
+            form.fields["to_occurrence"].label     = "Nested {} occurrence".format(release.name)
+
+
 ##
 ## Request helpers
 ##
@@ -123,5 +150,8 @@ def retrieve_any_attributes(AttributeModel, release_id):
     return (AttributeModel.objects.filter(release=release_id)) if release_id else []
 
 def retrieve_release_composition(release_id):
-    return ReleaseComposition.objects.filter(container_release=release_id)
+    return ReleaseComposition.objects.filter(from_release=release_id) ## on the "through" table
+     ## Would return Release instances, NOT ReleaseComposition objects
+    #return Release.objects.get(pk=release_id).nested_releases.all()
+
 

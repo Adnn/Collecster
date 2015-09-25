@@ -72,6 +72,12 @@ class Release(ReleaseDeploymentBase):
     # Todo specificity (text, or list ?)
     # Todo edition ? What is that ?
 
+    #  ## Not symmetrical: if a release B is nested in A, then A is NOT nested in B
+    #nested_releases = models.ManyToManyField("self", symmetrical=False, blank=True)
+
+    nested_releases = models.ManyToManyField("self", through="ReleaseComposition", symmetrical=False,
+                                             through_fields = ("from_release", "to_release"))
+
     def __str__(self):
         return ("{}".format(self.name if self.name else self.concept))
 
@@ -99,6 +105,16 @@ class ReleaseCustomAttribute(AbstractAttribute):
         return ("{} ({})" if self.note else "{}").format(super(ReleaseCustomAttribute, self).__str__(), self.note)
 
 
+class ReleaseComposition(models.Model):
+    from_release    = models.ForeignKey(Release, related_name="+") # "+" disable the reverse relation: not needed here,
+                                                                   # because we can access it through the 'nested_releases' field.
+    to_release      = models.ForeignKey(Release) # Reverse relation implicitly named "release_composition_set"
+
+    def __str__(self):
+        return "Nested {}".format(self.to_release)
+
+
+
 #############
 ## Occurrence
 #############
@@ -109,12 +125,14 @@ class Occurrence(models.Model):
         ## Some automatic date fields
     add_date        = models.DateTimeField(auto_now_add=True)
     lastmodif_date  = models.DateTimeField(auto_now=True)
+    nested_occurrences  = models.ManyToManyField("self", through="OccurrenceComposition", symmetrical=False,
+                                                 through_fields = ("from_occurrence", "to_occurrence"))
 
     def __str__(self):
         return ("Occurrence: {}".format(self.release))
 
 
-class OccurenceAnyAttributeBase(models.Model):
+class OccurrenceAnyAttributeBase(models.Model):
     class Meta:
         abstract = True
 
@@ -126,8 +144,17 @@ class OccurenceAnyAttributeBase(models.Model):
         # release_corresponding_entry should be added by all derived concrete models.
         return "{}: {}".format(self.release_corresponding_entry, self.value)
 
-class OccurenceAttribute(OccurenceAnyAttributeBase):
+class OccurrenceAttribute(OccurrenceAnyAttributeBase):
     release_corresponding_entry = models.ForeignKey(ReleaseAttribute)
 
-class OccurenceCustomAttribute(OccurenceAnyAttributeBase):
+class OccurrenceCustomAttribute(OccurrenceAnyAttributeBase):
     release_corresponding_entry = models.ForeignKey(ReleaseCustomAttribute)
+
+
+class OccurrenceComposition(models.Model):
+    release_composition = models.ForeignKey(ReleaseComposition)
+    from_occurrence = models.ForeignKey(Occurrence, related_name="+") # "+" disable the reverse relation: not needed here,
+                                                                      # because we can access it through the 'nested_occurrences' field.
+     ## This one has to be optional: if a nested occurrence is absent, we store a blank to_occurrence:
+     ## Because the matcing with the ReleaseComposition is order-based, we have to store blank composition...
+    to_occurrence   = models.ForeignKey(Occurrence, blank=True, null=True) # Reverse relation implicitly named "occurrence_composition_set"
