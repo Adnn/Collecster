@@ -7,7 +7,7 @@ from . import utils
 from . import widgets 
 from . import enumerations as enums
 
-from functools import partial
+from functools import partial, partialmethod
 
 ## TODEL ##
 from .configuration import ReleaseSpecific
@@ -76,7 +76,7 @@ class CollecsterModelAdmin(admin.ModelAdmin):
             #if hasattr(FormSet, "collecster_instance_callback"):
             if hasattr(formset, "collecster_instance_callback"):
                 #FormSet.collecster_instance_callback(formset, request, obj) 
-                formset.collecster_instance_callback(formset, request, obj) 
+                formset.collecster_instance_callback(request, obj) 
         return formsets, inlines
         
 
@@ -167,7 +167,7 @@ class BaseAttributeFormset(forms.BaseInlineFormSet):
 def AnyAttributeFormset_factory(classname, retr_func):
     return type(classname, (BaseAttributeFormset,),
                 {"retrieve_function": retr_func,
-                 "collecster_instance_callback": partial(utils.populate_occurrence_attributes,
+                 "collecster_instance_callback": partialmethod(utils.populate_occurrence_attributes,
                                                          retrieve_function = retr_func)})
 
 
