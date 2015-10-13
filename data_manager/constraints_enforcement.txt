@@ -23,6 +23,9 @@ It appears there is no need for custom validation to enforce the correct Specifi
 2.a) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
 3) Any occurrence can only be nested in a single occurrence (remove them from the candidates)
 
+= Special Concepts =
+1) The special Concepts (combo and subpart) are assigned a primary nature of the same name. Only one Concept instance can be assigned those special nature.
+
 = TODO =
 * Implement a constraint that, if the same Attribute is repeated on a given Release, each ReleaseAttribute must have a distinct note
 

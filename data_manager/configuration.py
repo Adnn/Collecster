@@ -89,6 +89,7 @@ class ReleaseCategory:
     def compose(*args):
         return tuple([element for tupl in args for element in tupl])
 
+    EMPTY       = ()
     SOFTWARE    = (RelSp.Software,)
     HARDWARE    = (RelSp.Hardware,)
     DEMO        = compose(SOFTWARE, (RelSp.Demo,))
@@ -121,9 +122,12 @@ class OccurrenceCategory:
 
 class ConceptNature:
     class UIGroup:
+        _HIDDEN         = "_HIDDEN"
         _TOPLEVEL       = ""
         ACCESSORY       = "Accessory"
         SOFT            = "Software"
+
+    COMBO = "_COMBO"
 
     CONSOLE = "CONSOLE"
     DEMO = "DEMO"
@@ -142,6 +146,8 @@ class ConceptNature:
     #}
     DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category"])
     DATA = {
+        COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY     ),
+
         CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE   ),
         GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY     ),
         DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY     ),
@@ -162,7 +168,7 @@ class ConceptNature:
         for db_value, data in cls.DATA.items():
             pair = (db_value, data.ui_value)
             (toplevel if (data.ui_group is cls.UIGroup._TOPLEVEL) else sorted_groups[data.ui_group]).append(pair)
-        return tuple(toplevel + [(ui_group, tuple(pairs)) for ui_group, pairs in sorted_groups.items()])
+        return tuple(toplevel + [(ui_group, tuple(pairs)) for ui_group, pairs in sorted_groups.items() if ui_group != cls.UIGroup._HIDDEN])
 
         #return (
         #    ("console", "console"),

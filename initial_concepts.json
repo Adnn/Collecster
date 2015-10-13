@@ -1,0 +1,10 @@
+[
+    {
+        "model": "data_manager.Concept",
+        "pk": 1,
+        "fields": {
+            "distinctive_name": "_COMBO",
+            "primary_nature": "_COMBO"
+        }
+    }
+]
