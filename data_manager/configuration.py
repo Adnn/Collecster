@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 
 import collections
 
+import data_manager.models
+
 #TODEL
 import wdb
 
@@ -120,6 +122,27 @@ class OccurrenceCategory:
     CONSOLE     = (OccSp.Console,)
 
 
+def get_attribute_category(category_name):
+    models = data_manager.models
+    return models.AttributeCategory.objects.get(name=category_name)
+
+def get_attribute(category_name, attribute_name):
+    models = data_manager.models
+    return models.Attribute.objects.get(category=get_attribute_category(category_name), name=attribute_name)
+
+
+def implicit_self(release):
+    return (get_attribute("content", "self"), )
+
+def self_software(release):
+    try:
+        material = not ReleaseSpecific.Software.objects.get(release=release).immaterial
+    except ReleaseSpecific.Software.DoesNotExist:
+        # The Software specific is not created id its form stayed empty (=> 'immaterial' was not checked)
+        material = True
+    return implicit_self(release) if material else ()
+
+
 class ConceptNature:
     class UIGroup:
         _HIDDEN         = "_HIDDEN"
@@ -144,14 +167,15 @@ class ConceptNature:
     #        (GAME,      'Game',    ReleaseCategory.SOFTWARE, UIGroup.SOFT),
     #    ),
     #}
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category"])
+    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category", "implicit_attributes"])
     DATA = {
-        COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY     ),
+        COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (),             ),
+        #SUBPART:    DataTuple(SUBPART,      UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY     ),
 
-        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE   ),
-        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY     ),
-        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY     ),
-        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY     ),
+        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,  implicit_self ),
+        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY,    self_software ),
+        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY,    self_software ),
+        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY,    implicit_self ),
     }
 
     @classmethod
@@ -192,4 +216,18 @@ class ConceptNature:
     def get_occurrence_specifics(cls, nature_set):
         return cls._get_specifics(nature_set, "occurrence")
 
+    @classmethod
+    def get_release_implicit_attributes(cls, release):
+        unique_implicit_attribs = collections.OrderedDict()
+        models = data_manager.models
 
+        for nature in release.concept.all_nature_tuple:
+            implicits = cls.DATA[nature].implicit_attributes 
+            if callable(implicits):
+                implicits = implicits(release)
+
+            for attribute in implicits:
+                release_attribute = models.ReleaseAttribute.objects.get_or_create(release=None, attribute=attribute)[0]
+                unique_implicit_attribs[release_attribute] = None
+
+        return list(unique_implicit_attribs.keys())

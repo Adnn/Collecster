@@ -155,3 +155,18 @@ def retrieve_release_composition(release_id):
     #return Release.objects.get(pk=release_id).nested_releases.all()
 
 
+def all_release_attributes(release_id):
+    if not release_id:
+        return []
+
+    if isinstance(release_id, Release):
+        release = release_id
+    else:
+        release = Release.objects.get(pk=release_id)
+
+    # get the implicit attributes first
+    attributes = conf.ConceptNature.get_release_implicit_attributes(release)
+    # then the explicit (non-custom) attributes
+    attributes.extend(retrieve_any_attributes(ReleaseAttribute, release))
+    return attributes
+        

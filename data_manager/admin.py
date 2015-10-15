@@ -172,7 +172,7 @@ class BaseAttributeFormset(forms.BaseInlineFormSet):
 
 def AnyAttributeFormset_factory(classname, retr_func):
     return type(classname, (BaseAttributeFormset,),
-                {"retrieve_function": retr_func,
+                {"retrieve_function": staticmethod(retr_func), #the retr_func should be called without implicit self
                  "collecster_instance_callback": partialmethod(utils.populate_occurrence_attributes,
                                                          retrieve_function = retr_func)})
 
@@ -180,7 +180,7 @@ def AnyAttributeFormset_factory(classname, retr_func):
 
 class OccurrenceAttributeInline(admin.TabularInline):
     model = OccurrenceAttribute
-    formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseAttribute))
+    formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", utils.all_release_attributes)
     #form = OccurrenceAttributeForm
     form = modelform_factory(OccurrenceAttribute, fields=("release_corresponding_entry", "value"),
                              widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)})
