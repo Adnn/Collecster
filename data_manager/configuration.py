@@ -131,9 +131,10 @@ def get_attribute(category_name, attribute_name):
     return models.Attribute.objects.get(category=get_attribute_category(category_name), name=attribute_name)
 
 
-def implicit_self(release):
+def automatic_self():
     return (get_attribute("content", "self"), )
 
+# Intended to be used for implicit occurence attributes
 def self_software(release):
     try:
         material = not ReleaseSpecific.Software.objects.get(release=release).immaterial
@@ -167,15 +168,14 @@ class ConceptNature:
     #        (GAME,      'Game',    ReleaseCategory.SOFTWARE, UIGroup.SOFT),
     #    ),
     #}
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category", "implicit_attributes"])
+    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category", "automatic_attributes"])
     DATA = {
         COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (),             ),
-        #SUBPART:    DataTuple(SUBPART,      UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY     ),
 
-        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,  implicit_self ),
-        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY,    self_software ),
-        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY,    self_software ),
-        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY,    implicit_self ),
+        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,  automatic_self ),
+        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY,    automatic_self ),
+        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY,    automatic_self ),
+        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY,    automatic_self ),
     }
 
     @classmethod
@@ -217,17 +217,38 @@ class ConceptNature:
         return cls._get_specifics(nature_set, "occurrence")
 
     @classmethod
-    def get_release_implicit_attributes(cls, release):
-        unique_implicit_attribs = collections.OrderedDict()
+    def get_concept_automatic_attributes(cls, concept):
+        unique_automatic_attribs = collections.OrderedDict()
         models = data_manager.models
 
-        for nature in release.concept.all_nature_tuple:
-            implicits = cls.DATA[nature].implicit_attributes 
-            if callable(implicits):
-                implicits = implicits(release)
+        for nature in concept.all_nature_tuple:
+            automatics = cls.DATA[nature].automatic_attributes 
+            if callable(automatics):
+                automatics = automatics()
+            for attribute in automatics:
+                 unique_automatic_attribs[attribute] = None
 
-            for attribute in implicits:
-                release_attribute = models.ReleaseAttribute.objects.get_or_create(release=None, attribute=attribute)[0]
-                unique_implicit_attribs[release_attribute] = None
+        return list(unique_automatic_attribs.keys())
 
-        return list(unique_implicit_attribs.keys())
+    ##
+    ## Note: This method implemented proper implicit attributes, that are not shown on the Release add page
+    ## but are then attributes attached to each Occurence instantiated from the Release.
+    ## Implicit attributes are is disabled for the moment.
+    ## To re-enable, it requires to allow ReleaseAttribute.release to be nullable
+    ## and to make utils.all_release_attributes() to call this function.
+    ##
+    #@classmethod
+    #def get_release_implicit_attributes(cls, release):
+    #    unique_implicit_attribs = collections.OrderedDict()
+    #    models = data_manager.models
+
+    #    for nature in release.concept.all_nature_tuple:
+    #        implicits = cls.DATA[nature].implicit_attributes 
+    #        if callable(implicits):
+    #            implicits = implicits(release)
+
+    #        for attribute in implicits:
+    #            release_attribute = models.ReleaseAttribute.objects.get_or_create(release=None, attribute=attribute)[0]
+    #            unique_implicit_attribs[release_attribute] = None
+
+    #    return list(unique_implicit_attribs.keys())

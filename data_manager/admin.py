@@ -8,6 +8,7 @@ from . import widgets
 from . import enumerations as enums
 
 from functools import partial, partialmethod
+from collections import OrderedDict
 
 ## TODEL ##
 from .configuration import ReleaseSpecific
@@ -27,7 +28,7 @@ class CollecsterModelAdmin(admin.ModelAdmin):
         else:
             return self.readonly_fields
 
-        # Nota: Sadly, this happends too lat: after the formset validation. 
+        # Nota: Sadly, this happend too late: after the formset validation. 
         # Yet, in cases where the callback would change some fields on the form, it is important that the new fields
         # would be used for validation !
     #def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
@@ -88,14 +89,29 @@ class CollecsterModelAdmin(admin.ModelAdmin):
         requested_inlines = utils.get_request_payload(request, "inlines_groups")
         if hasattr(AdminClass, "collecster_dynamic_inline_classes"):
             filter_func = (lambda x: x in requested_inlines) if requested_inlines else (lambda x: True)
-            for func in [func for group, func in AdminClass.collecster_dynamic_inline_classes.items() if filter_func(group)]:
-                for AdminInline in func(request, obj):
+            for inlines in [inlines for group, inlines in AdminClass.collecster_dynamic_inline_classes.items() if filter_func(group)]:
+                for AdminInline in (inlines(request, obj) if callable(inlines) else inlines):
                     added.append(AdminInline(self.model, self.admin_site))
 
         if requested_inlines:
             return added
         else:
             return super(CollecsterModelAdmin, self).get_inline_instances(request, obj) + added
+
+
+class ForceSaveModelForm(forms.ModelForm):
+    """ When a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
+    """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
+    """ Edit: it evolved to change the meaning of 'initial' to 'default', see: http://stackoverflow.com/a/33354303/1027706 """
+    def has_changed(self):
+        for name, field in self.fields.items():
+            prefixed_name = self.add_prefix(name)
+            data_value = field.widget.value_from_datadict(self.data, self.files, prefixed_name)
+
+            # When editing a parent object, all the forms of the formset are assigned its primary_key (even the empty ones)
+            if data_value and not issubclass(field.__class__, forms.models.InlineForeignKeyField):
+                return True
+        return False
 
 
 ##########
@@ -116,10 +132,15 @@ class ConceptAdmin(admin.ModelAdmin):
 ## Release
 ##########
 
+class ReleaseAttributeFormset(forms.BaseInlineFormSet):
+    collecster_instance_callback = utils.release_automatic_attributes
+
 class ReleaseAttributeInline(admin.TabularInline):
     extra = 3
     model = ReleaseAttribute
-    can_delete = False
+    #can_delete = False
+    formset = ReleaseAttributeFormset
+    form = modelform_factory(ReleaseAttribute, form=ForceSaveModelForm, fields="__all__")
 
 class ReleaseCustomAttributeInline(admin.TabularInline):
     extra = 0
@@ -134,8 +155,13 @@ class ReleaseCompositionInline(admin.TabularInline):
 
 
 class ReleaseAdmin(CollecsterModelAdmin):
-    inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
-    collecster_dynamic_inline_classes = {"specific": utils.release_specific_inlines}
+    #inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
+    collecster_dynamic_inline_classes = OrderedDict((
+        ("attributes",           (ReleaseAttributeInline,)),
+        ("custom_attributes",    (ReleaseCustomAttributeInline,)),
+        ("composition",          (ReleaseCompositionInline,)),
+        ("specific",             utils.release_specific_inlines),
+    )) 
     collecster_readonly_edit = ("concept",)
 
 
@@ -199,12 +225,6 @@ class OccurrenceCustomAttributeInline(admin.TabularInline):
 class OccurrenceCompositionFormset(forms.BaseInlineFormSet):
     collecster_instance_callback = utils.occurrence_composition_queryset
 
-
-class ForceSaveModelForm(forms.ModelForm):
-    """ When a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
-    """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
-    def has_changed(self):
-        return True
 
 class OccurrenceCompositionInline(admin.TabularInline):
     #model = Occurrence.nested_occurrences.through # Allowd to get the model when it is automatically created by Django

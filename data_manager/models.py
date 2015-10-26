@@ -83,7 +83,7 @@ class Release(ReleaseDeploymentBase):
 
 
 class ReleaseAttribute(models.Model):
-    release     = models.ForeignKey(Release, null=True) # No release are attached for implicit attributes (that are determined by the Release nature)
+    release     = models.ForeignKey(Release) # No release are attached for implicit attributes (that are determined by the Release nature), disabled
     attribute   = models.ForeignKey(Attribute)
     note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
 

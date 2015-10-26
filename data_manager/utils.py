@@ -74,6 +74,17 @@ def occurrence_specific_inlines(request, obj):
     return get_concept_inlines(concept_id, conf.ConceptNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
+def release_automatic_attributes(formset, request, obj):
+    if obj and hasattr(obj, "concept"):
+        concept_id = obj.concept.pk
+    else:
+        concept_id = get_request_payload(request, "concept_id", 0)
+
+    if not obj.pk: # test if the object is already in the DB, in which case the automatic attributes are not added
+        formset.initial = [{"attribute": attribute} for attribute in retrieve_automatic_attributes(concept_id)]
+    else:
+        formset.extra = 1
+
     
 def populate_occurrence_attributes(formset, request, obj, retrieve_function):
     if obj and hasattr(obj, "release"):
@@ -154,6 +165,8 @@ def retrieve_release_composition(release_id):
      ## Would return Release instances, NOT ReleaseComposition objects
     #return Release.objects.get(pk=release_id).nested_releases.all()
 
+def retrieve_automatic_attributes(concept_id):
+    return conf.ConceptNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
 
 def all_release_attributes(release_id):
     if not release_id:
@@ -164,8 +177,10 @@ def all_release_attributes(release_id):
     else:
         release = Release.objects.get(pk=release_id)
 
-    # get the implicit attributes first
-    attributes = conf.ConceptNature.get_release_implicit_attributes(release)
+    attributes = []
+    # get the implicit attributes first, disabled
+    #attributes = conf.ConceptNature.get_release_implicit_attributes(release)
+
     # then the explicit (non-custom) attributes
     attributes.extend(retrieve_any_attributes(ReleaseAttribute, release))
     return attributes

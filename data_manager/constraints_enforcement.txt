@@ -21,7 +21,8 @@ It appears there is no need for custom validation to enforce the correct Specifi
 = Enforcing the Releases and Occurrences composition =
 1) Prevent circular compositions on Release (release A is composed of a release B which is composed of a release A)
 2.a) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
-3) Any occurrence can only be nested in a single occurrence (remove them from the candidates)
+3) Any occurrence can only be nested in a single occurrence (also: remove them from the candidate queryset once nested in another occurence)
+    exception: immaterials (idea of implicitly making an immaterial occurence of each game release or concept ? unclear)
 
 = Special Concepts =
 1) The special Concepts (combo and subpart) are assigned a primary nature of the same name. Only one Concept instance can be assigned those special nature.
