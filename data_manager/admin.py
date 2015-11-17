@@ -10,9 +10,12 @@ from . import enumerations as enums
 from functools import partial, partialmethod
 from collections import OrderedDict
 
+from .configuration import is_material
+
 ## TODEL ##
 from .configuration import ReleaseSpecific
 import wdb
+
 
 class CollecsterModelAdmin(admin.ModelAdmin):
     class Media:
@@ -54,15 +57,16 @@ class CollecsterModelAdmin(admin.ModelAdmin):
         #if hasattr(FormSet, "collecster_instance_callback"):
         #    FormSet.collecster_instance_callback(formset, request, obj) 
         #yield formset, inline
-
  
 
 
     def _create_formsets(self, request, obj, change):
+        """ Used to customize a static formset (number of forms, initial data, ...) """
+        """ """
         """ It would be best not to need to override this 'private' method, the rationale is obj propagation """
         """ _create_formsets does not propagate the object when ADDing it (even if it partially or totally exists) """
         """ see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 """
-        """ Yet we need to save its value (at least the concept) for 'collecster_instance_callback' callback """
+        """ Yet we need to save its value (at least the concept or release) for 'collecster_instance_callback' callback """
         # TODO make that generic, instead of hardcoding potential attributes
         if obj and hasattr(obj, "concept"):
             request.collecster_payload = {"concept_id": obj.concept.pk}
@@ -132,13 +136,22 @@ class ConceptAdmin(admin.ModelAdmin):
 ## Release
 ##########
 
-class ReleaseAttributeFormset(forms.BaseInlineFormSet):
+class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        if not is_material(self.instance):
+            for form in self:
+                if form.has_changed(): # This is the criterion used by BaseModelfFormSet.save_new_object() to decide whether to save the object
+                    raise forms.ValidationError("Immaterial release cannot be attached those inlines.",
+                                                code='invalid')
+
+
+class ReleaseAttributeFormset(OnlyOnMaterialFormSet):
     collecster_instance_callback = utils.release_automatic_attributes
 
 class ReleaseAttributeInline(admin.TabularInline):
     extra = 3
     model = ReleaseAttribute
-    #can_delete = False
+    can_delete = False
     formset = ReleaseAttributeFormset
     form = modelform_factory(ReleaseAttribute, form=ForceSaveModelForm, fields="__all__")
 
@@ -146,23 +159,25 @@ class ReleaseCustomAttributeInline(admin.TabularInline):
     extra = 0
     model = ReleaseCustomAttribute
     can_delete = False
+    formset = OnlyOnMaterialFormSet
 
 
 class ReleaseCompositionInline(admin.TabularInline):
     verbose_name = verbose_name_plural = "Release composition"
     model = Release.nested_releases.through
     fk_name = 'from_release' # This seems to be the hardcoded name automatically given by Django 
+    formset = OnlyOnMaterialFormSet
 
 
 class ReleaseAdmin(CollecsterModelAdmin):
     #inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
     collecster_dynamic_inline_classes = OrderedDict((
+        ("specific",             utils.release_specific_inlines),
         ("attributes",           (ReleaseAttributeInline,)),
         ("custom_attributes",    (ReleaseCustomAttributeInline,)),
         ("composition",          (ReleaseCompositionInline,)),
-        ("specific",             utils.release_specific_inlines),
     )) 
-    collecster_readonly_edit = ("concept",)
+    collecster_readonly_edit = ("concept", "immaterial")
 
 
 #############

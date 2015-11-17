@@ -16,23 +16,37 @@ class ReleaseDeploymentBase(models.Model):
     class Meta:
         abstract = True
     
+    collecster_material_fields = ("loose", "barcode",)
+
+    # Made a base concept, to define application logic that an immterial cannot have attribute nor nested elements
+    immaterial  = models.BooleanField(default=False) 
+
     loose   = models.BooleanField() 
     #region  = models.CharField(max_length=2, choices=Region.CHOICES, blank=True) #TODO
     version = models.CharField(max_length=20, blank=True) 
     #working_condition = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
 
+    ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
+    barcode = models.CharField(max_length=20, blank=True)
 
-class InstanceDeploymentBase(models.Model):
+
+def is_material(release):
+    return not release.immaterial
+
+
+class OccurrenceDeploymentBase(models.Model):
     class Meta:
         abstract = True
 
-    price = models.FloatField(blank=True, null=True)
+    collecster_material_fields = ("blister",)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     #origin = models.CharField(max_length=2, choices=Origin.get_choices()) #TODO
     notes = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
     #tag = models.ImageField(upload_to=name_tag, blank=True)
         ## TODO Should be excluded from _COMBO_PACK, and NOT from immaterial releases (not sure about the last one, what if the included game is barked ?)
     #working = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
-    blister = models.BooleanField(help_text="Indicates whether the blister is present.")
+    blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
 
 class ReleaseSpecific(object):
@@ -54,7 +68,6 @@ class ReleaseSpecific(object):
     class Software(AbstractBase):
         #publisher   = models.ForeignKey(Company, blank=True, null=True) # TODO
         #porter      = models.ForeignKey(Company, blank=True, null=True, vebose_name"Company realizing the port") # TODO
-        immaterial = models.BooleanField(default=False)
         collection_label = models.CharField(max_length=120, blank=True, verbose_name="Released in collection")
 
 #    class Accessory(AbstractBase):

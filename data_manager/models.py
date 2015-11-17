@@ -1,7 +1,21 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
-from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase
+from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase
 from . import enumerations as enum
+
+
+##########
+## Utils functions
+##########
+def check_material_consistency(model_instance):
+    if hasattr(model_instance, "collecster_material_fields"):
+        errors_dict = {}
+        for field_name in model_instance.collecster_material_fields:
+            if getattr(model_instance, field_name):
+                errors_dict[field_name]=ValidationError("Not allowed on immaterial releases.", code='invalid')
+        if errors_dict:
+            raise ValidationError(errors_dict)
 
 
 ##########
@@ -67,8 +81,6 @@ class Release(ReleaseDeploymentBase):
     concept = models.ForeignKey(Concept)
     name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
     date    = models.DateField(blank=True, null=True)
-     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
-    barcode = models.CharField(max_length=20, blank=True)
     # Todo specificity (text, or list ?)
     # Todo edition ? What is that ?
 
@@ -81,17 +93,29 @@ class Release(ReleaseDeploymentBase):
     def __str__(self):
         return ("{}".format(self.name if self.name else self.concept))
 
+    def clean(self):
+        super(Release, self).clean()
+        if self.immaterial:
+            check_material_consistency(self)
+
 
 class ReleaseAttribute(models.Model):
+    class Meta:
+        unique_together = ("release", "attribute", "note") # Seems to be a bug: when ADDing the parent object, it is possible to save instances violating this constraint
+                                                    # TODO: report to the Django project
+
     release     = models.ForeignKey(Release) # No release are attached for implicit attributes (that are determined by the Release nature), disabled
     attribute   = models.ForeignKey(Attribute)
-    note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
+    note        = models.CharField(max_length=60, blank=True, help_text="Distinctive remark if the attribute is repeated.")
 
     def __str__(self):
         return ("{} ({})" if self.note else "{}").format(self.attribute, self.note)
 
 
 class ReleaseCustomAttribute(AbstractAttribute):
+    class Meta:
+        unique_together = AbstractAttribute._meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
+
     """ Inherits from AbstractAttribute: the attribute is custom to a single release """
     release     = models.ForeignKey(Release)
     note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
@@ -119,7 +143,7 @@ class ReleaseComposition(models.Model):
 ## Occurrence
 #############
 
-class Occurrence(models.Model):
+class Occurrence(OccurrenceDeploymentBase):
     release     = models.ForeignKey(Release)
     #owner       = models.ForeignKey(Person) #TODO
         ## Some automatic date fields
@@ -130,6 +154,11 @@ class Occurrence(models.Model):
 
     def __str__(self):
         return ("Occurrence: {}".format(self.release))
+
+    def clean(self):
+        super(Occurrence, self).clean()
+        if hasattr(self, "release") and self.release.immaterial:
+            check_material_consistency(self)
 
 
 class OccurrenceAnyAttributeBase(models.Model):
