@@ -16,8 +16,19 @@ from .configuration import is_material
 from .configuration import ReleaseSpecific
 import wdb
 
+class CustomSaveModelAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        # If obj has a "created_by" field, and this is adding a new object (not editing one)
+        if issubclass(obj.__class__, AbstractUserOwned) and not change:
+            obj.created_by = UserExtension.objects.get(user=request.user)
+        super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)
+        self.post_save_model(request, obj, form, change)
 
-class CollecsterModelAdmin(admin.ModelAdmin):
+    def post_save_model(self, request, obj, form, change):
+        pass
+
+
+class CollecsterModelAdmin(CustomSaveModelAdmin):
     class Media:
         js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
               "data_manager/scripts/form_ajax.js",)
@@ -128,7 +139,8 @@ class ConceptNatureInline(admin.TabularInline):
     can_delete = False
 
 
-class ConceptAdmin(admin.ModelAdmin):
+class ConceptAdmin(CustomSaveModelAdmin):
+    exclude = ("created_by",)
     inlines = (ConceptNatureInline,)
 
 
@@ -170,6 +182,7 @@ class ReleaseCompositionInline(admin.TabularInline):
 
 
 class ReleaseAdmin(CollecsterModelAdmin):
+    exclude = ("created_by",)
     #inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
     collecster_dynamic_inline_classes = OrderedDict((
         ("specific",             utils.release_specific_inlines),
@@ -257,10 +270,15 @@ class OccurrenceCompositionInline(admin.TabularInline):
 
 
 class OccurrenceAdmin(CollecsterModelAdmin):
+    exclude = ("created_by",)
     collecster_dynamic_inline_classes = {"specific": utils.occurrence_specific_inlines}
     collecster_readonly_edit = ("release",)
 
     inlines = (OccurrenceAttributeInline, OccurrenceCustomAttributeInline, OccurrenceCompositionInline)
+
+    def post_save_model(self, request, obj, form, change):
+        if not change:
+            TagToOccurrence(user=obj.created_by, tag_occurrence_id=obj.pk, occurrence=obj).save()
 
 
 ################
@@ -274,6 +292,10 @@ admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Attribute)
 admin.site.register(AttributeCategory)
 
+# For Administration
+admin.site.register(UserExtension)
+
 # For readonly debug
 admin.site.register(ConceptNature)
 admin.site.register(ReleaseSpecific.Hardware)
+admin.site.register(TagToOccurrence)

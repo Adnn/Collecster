@@ -45,7 +45,6 @@ class OccurrenceDeploymentBase(models.Model):
     notes = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
     #tag = models.ImageField(upload_to=name_tag, blank=True)
         ## TODO Should be excluded from _COMBO_PACK, and NOT from immaterial releases (not sure about the last one, what if the included game is barked ?)
-    #working = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
 
@@ -119,6 +118,10 @@ class OccurrenceSpecific(object):
             abstract = True
         release = models.ForeignKey('Occurrence')
 
+    class Operational(AbstractBase):
+        #working = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
+        pass
+
     class Console(AbstractBase):
         region_modded = models.BooleanField()
         copy_modded = models.BooleanField()
@@ -132,7 +135,8 @@ class OccurrenceCategory:
         return tuple([element for tupl in args for element in tupl])
 
     EMPTY       = ()
-    CONSOLE     = (OccSp.Console,)
+    OPERATIONAL = (OccSp.Operational,)
+    CONSOLE     = (OccSp.Operational, OccSp.Console,)
 
 
 def get_attribute_category(category_name):
@@ -185,10 +189,10 @@ class ConceptNature:
     DATA = {
         COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (),             ),
 
-        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,  automatic_self ),
-        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.EMPTY,    automatic_self ),
-        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.EMPTY,    automatic_self ),
-        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.EMPTY,    automatic_self ),
+        CONSOLE:    DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,      automatic_self ),
+        GAME:       DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self ),
+        DEMO:       DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.OPERATIONAL,  automatic_self ),
+        GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self ),
     }
 
     @classmethod

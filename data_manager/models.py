@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
-from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase
+from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase, is_material
 from . import enumerations as enum
 
 
@@ -17,6 +18,43 @@ def check_material_consistency(model_instance):
         if errors_dict:
             raise ValidationError(errors_dict)
 
+def created_by_field():
+    return models.ForeignKey("UserExtension")
+
+
+##########
+## User
+##########
+
+class UserExtension(models.Model):
+    """ Extends Django contrib's User model, to attach a globally unique ID """
+    """ (to be managed by a central repo for Collecster """
+    user = models.OneToOneField(User, primary_key=True)
+    guid = models.IntegerField(unique=True) # From the documentation, it is the type of primary keys
+                                          # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
+    def __str__(self):
+        return "{} (guid: {})".format(self.user, self.guid)
+
+
+class TagToOccurrence(models.Model):
+    class Meta:
+        unique_together = ("user", "tag_occurrence_id")
+
+    user              = models.ForeignKey(UserExtension)
+    tag_occurrence_id = models.IntegerField()
+    occurrence = models.OneToOneField("Occurrence")
+
+    def __str__(self):
+        return "{}/{} -> {}".format(self.user.user, self.tag_occurrence_id, self.occurrence)
+
+
+class AbstractUserOwned(models.Model):
+    """ Abstract class adding the fields to make a model owned by a user """
+    class Meta:
+        abstract = True
+
+    created_by  = created_by_field()
+
 
 ##########
 ## Concept
@@ -27,7 +65,7 @@ class ConceptNature(models.Model):
     nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
 
 
-class Concept(models.Model):
+class Concept(AbstractUserOwned):
     common_name         = models.CharField(max_length= 60, blank=True)  
     distinctive_name    = models.CharField(max_length=180, unique=True)  
     primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
@@ -77,7 +115,7 @@ class Attribute(AbstractAttribute):
 ## Release
 ##########
 
-class Release(ReleaseDeploymentBase):
+class Release(ReleaseDeploymentBase, AbstractUserOwned):
     concept = models.ForeignKey(Concept)
     name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
     date    = models.DateField(blank=True, null=True)
@@ -91,7 +129,7 @@ class Release(ReleaseDeploymentBase):
                                              through_fields = ("from_release", "to_release"))
 
     def __str__(self):
-        return ("{}".format(self.name if self.name else self.concept))
+        return ("{}{}".format("[immat] " if not is_material(self) else "", self.name if self.name else self.concept))
 
     def clean(self):
         super(Release, self).clean()
@@ -143,7 +181,7 @@ class ReleaseComposition(models.Model):
 ## Occurrence
 #############
 
-class Occurrence(OccurrenceDeploymentBase):
+class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
     release     = models.ForeignKey(Release)
     #owner       = models.ForeignKey(Person) #TODO
         ## Some automatic date fields
@@ -153,7 +191,7 @@ class Occurrence(OccurrenceDeploymentBase):
                                                  through_fields = ("from_occurrence", "to_occurrence"))
 
     def __str__(self):
-        return ("Occurrence: {}".format(self.release))
+        return ("Occurrence #{}: {}".format(self.pk, self.release))
 
     def clean(self):
         super(Occurrence, self).clean()

@@ -38,6 +38,12 @@ Offline: Trivial check using the query API
 2) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
 3) An occurrence that instantiate an immaterial release must be nested under antother occurrence, that cannot be immaterial.
 
+= User management =
+1) The created_by field should not be allowed to change
+2.a) There should be a TagToOccurrence instance for each Occurrence
+2.b) and only one
+    2.b is naturally enforced by the occurrence OneToOneField.
+
 
 = Tweaking the Admin interface to fit the application =
 
