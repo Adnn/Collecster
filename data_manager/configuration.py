@@ -8,6 +8,16 @@ import data_manager.models
 #TODEL
 import wdb
 
+def compose(*args):
+    """ Used to compose category from by extending another category """
+    return tuple([element for tupl in args for element in tupl])
+
+
+def is_material(release):
+    """ The notion of immaterial needs to be a core concept, because some core behaviour depends on it"""
+    """ eg. define application logic that an immterial cannot have attribute nor nested elements """
+    """ Yet not to force having an immaterial field (for cases were there are no immaterials), it is abstracted through this function """
+    return not release.immaterial
 
 
 class ReleaseDeploymentBase(models.Model):
@@ -18,20 +28,14 @@ class ReleaseDeploymentBase(models.Model):
     
     collecster_material_fields = ("loose", "barcode",)
 
-    # Made a base concept, to define application logic that an immterial cannot have attribute nor nested elements
     immaterial  = models.BooleanField(default=False) 
 
     loose   = models.BooleanField() 
     #region  = models.CharField(max_length=2, choices=Region.CHOICES, blank=True) #TODO
     version = models.CharField(max_length=20, blank=True) 
-    #working_condition = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     barcode = models.CharField(max_length=20, blank=True)
-
-
-def is_material(release):
-    return not release.immaterial
 
 
 class OccurrenceDeploymentBase(models.Model):
@@ -43,8 +47,7 @@ class OccurrenceDeploymentBase(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     #origin = models.CharField(max_length=2, choices=Origin.get_choices()) #TODO
     notes = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
-    #tag = models.ImageField(upload_to=name_tag, blank=True)
-        ## TODO Should be excluded from _COMBO_PACK, and NOT from immaterial releases (not sure about the last one, what if the included game is barked ?)
+    #tag = models.ImageField(upload_to=name_tag, blank=True) #TODO
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
 
@@ -58,7 +61,7 @@ class ReleaseSpecific(object):
 
     class Hardware(AbstractBase):
         #TODO : color
-        #constructor = models.ForeignKey('Company', blank=True, null=True)
+        #constructor = models.ForeignKey('Company', blank=True, null=True) #TODO
         model = models.CharField(max_length=20, blank=True) 
 
         def __str__(self):
@@ -100,9 +103,6 @@ RelSp = ReleaseSpecific
 
 
 class ReleaseCategory:
-    def compose(*args):
-        return tuple([element for tupl in args for element in tupl])
-
     EMPTY       = ()
     SOFTWARE    = (RelSp.Software,)
     HARDWARE    = (RelSp.Hardware,)
@@ -119,7 +119,7 @@ class OccurrenceSpecific(object):
         release = models.ForeignKey('Occurrence')
 
     class Operational(AbstractBase):
-        #working = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN)
+        #working_condition = models.CharField(max_length=1, choices=WorkingState.CHOICES, default=WorkingState.UNKNOWN) #TODO
         pass
 
     class Console(AbstractBase):
@@ -131,9 +131,6 @@ OccSp = OccurrenceSpecific
 
 
 class OccurrenceCategory:
-    def compose(*args):
-        return tuple([element for tupl in args for element in tupl])
-
     EMPTY       = ()
     OPERATIONAL = (OccSp.Operational,)
     CONSOLE     = (OccSp.Operational, OccSp.Console,)
@@ -151,7 +148,7 @@ def get_attribute(category_name, attribute_name):
 def automatic_self():
     return (get_attribute("content", "self"), )
 
-# Intended to be used for implicit occurence attributes
+# Intended to be used for implicit occurence attributes (unused now)
 def self_software(release):
     try:
         material = not ReleaseSpecific.Software.objects.get(release=release).immaterial
@@ -195,12 +192,18 @@ class ConceptNature:
         GUN:        DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self ),
     }
 
+
+##
+## Generic methods (no need for customization)
+##
     @classmethod
     def choices_maxlength(cls):
-        return 10
+        """ Returns the number of characters required to store any Nature into the DB """
+        return max ([len(db_value) for db_value in cls.DATA])
 
     @classmethod
     def get_choices(cls):
+        """ Returns the Nature choices for Concepts """
         #grouped = [(group, tuple([(line[0], line[1]) for line in tupl])) for group, tupl in cls.DATA.items() if group]
         #toplevel = [(line[0], line[1]) for line in [tupl for tupl in cls.DATA.get(cls.UIGroup._TOPLEVEL, ())]]
         #return tuple(toplevel) + tuple(grouped)

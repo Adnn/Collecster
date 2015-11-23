@@ -1,133 +1,20 @@
-from django.contrib import admin
-from django import forms
-from django.forms.models import modelform_factory
-
+from .configuration import is_material
+from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 from .models import *
 from . import utils
 from . import widgets 
 from . import enumerations as enums
 
+from django import forms
+from django.contrib import admin
+from django.forms.models import modelform_factory
+
 from functools import partial, partialmethod
 from collections import OrderedDict
-
-from .configuration import is_material
 
 ## TODEL ##
 from .configuration import ReleaseSpecific
 import wdb
-
-class CustomSaveModelAdmin(admin.ModelAdmin):
-    def save_model(self, request, obj, form, change):
-        # If obj has a "created_by" field, and this is adding a new object (not editing one)
-        if issubclass(obj.__class__, AbstractUserOwned) and not change:
-            obj.created_by = UserExtension.objects.get(user=request.user)
-        super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)
-        self.post_save_model(request, obj, form, change)
-
-    def post_save_model(self, request, obj, form, change):
-        pass
-
-
-class CollecsterModelAdmin(CustomSaveModelAdmin):
-    class Media:
-        js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
-              "data_manager/scripts/form_ajax.js",)
-
-
-    def get_readonly_fields(self, request, obj=None):
-        """ Make the given fields read-only when editing an existing object """
-        AdminClass = self.__class__
-        if obj and hasattr(AdminClass, "collecster_readonly_edit"):
-            return self.readonly_fields + AdminClass.collecster_readonly_edit
-        else:
-            return self.readonly_fields
-
-        # Nota: Sadly, this happend too late: after the formset validation. 
-        # Yet, in cases where the callback would change some fields on the form, it is important that the new fields
-        # would be used for validation !
-    #def get_inline_formsets(self, request, formsets, inline_instances, obj=None):
-    #    """ Override allowing to insert a potential callback on each formset """
-    #    """ The callback is assigned to the custom formset class, under the attribute 'collecster_instance_callback' """
-    #    """ It is usefull to customize a static formset (number of forms, initial data, ...) """
-    #    inline_admin_formsets = super(CollecsterModelAdmin, self).get_inline_formsets(request, formsets,
-    #                                                                                  inline_instances, obj)
-    #    for wrapped_formset in inline_admin_formsets: 
-    #        formset = wrapped_formset.formset
-    #        FormSet = formset.__class__
-    #        if hasattr(FormSet, "collecster_instance_callback"):
-    #            FormSet.collecster_instance_callback(formset, request, obj) 
-    #    
-    #    return inline_admin_formsets
-
-        # Nota: this one happens before formset validation... but it is expected to return FormSet classes
-        # but we want to be able to change the formset instances.
-    #def get_formsets_with_inlines(self, request, obj=None):
-        ## The method in the parent yields
-        #(FormSet, inline) = next(super(CollecsterModelAdmin, self).get_formsets_with_inlines(request, obj))
-        ##FormSet = formset.__class__
-        #if hasattr(FormSet, "collecster_instance_callback"):
-        #    FormSet.collecster_instance_callback(formset, request, obj) 
-        #yield formset, inline
- 
-
-
-    def _create_formsets(self, request, obj, change):
-        """ Used to customize a static formset (number of forms, initial data, ...) """
-        """ """
-        """ It would be best not to need to override this 'private' method, the rationale is obj propagation """
-        """ _create_formsets does not propagate the object when ADDing it (even if it partially or totally exists) """
-        """ see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 """
-        """ Yet we need to save its value (at least the concept or release) for 'collecster_instance_callback' callback """
-        # TODO make that generic, instead of hardcoding potential attributes
-        if obj and hasattr(obj, "concept"):
-            request.collecster_payload = {"concept_id": obj.concept.pk}
-        if obj and hasattr(obj, "release"):
-            request.collecster_payload = {"release_id": obj.release.pk}
-
-            # Nota: it is now where we execute formset callback (see notes above)
-        #return super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
-        formsets, inlines = super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
-        for formset in formsets:
-            #FormSet = formset.__class__
-            #if hasattr(FormSet, "collecster_instance_callback"):
-            if hasattr(formset, "collecster_instance_callback"):
-                #FormSet.collecster_instance_callback(formset, request, obj) 
-                formset.collecster_instance_callback(request, obj) 
-        return formsets, inlines
-        
-
-    def get_inline_instances(self, request, obj=None):
-        """ Override allowing to dynamically generate AdminInline instances """
-        """ It is usefull to add formsets to a given admin form at runtime """
-        AdminClass = self.__class__
-        added = []
-        requested_inlines = utils.get_request_payload(request, "inlines_groups")
-        if hasattr(AdminClass, "collecster_dynamic_inline_classes"):
-            filter_func = (lambda x: x in requested_inlines) if requested_inlines else (lambda x: True)
-            for inlines in [inlines for group, inlines in AdminClass.collecster_dynamic_inline_classes.items() if filter_func(group)]:
-                for AdminInline in (inlines(request, obj) if callable(inlines) else inlines):
-                    added.append(AdminInline(self.model, self.admin_site))
-
-        if requested_inlines:
-            return added
-        else:
-            return super(CollecsterModelAdmin, self).get_inline_instances(request, obj) + added
-
-
-class SaveInitialDataModelForm(forms.ModelForm):
-    """ When a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
-    """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
-    """ Edit: it evolved to change the meaning of 'initial' to 'default', see: http://stackoverflow.com/a/33354303/1027706 """
-    def has_changed(self):
-        for name, field in self.fields.items():
-            prefixed_name = self.add_prefix(name)
-            data_value = field.widget.value_from_datadict(self.data, self.files, prefixed_name)
-
-            # When editing a parent object, all the forms of the formset are assigned its primary_key
-            # (even the totally empty ones, without any initial data)
-            if data_value and not issubclass(field.__class__, forms.models.InlineForeignKeyField):
-                return True
-        return False
 
 
 ##########

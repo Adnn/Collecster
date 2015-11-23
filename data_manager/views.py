@@ -5,7 +5,7 @@ from django.http        import HttpResponse
 
 from .admin import ReleaseAdmin, OccurrenceAdmin
 from .models import *
-from .requests import CollecsterAugmentedRequest
+
 
 ##
 ## Utilities
@@ -78,7 +78,7 @@ def ajax_occurrence_specific_admin_formsets(request, release_id):
 
 
 def ajax_occurrence_attributes_admin_formsets(request, release_id):
-    request.collecster_payload = { "release_id": release_id }
+    request.collecster_payload = { "release_id": int(release_id) }
 
     occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
     formsets, inline_instances = occurrence_adm._create_formsets(request, occurrence_adm.model(), change=False)

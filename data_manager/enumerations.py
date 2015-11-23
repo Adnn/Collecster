@@ -10,11 +10,13 @@ class Attribute:
 
         @classmethod
         def get_choices(cls):
+            """ Return the Type choices for Attributes """
             return [(key, value_tuple.ui_value) for key, value_tuple in Attribute.DATA.items()]
 
         @classmethod
         def choices_maxlength(cls):
-            return 3
+            """ Returns the number of characters required to store any Attribute Type into the DB """
+            return max ([len(db_value) for db_value in Attribute.DATA])
 
         to_form_field = {}# dictionary mapping Type to form fields, assigned after the class definition
 
@@ -47,16 +49,16 @@ class Attribute:
             return 1
 
 
-    class CustBool(forms.BooleanField):
-        def prepare_value(self, value):
-            if value == "0":
-                return ""
-            return value
+    #class CustBool(forms.BooleanField):
+    #    def prepare_value(self, value):
+    #        if value == "0":
+    #            return ""
+    #        return value
 
-        def to_python(self, value):
-            value = super(Attribute.CustBool, self).to_python(value)
-            return "1" if value else "0"
-        pass
+    #    def to_python(self, value):
+    #        value = super(Attribute.CustBool, self).to_python(value)
+    #        return "1" if value else "0"
+    #    pass
 
 
     DataTuple = collections.namedtuple("DataTuple", ["ui_value", "form_field"])
@@ -70,6 +72,7 @@ class Attribute:
     }
 
 
+# Maps attribute types to the form field that should be used to populate values of this type.
 Attribute.Type.to_form_field = {key: tuple_value.form_field for key, tuple_value in Attribute.DATA.items()}
 
 
