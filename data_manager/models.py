@@ -42,11 +42,11 @@ class UserExtension(models.Model):
 
 class TagToOccurrence(models.Model):
     class Meta:
-        unique_together = ("user", "tag_occurrence_id")
+        unique_together = ("user", "tag_occurrence_id") # Enforces USER::3)
 
     user              = models.ForeignKey(UserExtension)
     tag_occurrence_id = id_field()
-    occurrence = models.OneToOneField("Occurrence")
+    occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
     def __str__(self):
         return "{}/{} -> {}".format(self.user.user, self.tag_occurrence_id, self.occurrence)
@@ -65,6 +65,9 @@ class AbstractUserOwned(models.Model):
 ##########
 
 class ConceptNature(models.Model):
+    class Meta:
+        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
+
     concept = models.ForeignKey('Concept', related_name="additional_nature_set")
     nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
 
@@ -137,6 +140,7 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
 
     def clean(self):
         super(Release, self).clean()
+        # Enforces IMMATERIAL::2.a)
         if self.immaterial:
             check_material_consistency(self)
 
@@ -157,7 +161,7 @@ class ReleaseAttribute(models.Model):
         return ("{} ({})" if self.note else "{}").format(self.attribute, self.note)
 
 
-class ReleaseCustomAttribute(AbstractAttribute):
+class ReleaseCustomAttribute(AbstractAttribute): # Inherits the fields of AbstractAttribute, direct composition
     """ Inherits from AbstractAttribute: the attribute is custom to a single release """
     """ Since it is not shared, there is no need for mapping to an external attribute: """
     """ this is the attribute itself, mapped to a Release. """
@@ -186,6 +190,7 @@ class ReleaseComposition(models.Model):
     """ The container element. """
 
     def clean(self):
+        # Enforces COMPOSITION::1)
         try:
             target = self.from_release
         except Release.DoesNotExist:
@@ -223,6 +228,7 @@ class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
 
     def clean(self):
         super(Occurrence, self).clean()
+        # Enforces IMMATERIAL::2.b)
         if hasattr(self, "release") and self.release.immaterial:
             check_material_consistency(self)
 
@@ -230,6 +236,7 @@ class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
 class OccurrenceAnyAttributeBase(models.Model):
     class Meta:
         abstract = True
+        unique_together = ("occurrence", "release_corresponding_entry") # Enforces ATTRIBUTES::2.b)
 
     occurrence          = models.ForeignKey(Occurrence)
      # The choices limitation is assigned dynamically, depending on the attribute's value type
@@ -238,6 +245,21 @@ class OccurrenceAnyAttributeBase(models.Model):
     def __str__(self):
         # release_corresponding_entry should be added by all derived concrete models.
         return "{}: {}".format(self.release_corresponding_entry, self.value)
+
+    def clean(self):
+        # Enforces ATTRIBUTES::2.c)
+        try:
+            if self.release_corresponding_entry.release != self.occurrence.release:
+                raise ValidationError("The attribute assigned to the Occurrence is not an attribute of the corresponding Release.", code='invalid')
+        except Occurrence.DoesNotExist:
+            pass # I do not know how to access the data for the occurrence that is currently added
+                 # see: http://stackoverflow.com/q/33854812/1027706
+
+        # Enforces ATTRIBUTES::3)
+        form_field = enum.Attribute.Type.to_form_field[self.release_corresponding_entry.attribute.value_type]
+        if self.value not in [first for first, second in form_field.choices]:
+            raise ValidationError("The assigned value is not allowed by the Attribute value type.", code='invalid')
+
 
 class OccurrenceAttribute(OccurrenceAnyAttributeBase):
     release_corresponding_entry = models.ForeignKey(ReleaseAttribute)

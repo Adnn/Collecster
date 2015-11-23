@@ -2,29 +2,45 @@ This project is very dynamic in the formsets its presenting on the admin pages. 
 * Bugs in the code (logic errors)
 * Forged forms submission
 
+
+= CONCEPT =
+== Natures cannot be repeated on Concepts ==
+1.a) A Concept cannot be assigned several times the same secondary nature.
+    Model-level: unique_together on ConceptNature
+1.b) Its primary nature cannot be the same as any of its secondary nature.
+    Model-level: TODO Could be done in ConceptNature::clean(), but it would not work for ConceptNature inline on a Concept form.
+
+
 = SPECIFIC =
 == Enforcing Specific on Release and Occurrence ==
 1.a) There must be one formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurrence).
 1.b) There must be ONLY one form in each of such formset
     This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
 1.c) There must not be any formset for a Specific that is not corresponding to the nature(s).
-This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
-In particular for b), even if data was posted for other formsets, it would not be assigned to anything.
+    This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
+    Forged-forms: In particular for c), even if data was posted for other formsets, it would not be assigned to anything.
 
-It appears there is no need for custom validation to enforce the correct Specific composition.
-
+Data model consistency 
+   TODO
+ 
 = ATTRIBUTES =
 == Constraints on Release attributes ==
 1) When the same Attribute is repeated for a given Release, each must have a distinct note. (Nb: empty being distinct from any non-empty) It applies to both Attribute and CustomAttribute
     Model-level: this is enforced by a unique_together constraint. No need for offline
     Interface-level: not a clean error, is it ?
+    Other introduction path: None
 
 == Enforcing the Attributes assigned to Occurrences==
-1.a) For any Occurrence, there must be one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
-1.b) There must be ONLY one
-1.c) There must not be an OccurrenceAttribute without the corresponding ReleaseAttribute on the Release.
+2.a) For any Occurrence, there must be one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
+2.b) There must be ONLY one
+    Model-level: this is enforced by a unique_together constraint. No need for offline
+2.c) There must not be an OccurrenceAttribute without the associated ReleaseAttribute on the corresponding Release.
+    Model-level: enforced in OccurrenceAnyAttributeBase::clean(), TODO there is a problem when the Occurrence is first added.
+    Other introduction path: Changing the Release[Custom]Attribute associated Release
 
-2) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
+3) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding Release[Custom]Attribute.
+    Model-level: enforced in OccurrenceAnyAttributeBase::clean()
+    Interface-level: the formset callback dynamically assigns the right Form Field type to the "value" inline form field, only presenting acceptable values and validating the selected one.
 
 
 = COMPOSITION =
@@ -57,19 +73,23 @@ It appears there is no need for custom validation to enforce the correct Specifi
 = IMMATERIAL =
 == Immaterial restrictions ==
 1) Prevent an immaterial release from having: attribute, custom attributes, or nested releases.
-2) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
-3) An occurrence that instantiate an immaterial release must be nested under antother occurrence, that cannot be immaterial.
+2.a) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
+2.b) For an Occurrence instantiating an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
+3) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
 
 
 = Special Concepts =
 1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name.
 2) Only one Concept instance can be assigned those special nature.
 
-= User management =
+
+= USER =
 1) The created_by field should not be allowed to change
 2.a) There should be a TagToOccurrence instance for each Occurrence
 2.b) and only one
     Model-level: naturally enforced by the occurrence OneToOneField.
+3) The TAG occurrence id are unique per user.
+    Model-level: unique_together on TagToOccurrence
 
 
 = Tweaking the Admin interface to fit the application =
