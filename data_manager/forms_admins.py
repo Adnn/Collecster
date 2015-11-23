@@ -98,12 +98,6 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         """ _create_formsets does not propagate the object to get_formsets_with_inlines() when ADDing it (even if it partially or totally exists) """
         """ see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 """
         """ Yet we need to save its value (at least the concept or release) for 'collecster_instance_callback' callback """
-        # TODO make that generic, instead of hardcoding potential attributes
-        if obj and hasattr(obj, "concept"):
-            request.collecster_payload = {"concept_id": obj.concept.pk}
-        if obj and hasattr(obj, "release"):
-            request.collecster_payload = {"release_id": obj.release.pk}
-
         formsets, inlines = super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
         for formset in formsets:
             if hasattr(formset, "collecster_instance_callback"):

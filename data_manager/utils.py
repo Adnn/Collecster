@@ -6,24 +6,10 @@ from .models import *
 
 from django import forms
 from django.db.models import Q
+from django.forms.models import BaseInlineFormSet
 
-#Todel ?
-from django.forms.models import inlineformset_factory, BaseInlineFormSet
+## TODEL
 import wdb
-
-#class DebugBaseInlineFormSet(BaseInlineFormSet):
-#    @property
-#    def validate_max(self):
-#        wdb.set_trace()
-#        return True
-#
-#    @property
-#    def validate_max(self, value):
-#        self.validate_max = value
-#
-#    def full_clean(self):
-#        wdb.set_trace()
-#        super(DebugBaseInlineFormSet, self).full_clean()
 
 
 class OneFormFormSet(BaseInlineFormSet):
@@ -45,8 +31,27 @@ def admininline_factory(Model, Inline):
     #wdb.set_trace() 
     #return tp
 
+
+def get_concept_id(request, release=None, occurrence=None):
+    # Even if the forwarded object is not None, it could not have its related field not populated:
+    # Eg. On creation of the empty form for a Release, a default constructed Release instance is forwarded to formsets
+    # see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1480
+    if release is not None and hasattr(release, "concept"):
+        return release.concept.pk
+    elif occurrence is not None and hasattr(occurrence, "release"):
+        return occurrence.release.concept.pk
+    else:
+        return get_request_payload(request, "concept_id", 0)
+
+def get_release_id(request, occurrence=None):
+    # Even if the forwarded object is not None, it could not have its related field not populated
+    if occurrence is not None and hasattr(occurrence, "release"):
+        return occurrence.release.pk
+    else:
+        return get_request_payload(request, "release_id", 0)
+
+
 def get_concept_inlines(concept_id, specifics_retriever):
-    # todo: make it span all natures
     nature_set = Concept.objects.get(pk=concept_id).all_nature_tuple
 
     AdminInlines = []
@@ -57,29 +62,16 @@ def get_concept_inlines(concept_id, specifics_retriever):
 
 
 def release_specific_inlines(request, obj):
-    concept_id = 0
-    if obj is not None:
-        concept_id = obj.concept.pk
-    elif hasattr(request, "collecster_payload") and "concept_id" in request.collecster_payload:
-        concept_id = request.collecster_payload["concept_id"]
-
+    concept_id = get_concept_id(request, release=obj)
     return get_concept_inlines(concept_id, conf.ConceptNature.get_release_specifics) if concept_id != 0 else []
 
 def occurrence_specific_inlines(request, obj):
-    concept_id = 0
-    if obj is not None:
-        concept_id = obj.release.concept.pk
-    elif hasattr(request, "collecster_payload") and "concept_id" in request.collecster_payload:
-        concept_id = request.collecster_payload["concept_id"]
-
+    concept_id = get_concept_id(request, release=obj)
     return get_concept_inlines(concept_id, conf.ConceptNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
 def release_automatic_attributes(formset, request, obj):
-    if obj and hasattr(obj, "concept"):
-        concept_id = obj.concept.pk
-    else:
-        concept_id = get_request_payload(request, "concept_id", 0)
+    concept_id = get_concept_id(request, release=obj)
 
     if not obj.pk: # test if the object is already in the DB, in which case the automatic attributes are not added
         formset.initial = [{"attribute": attribute} for attribute in retrieve_automatic_attributes(concept_id)]
@@ -88,10 +80,7 @@ def release_automatic_attributes(formset, request, obj):
 
     
 def populate_occurrence_attributes(formset, request, obj, retrieve_function):
-    if obj and hasattr(obj, "release"):
-        release_id = obj.release.pk
-    else:
-        release_id = get_request_payload(request, "release_id", 0)
+    release_id = get_release_id(request, obj)
     
     attributes = retrieve_function(release_id)
     force_formset_size(formset, len(attributes))
@@ -105,10 +94,7 @@ def populate_occurrence_attributes(formset, request, obj, retrieve_function):
 
 
 def occurrence_composition_queryset(formset, request, obj):
-    if obj and hasattr(obj, "release"):
-        release_id = obj.release.pk
-    else:
-        release_id = get_request_payload(request, "release_id", 0)
+    release_id = get_release_id(request, obj)
 
     if release_id == 0:
         force_formset_size(formset, 0)
@@ -140,15 +126,6 @@ def get_request_payload(request, key, default=None):
         return request.collecster_payload[key] 
     return default 
 
-
-  ## Dangerous, if var is immutable
-#def get_request_payload_to_var(request, key, var):
-#    if hasattr(request, "collecster_payload") and key in request.collecster_payload:
-#        var = request.collecster_payload[key] 
-#        print("Vr {}:".format(var))
-#        return True
-#    else:
-#        return False
 
 ##
 ## Formset helpers
@@ -186,4 +163,3 @@ def all_release_attributes(release_id):
     # then the explicit (non-custom) attributes
     attributes.extend(retrieve_any_attributes(ReleaseAttribute, release))
     return attributes
-        
