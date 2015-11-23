@@ -1,53 +1,75 @@
-This project is very dynamic in the formsets its presenting on the admin pages. This implies a need for custom validation of the constraints, to protect against (in increasing order of interest):
-* Bugs in the code
+This project is very dynamic in the formsets its presenting on the admin pages. This implies a need for custom validation of the constraints in order to ensure data consistency. Validation should protect against (in increasing order of interest):
+* Bugs in the code (logic errors)
 * Forged forms submission
 
-= Enforcing Specific on Release and Occurrence =
-1.a) There must be a formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurrence).
-1.b) There must not be any formset for a Specific that is not corresponding to the nature(s).
+= SPECIFIC =
+== Enforcing Specific on Release and Occurrence ==
+1.a) There must be one formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurrence).
+1.b) There must be ONLY one form in each of such formset
+    This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
+1.c) There must not be any formset for a Specific that is not corresponding to the nature(s).
 This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
 In particular for b), even if data was posted for other formsets, it would not be assigned to anything.
 
-2) In each Specific's formset, there must be exactly ONE form
-This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
-
 It appears there is no need for custom validation to enforce the correct Specific composition.
 
-= Constraints on Release attributes =
+= ATTRIBUTES =
+== Constraints on Release attributes ==
 1) When the same Attribute is repeated for a given Release, each must have a distinct note. (Nb: empty being distinct from any non-empty) It applies to both Attribute and CustomAttribute
-Interface: this should be natively enforced by Django models, relying on unique_together constraint.
-Offline: Trivial check using the query API
+    Model-level: this is enforced by a unique_together constraint. No need for offline
+    Interface-level: not a clean error, is it ?
 
-= Enforcing the Attributes assigned to Occurrences=
-1.a) For any Occurrence, there must be one and only one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
-1.b) There must not be an OccurrenceAttribute without the corresponding ReleaseAttribute on the Release.
-1.c) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
+== Enforcing the Attributes assigned to Occurrences==
+1.a) For any Occurrence, there must be one OccurrenceAttribute instance mapping to each ReleaseAttribute of its correponding Release.
+1.b) There must be ONLY one
+1.c) There must not be an OccurrenceAttribute without the corresponding ReleaseAttribute on the Release.
 
-= Enforcing the Releases and Occurrences composition =
+2) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding ReleaseAttribute type.
+
+
+= COMPOSITION =
+== Enforcing the Releases and Occurrences composition ==
 1) Prevent circular compositions on Release (release A is composed of a release B which is composed of a release A)
-2.1) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
-3) Any occurrence can only be nested in a single occurrence
-    This is enforced at the model level, OccurrenceComposition::to_occurrence being marked unique
-3.1)also: remove them from the candidate queryset once nested in another occurence
-    exception: immaterials (idea of implicitly making an immaterial occurence of each game release or concept ? unclear)
-    NO EXCEPTION ANYMORE: we instantiate immaterials for composition the same way than for materials
-4) For an occurrence, there must be exactly one OccurrenceComposition instance (potentially empty) for each ReleaseComposition instance of the corresponding Release.
-4.1) Ideally, enforce same order (pk ordering I guess ?)
+    Model-level: enforced by a custom ReleaseComposition::clean() method.
+    Interface: the model-level reports a clear form error.
+    Other introduction path: None
 
-= Special Concepts =
-1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name. Only one Concept instance can be assigned those special nature.
+2.a) For any occurrence, there must be one OccurrenceComposition instance (potentially empty) for each ReleaseComposition instance of the corresponding Release.
+    Model-level: not possible ?
+2.b) There must be ONLY one
+    Model-level: enforced by a unique_together clause on OccurrenceComposition
+    Other introduction path: None
+2.c) The OccurrenceComposition container-occurrence (from_occurrence field) must be an instance of the associated ReleaseComposition container-release.
+    Model-level: enforced in OccurrenceComposition::clean(), TODO there is a problem when the container-Occurrence is first added.
+    Other introduction path: Changing the ReleaseComposition container-release
+2.1) Ideally, enforce same relative order (pk ordering ?) between the ReleaseComposition for a Release and the OccurrenceComposition for any Occurrence of said Release.
+
+3.a) For any OccurrenceComposition, the nested Occurrence (i.e. to_occurrence field) must be an instance of the nested Release in the corresponding ReleaseComposition.
+    Model-level: enforced in OccurrenceComposition::clean()
+    Interface: the queryset only keeps the occurrences instantiating the right Release
+    Other introduction path: Changing the ReleaseComposition nested Release.
+3.b) Any occurrence can only be nested in a single occurrence.
+    Model-level: enforced by OccurrenceComposition::to_occurrence being marked unique
+    Interface: the queryset only keeps the occurrences that are not already nested
+    Other introduction path: None
 
 
-= Immaterial restrictions =
+= IMMATERIAL =
+== Immaterial restrictions ==
 1) Prevent an immaterial release from having: attribute, custom attributes, or nested releases.
 2) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
 3) An occurrence that instantiate an immaterial release must be nested under antother occurrence, that cannot be immaterial.
+
+
+= Special Concepts =
+1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name.
+2) Only one Concept instance can be assigned those special nature.
 
 = User management =
 1) The created_by field should not be allowed to change
 2.a) There should be a TagToOccurrence instance for each Occurrence
 2.b) and only one
-    2.b is naturally enforced by the occurrence OneToOneField.
+    Model-level: naturally enforced by the occurrence OneToOneField.
 
 
 = Tweaking the Admin interface to fit the application =

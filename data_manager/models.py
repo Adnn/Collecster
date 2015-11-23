@@ -5,6 +5,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
+# TODEL
+import wdb
 
 ##########
 ## Utils functions
@@ -183,8 +185,23 @@ class ReleaseComposition(models.Model):
     to_release      = models.ForeignKey(Release) # Reverse relation implicitly named "release_composition_set"
     """ The container element. """
 
+    def clean(self):
+        try:
+            target = self.from_release
+        except Release.DoesNotExist:
+            return # If the from_release is not yet saved in the DB, no other path could lead to it
+        self.check_circular_dependencies(target, self.to_release)
+
     def __str__(self):
         return "Nested {}".format(self.to_release)
+
+    @staticmethod
+    def check_circular_dependencies(target, to_release):
+        if to_release == target:
+            raise ValidationError("This composition would introduce a circular dependency.", code='invalid')
+        for indirect_composition in ReleaseComposition.objects.filter(from_release=to_release):
+            ReleaseComposition.check_circular_dependencies(target, indirect_composition.to_release)
+        
 
 
 
@@ -230,6 +247,9 @@ class OccurrenceCustomAttribute(OccurrenceAnyAttributeBase):
 
 
 class OccurrenceComposition(models.Model):
+    class Meta:
+        unique_together = ("release_composition", "from_occurrence") # Enforces COMPOSITION::2.b)
+
     release_composition = models.ForeignKey(ReleaseComposition)
     from_occurrence = models.ForeignKey(Occurrence, related_name="+") # "+" disable the reverse relation: not needed here,
                                                                       # because we can access it through the 'nested_occurrences' field.
@@ -239,3 +259,13 @@ class OccurrenceComposition(models.Model):
     to_occurrence   = models.OneToOneField(Occurrence, blank=True, null=True, related_name="occurrence_composition")
     # Note: Because of the OneToMany relation here (One parent to many nested occurrences), it would have been possible
     # to directly put a ForeignKey to the parent in Occurence. But it would complicate the occurrence composition formset.
+
+    def clean(self):
+        try:
+            if self.release_composition.from_release != self.from_occurrence.release:
+                raise ValidationError("The release composition container-release does not match the container-occurrence corresponding release.", code='invalid')
+        except Occurrence.DoesNotExist:
+            pass # I do not know how to access the data for the occurrence that is currently added
+                 # see: http://stackoverflow.com/q/33854812/1027706
+        if (self.to_occurrence) and (self.release_composition.to_release != self.to_occurrence.release):
+            raise ValidationError("The nested-occurrence corresponding release does not match the nested-release in the ReleaseComposition.", code='invalid')
