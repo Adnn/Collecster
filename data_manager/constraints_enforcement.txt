@@ -15,7 +15,7 @@ It appears there is no need for custom validation to enforce the correct Specifi
 
 = Constraints on Release attributes =
 1) When the same Attribute is repeated for a given Release, each must have a distinct note. (Nb: empty being distinct from any non-empty) It applies to both Attribute and CustomAttribute
-Interface: this should be natively enforced by Django models, relying on unique_together constraint. Yet there is a bug when ADDing the parent object.
+Interface: this should be natively enforced by Django models, relying on unique_together constraint.
 Offline: Trivial check using the query API
 
 = Enforcing the Attributes assigned to Occurrences=
@@ -25,9 +25,14 @@ Offline: Trivial check using the query API
 
 = Enforcing the Releases and Occurrences composition =
 1) Prevent circular compositions on Release (release A is composed of a release B which is composed of a release A)
-2.a) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
-3) Any occurrence can only be nested in a single occurrence (also: remove them from the candidate queryset once nested in another occurence)
+2.1) For any occurrence, the candidates for nesting correspond to the corresponding Release composition.
+3) Any occurrence can only be nested in a single occurrence
+    This is enforced at the model level, OccurrenceComposition::to_occurrence being marked unique
+3.1)also: remove them from the candidate queryset once nested in another occurence
     exception: immaterials (idea of implicitly making an immaterial occurence of each game release or concept ? unclear)
+    NO EXCEPTION ANYMORE: we instantiate immaterials for composition the same way than for materials
+4) For an occurrence, there must be exactly one OccurrenceComposition instance (potentially empty) for each ReleaseComposition instance of the corresponding Release.
+4.1) Ideally, enforce same order (pk ordering I guess ?)
 
 = Special Concepts =
 1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name. Only one Concept instance can be assigned those special nature.

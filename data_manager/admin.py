@@ -114,7 +114,7 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
             return super(CollecsterModelAdmin, self).get_inline_instances(request, obj) + added
 
 
-class ForceSaveModelForm(forms.ModelForm):
+class SaveInitialDataModelForm(forms.ModelForm):
     """ When a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
     """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
     """ Edit: it evolved to change the meaning of 'initial' to 'default', see: http://stackoverflow.com/a/33354303/1027706 """
@@ -123,7 +123,8 @@ class ForceSaveModelForm(forms.ModelForm):
             prefixed_name = self.add_prefix(name)
             data_value = field.widget.value_from_datadict(self.data, self.files, prefixed_name)
 
-            # When editing a parent object, all the forms of the formset are assigned its primary_key (even the empty ones)
+            # When editing a parent object, all the forms of the formset are assigned its primary_key
+            # (even the totally empty ones, without any initial data)
             if data_value and not issubclass(field.__class__, forms.models.InlineForeignKeyField):
                 return True
         return False
@@ -165,7 +166,7 @@ class ReleaseAttributeInline(admin.TabularInline):
     model = ReleaseAttribute
     can_delete = False
     formset = ReleaseAttributeFormset
-    form = modelform_factory(ReleaseAttribute, form=ForceSaveModelForm, fields="__all__")
+    form = modelform_factory(ReleaseAttribute, form=SaveInitialDataModelForm, fields="__all__")
 
 class ReleaseCustomAttributeInline(admin.TabularInline):
     extra = 0
@@ -261,10 +262,9 @@ class OccurrenceCompositionInline(admin.TabularInline):
     fk_name = 'from_occurrence' # This seems to be the hardcoded name automatically given by Django 
     extra   = 0 # on first load, none shown
     max_num = 0 # and no "+" button
-     ## required to specify the "form population" callback
-    formset = OccurrenceCompositionFormset
-     ## required to specify the lable widget on release_composition
-    form = modelform_factory(OccurrenceComposition, form=ForceSaveModelForm, fields="__all__",
+    formset = OccurrenceCompositionFormset # required to specify the "form population" callback
+    ## required to specify the lable widget on release_composition and to force saving empty compositions
+    form = modelform_factory(OccurrenceComposition, form=SaveInitialDataModelForm, fields="__all__",
                              widgets={"release_composition": widgets.labelwidget_factory(ReleaseComposition)})
     can_delete = False #Remove the delete checkbox on each composition form (on edit page)
 

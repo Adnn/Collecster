@@ -1,9 +1,9 @@
+from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase, is_material
+from . import enumerations as enum
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-
-from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase, is_material
-from . import enumerations as enum
 
 
 ##########
@@ -18,8 +18,10 @@ def check_material_consistency(model_instance):
         if errors_dict:
             raise ValidationError(errors_dict)
 
-def created_by_field():
-    return models.ForeignKey("UserExtension")
+def id_field(**kwargs):
+    return models.IntegerField(**kwargs) # From the documentation, it is the type of primary keys
+                                          # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
+
 
 
 ##########
@@ -30,8 +32,8 @@ class UserExtension(models.Model):
     """ Extends Django contrib's User model, to attach a globally unique ID """
     """ (to be managed by a central repo for Collecster """
     user = models.OneToOneField(User, primary_key=True)
-    guid = models.IntegerField(unique=True) # From the documentation, it is the type of primary keys
-                                          # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
+    guid = id_field(unique=True)
+    
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)
 
@@ -41,7 +43,7 @@ class TagToOccurrence(models.Model):
         unique_together = ("user", "tag_occurrence_id")
 
     user              = models.ForeignKey(UserExtension)
-    tag_occurrence_id = models.IntegerField()
+    tag_occurrence_id = id_field()
     occurrence = models.OneToOneField("Occurrence")
 
     def __str__(self):
@@ -53,7 +55,7 @@ class AbstractUserOwned(models.Model):
     class Meta:
         abstract = True
 
-    created_by  = created_by_field()
+    created_by  = models.ForeignKey("UserExtension")
 
 
 ##########
@@ -129,7 +131,7 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
                                              through_fields = ("from_release", "to_release"))
 
     def __str__(self):
-        return ("{}{}".format("[immat] " if not is_material(self) else "", self.name if self.name else self.concept))
+        return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not is_material(self) else "", self.name if self.name else self.concept))
 
     def clean(self):
         super(Release, self).clean()
@@ -138,6 +140,9 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
 
 
 class ReleaseAttribute(models.Model):
+    """ Maps an Attribute to a Release, with an optional note. """
+    """ The note is manadatory if the same attribute is present multiple times on the same Release """
+
     class Meta:
         unique_together = ("release", "attribute", "note") # Seems to be a bug: when ADDing the parent object, it is possible to save instances violating this constraint
                                                     # TODO: report to the Django project
@@ -151,10 +156,13 @@ class ReleaseAttribute(models.Model):
 
 
 class ReleaseCustomAttribute(AbstractAttribute):
+    """ Inherits from AbstractAttribute: the attribute is custom to a single release """
+    """ Since it is not shared, there is no need for mapping to an external attribute: """
+    """ this is the attribute itself, mapped to a Release. """
+
     class Meta:
         unique_together = AbstractAttribute._meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
 
-    """ Inherits from AbstractAttribute: the attribute is custom to a single release """
     release     = models.ForeignKey(Release)
     note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
 
@@ -170,7 +178,10 @@ class ReleaseCustomAttribute(AbstractAttribute):
 class ReleaseComposition(models.Model):
     from_release    = models.ForeignKey(Release, related_name="+") # "+" disable the reverse relation: not needed here,
                                                                    # because we can access it through the 'nested_releases' field.
+    """ The parent in the composition relation (i.e., the container). """
+
     to_release      = models.ForeignKey(Release) # Reverse relation implicitly named "release_composition_set"
+    """ The container element. """
 
     def __str__(self):
         return "Nested {}".format(self.to_release)
@@ -191,7 +202,7 @@ class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
                                                  through_fields = ("from_occurrence", "to_occurrence"))
 
     def __str__(self):
-        return ("Occurrence #{}: {}".format(self.pk, self.release))
+        return ("Occurrence #{} of {}".format(self.pk, self.release))
 
     def clean(self):
         super(Occurrence, self).clean()
@@ -223,5 +234,8 @@ class OccurrenceComposition(models.Model):
     from_occurrence = models.ForeignKey(Occurrence, related_name="+") # "+" disable the reverse relation: not needed here,
                                                                       # because we can access it through the 'nested_occurrences' field.
      ## This one has to be optional: if a nested occurrence is absent, we store a blank to_occurrence:
-     ## Because the matcing with the ReleaseComposition is order-based, we have to store blank composition...
-    to_occurrence   = models.ForeignKey(Occurrence, blank=True, null=True) # Reverse relation implicitly named "occurrence_composition_set"
+     ## (We store empty composition to maintain the same order than the corresponding release compositions)
+     ## Unique, because any occurrence can be nested in at most one parent occurrence.
+    to_occurrence   = models.OneToOneField(Occurrence, blank=True, null=True, related_name="occurrence_composition")
+    # Note: Because of the OneToMany relation here (One parent to many nested occurrences), it would have been possible
+    # to directly put a ForeignKey to the parent in Occurence. But it would complicate the occurrence composition formset.

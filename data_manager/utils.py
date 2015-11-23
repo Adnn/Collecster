@@ -5,6 +5,7 @@ from . import enumerations as enum
 from .models import *
 
 from django import forms
+from django.db.models import Q
 
 #Todel ?
 from django.forms.models import inlineformset_factory, BaseInlineFormSet
@@ -112,9 +113,6 @@ def occurrence_composition_queryset(formset, request, obj):
     if release_id == 0:
         force_formset_size(formset, 0)
     else:
-        #nested_releases = [compo.to_release for compo in retrieve_release_composition(release_id)]
-        #nested_releases = retrieve_release_composition(release_id)
-
         release_compositions = retrieve_release_composition(release_id)
         force_formset_size(formset, len(release_compositions))
             ## Does not help with saving the emtpy forms (only with their initial values)...
@@ -124,9 +122,13 @@ def occurrence_composition_queryset(formset, request, obj):
 
         for compo, form in zip(release_compositions, formset):
             release = compo.to_release
-                ## Does not help with empty forms either
-            #form.empty_permitted=False 
-            form.fields["to_occurrence"].queryset  = Occurrence.objects.filter(release=release)
+            #form.empty_permitted=False ## Does not help with empty forms either
+            form.fields["to_occurrence"].queryset = (
+                Occurrence.objects.filter(release=release)  # only propose occurrences of the right release
+                                  .filter(Q(occurrence_composition__isnull=True) # not already nested in another occurrence
+                                          | Q(occurrence_composition__from_occurrence=formset.instance)) # except if nested in this occurrence (for edit)
+            )
+            print(form.fields["to_occurrence"].queryset)
             form.fields["to_occurrence"].label     = "Nested {} occurrence".format(release.name)
 
 
