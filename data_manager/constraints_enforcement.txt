@@ -78,6 +78,16 @@ Data model consistency
 3) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
 
 
+= PARTIAL DATE =
+1) If not date is specified, the precision should be blank.
+    Model-level: the clean method set the precision value to blank in this case.
+    Interface: The blank option is not proposed to the user. TODO disable the precision with JS when there is not date specified
+2.a) When the date is specified, the precision is mandatory.
+    Model-level: Enforced in the clean method.
+    Interface: The blank option is not proposed to the user.
+2.b) When a date is partial, the "unspecified" parts (i.e., the information beyond the specified precision) should be set to the lowest available value. (eg. If the precision is month, the unspecified part is the day. The lowest day value is "1".)
+    Model-level: Enforced in the clean method.
+
 = Special Concepts =
 1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name.
 2) Only one Concept instance can be assigned those special nature.

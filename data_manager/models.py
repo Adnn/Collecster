@@ -125,13 +125,18 @@ class Attribute(AbstractAttribute):
 class Release(ReleaseDeploymentBase, AbstractUserOwned):
     concept = models.ForeignKey(Concept)
     name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
-    date    = models.DateField(blank=True, null=True)
+
     # Todo specificity (text, or list ?)
     # Todo edition ? What is that ?
 
-    #  ## Not symmetrical: if a release B is nested in A, then A is NOT nested in B
-    #nested_releases = models.ManyToManyField("self", symmetrical=False, blank=True)
+    partial_date = models.DateField("Date", blank=True, null=True)
+    partial_date_precision = models.CharField("Date precision",
+                                              choices=enum.PartialDate.get_choices(),
+                                              max_length=enum.PartialDate.choices_maxlength(),
+                                              default=enum.PartialDate.DAY,
+                                              blank=True)
 
+    # Not symmetrical: if a release B is nested in A, then A is NOT nested in B
     nested_releases = models.ManyToManyField("self", through="ReleaseComposition", symmetrical=False,
                                              through_fields = ("from_release", "to_release"))
 
@@ -144,6 +149,34 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
         if self.immaterial:
             check_material_consistency(self)
 
+        self._clean_partial_date()
+
+    def _clean_partial_date(self):
+        # Implements PARTIAL DATE::1)
+        if not self.partial_date:
+            self.partial_date_precision = ""
+            return
+        # Enforces PARTIAL DATE:2a)
+        elif not self.partial_date_precision:
+            raise ValidationError({"partial_date_precision": ValidationError("The precision must be specified.", code="invalid")})
+
+        # Enforces PARTIAL DATE::2b)
+        errors = {"partial_date": []} 
+        if ((self.partial_date_precision == enum.PartialDate.YEAR or self.partial_date_precision == enum.PartialDate.MONTH)
+            and self.partial_date.day != 1):
+            print(self.partial_date.day)
+            errors["partial_date"].append(ValidationError("Day should be set to '1' with precision %(precision)s.",
+                                                     params={"precision":enum.PartialDate.DATA[self.partial_date_precision]},
+                                                     code="inconsistent"))
+        if (self.partial_date_precision == enum.PartialDate.YEAR
+            and self.partial_date.day != 1):
+            errors["partial_date"].append(ValidationError("Month should be set to '1' with precision %(precision)s.",
+                                                     params={"precision":enum.PartialDate.DATA[self.partial_date_precision]},
+                                                     code="inconsistent"))
+        if errors["partial_date"]:
+            raise ValidationError(errors)
+        
+        
 
 class ReleaseAttribute(models.Model):
     """ Maps an Attribute to a Release, with an optional note. """

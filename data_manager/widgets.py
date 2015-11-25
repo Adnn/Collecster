@@ -23,3 +23,15 @@ class LabelWidget(forms.widgets.Select):
 def labelwidget_factory(Model):
     classname = "{}{}".format(Model.__name__, "LabelWidget")
     return type(classname, (LabelWidget,), {"model": Model})
+
+
+##
+## Radio select
+##
+class RadioSelectOneLineRenderer(forms.widgets.RadioFieldRenderer):
+    """ Custom renderer for RadioSelect widget, displaying the option on a single line instead of inside of <ul> """
+    outer_html = '<span{id_attr}>{content}</span>'
+    inner_html = '{choice_value}{sub_widgets}'
+        
+class RadioSelectOneLine(forms.widgets.RadioSelect):
+    renderer = RadioSelectOneLineRenderer

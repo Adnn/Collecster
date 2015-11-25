@@ -85,3 +85,24 @@ Attribute.Type.to_form_field = {key: tuple_value.form_field for key, tuple_value
 #        value = cls.DICT[attribute_type][1]
 #        return value[0], value[1]
 
+
+class PartialDate:
+    YEAR="YYYY"
+    MONTH="MM"
+    DAY="DD"
+
+    DATA = collections.OrderedDict((
+        (DAY,    "Day"),
+        (MONTH,  "Month"),
+        (YEAR,   "Year"),
+    ))
+
+    @classmethod
+    def get_choices(cls):
+        """ Return the precision choices for partial dates """
+        return [(key, value) for key, value in cls.DATA.items()]
+
+    @classmethod
+    def choices_maxlength(cls):
+        """ Returns the number of characters required to store any partial date precision in the DB """
+        return max ([len(db_value) for db_value in cls.DATA])

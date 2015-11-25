@@ -69,8 +69,22 @@ class ReleaseCompositionInline(admin.TabularInline):
     formset = OnlyOnMaterialFormSet
 
 
+class ReleaseForm(forms.ModelForm):
+    ## Override the partial_date_precision field for two customizations :
+    ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
+    ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
+    partial_date_precision = forms.ChoiceField(choices=Release._meta.get_field("partial_date_precision").choices, required=False,
+                                               widget=widgets.RadioSelectOneLine)
+        
+    ## Would be less intrusive, but does not allow to control the choices proposed by the widget
+    #class Meta:
+    #    widgets = {"partial_date_precision": widgets.RadioSelectOneLine} 
+
 class ReleaseAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
+    #fieldsets = (
+    #    (None, {"fields": (("concept", "immaterial"),)}),
+    #)
     #inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
     collecster_dynamic_inline_classes = OrderedDict((
         ("specific",             utils.release_specific_inlines),
@@ -79,6 +93,7 @@ class ReleaseAdmin(CollecsterModelAdmin):
         ("composition",          (ReleaseCompositionInline,)),
     )) 
     collecster_readonly_edit = ("concept", "immaterial")
+    form = ReleaseForm
 
 
 #############
