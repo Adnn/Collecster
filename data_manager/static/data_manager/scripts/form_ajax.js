@@ -7,9 +7,31 @@ function div_replacer(html_content)
 {
     // For each division at the top level of html_content, find a division with the same id in the dom, and replace
     // the div in the dom with the corresponding div in html_content.
+    // Plus potientially do the same with a <script> element following the <div>
+    // (this script would be responsible for "Add another ..." button)
     $(html_content).filter("div").each(function(index)
-       {
-           $("#"+this.id).replaceWith(this)
+        {
+            script = ""
+            // if the new <div> is followed by a script, save the element for later insertion
+            if($(this).next().prop("tagName") == "SCRIPT")
+            {
+                script = $(this).next()
+            }
+
+            // replace the page's <div> having the same id with the new <div>
+            $("#"+this.id).replaceWith(this)
+
+            // if the <div> was followed by a <script> in the page, remove this script
+            if($("#"+this.id).next().prop("tagName") == "SCRIPT")
+            {
+                $("#"+this.id).next().remove();
+            }
+
+            // insert the new script if it exists
+            if(script)
+            {
+                $("#"+this.id).after(script);
+            }
        })
 }
 
