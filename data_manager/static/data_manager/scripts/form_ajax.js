@@ -37,9 +37,34 @@ function div_replacer(html_content)
 
 function main_function()
 {
-    // Prepare the spot for specifics
+    /*
+     * Setup
+     */
+    // prepares the spot for specifics
     $(".submit-row").before("<div id=\"collecster_specifics\"></div>")
 
+    
+    // Hack to have the Django Admin Popup trigger a change event on the <select> when it completes
+    // see: http://stackoverflow.com/a/33937138/1027706
+    function triggerChangeOnField(win, chosenId)
+    {
+        var name = windowname_to_id(win.name);
+        var elem = document.getElementById(name);
+        $(elem).change();
+    } 
+
+    // original function defined in RelatedObjectLookups.js
+    window.ORIGINAL_dismissAddRelatedObjectPopup = window.dismissAddRelatedObjectPopup
+    window.dismissAddRelatedObjectPopup = function(win, chosenId, newRepr)
+    {
+        ORIGINAL_dismissAddRelatedObjectPopup(win, chosenId, newRepr);
+        triggerChangeOnField(win, chosenId);
+    }
+
+
+    /*
+     * Attach event callbacks
+     */ 
     // 'id_${field_name}' id is assigned by Django by default.
     $("#id_release").change(
         function()
