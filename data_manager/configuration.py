@@ -6,7 +6,7 @@ import collections
 import data_manager.models
 
 #TODEL
-import wdb
+#import wdb
 
 def compose(*args):
     """ Used to compose category from by extending another category """
