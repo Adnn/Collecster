@@ -18,7 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^OO_attrib/', include('OOModel_attributes.urls')),
-    url(r'^OO_compo/', include('OOModel_composition.urls')),
+    #url(r'^OO_attrib/', include('OOModel_attributes.urls')),
+    #url(r'^OO_compo/', include('OOModel_composition.urls')),
     url(r'^data_manager/', include('data_manager.urls')),
 ]
