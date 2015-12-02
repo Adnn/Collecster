@@ -12,7 +12,7 @@ Thumbs.db
 
 # Django #
 *.sqlite3
-*/local_settings.py
+#*/local_settings.py ## Not private anymore: the secret key is read from environment variable.
 
 
     # from: https://github.com/github/gitignore/blob/master/Python.gitignore
