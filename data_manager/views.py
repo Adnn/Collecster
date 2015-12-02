@@ -48,10 +48,9 @@ def ajax_release_specific_admin_formsets(request, concept_id):
     rendered_formsets = [] 
     for wrapped_formset in formsets:
     #for inline, wrapped_formset in zip(inline_instances, formsets):
-        template_file = "admin/edit_inline/{}.html".format("tabular" if issubclass(wrapped_formset.opts.__class__, admin.TabularInline) else "stacked")
+        template_file = get_template(wrapped_formset)
         rendered_formsets.append(loader.render_to_string(template_file, {"inline_admin_formset": wrapped_formset}))
     attributes_formset = rendered_formsets[0]
-
 
     return HttpResponse("{}\n{}".format(specifics_div, attributes_formset))
 
@@ -67,20 +66,17 @@ def ajax_occurrence_specific_admin_formsets(request, release_id):
     }
 
     ## SAME AS ABOVE ##
-    formsets, inline_instances = occurrence_adm._create_formsets(request_with_payload, occurrence_adm.model(), change=False)
-    formsets = occurrence_adm.get_inline_formsets(request, formsets, inline_instances)#, **{"release_id": release_id})
-
-    rendered_formsets = [] 
-    for wrapped_formset in formsets:
-        rendered_formsets.append(loader.render_to_string("admin/edit_inline/stacked.html", {"inline_admin_formset": wrapped_formset}))
+    rendered_formsets = [loader.render_to_string(get_template(wrapped_fs), {"inline_admin_formset": wrapped_fs})
+                         for wrapped_fs in get_admin_formsets(occurrence_adm, request_with_payload)]
 
     return HttpResponse("<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets)))
 
 
 def ajax_occurrence_attributes_admin_formsets(request, release_id):
+    occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
+
     request.collecster_payload = { "release_id": int(release_id) }
 
-    occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
     formsets, inline_instances = occurrence_adm._create_formsets(request, occurrence_adm.model(), change=False)
     formsets = occurrence_adm.get_inline_formsets(request, formsets, inline_instances)
 
