@@ -1,0 +1,34 @@
+[
+  {
+    "model": "data_manager.attributecategory",
+    "pk": 1,
+    "fields": {
+      "name": "content"
+    }
+  },
+  {
+    "model": "data_manager.attributecategory",
+    "pk": 2,
+    "fields": {
+      "name": "packaging"
+    }
+  },
+  {
+    "model": "data_manager.attribute",
+    "pk": 1,
+    "fields": {
+      "category": 1,
+      "name": "media",
+      "value_type": "RTN"
+    }
+  },
+  {
+    "model": "data_manager.attribute",
+    "pk": 2,
+    "fields": {
+      "category": 2,
+      "name": "sleeve",
+      "value_type": "RTN"
+    }
+  }
+]

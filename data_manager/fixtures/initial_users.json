@@ -1,0 +1,9 @@
+[
+    {
+        "model": "data_manager.UserExtension",
+        "pk": 1,
+        "fields": {
+            "guid": "1"
+        }
+    }
+]

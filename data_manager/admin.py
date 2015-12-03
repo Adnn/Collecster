@@ -207,5 +207,11 @@ admin.site.register(AttributeCategory)
 admin.site.register(UserExtension)
 
 # For readonly debug
-admin.site.register(ConceptNature)
-admin.site.register(TagToOccurrence)
+#admin.site.register(ConceptNature)
+#admin.site.register(TagToOccurrence)
+
+# Custom (deployment)
+from .configuration import Artist, Label
+admin.site.register(Artist)
+admin.site.register(Label)
+
