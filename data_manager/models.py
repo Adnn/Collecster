@@ -1,4 +1,4 @@
-from .configuration import ConceptNature as ConfNature, ReleaseDeploymentBase, OccurrenceDeploymentBase, is_material
+from .configuration import ConceptNature as ConfNature, ConceptDeploymentBase, ReleaseDeploymentBase, OccurrenceDeploymentBase, is_material
 from . import enumerations as enum
 
 from django.db import models
@@ -23,7 +23,6 @@ def check_material_consistency(model_instance):
 def id_field(**kwargs):
     return models.IntegerField(**kwargs) # From the documentation, it is the type of primary keys
                                           # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
-
 
 
 ##########
@@ -72,7 +71,7 @@ class ConceptNature(models.Model):
     nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
 
 
-class Concept(AbstractUserOwned):
+class Concept(ConceptDeploymentBase, AbstractUserOwned):
     common_name         = models.CharField(max_length= 60, blank=True)  
     distinctive_name    = models.CharField(max_length=180, unique=True)  
     primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
@@ -146,7 +145,7 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
     def clean(self):
         super(Release, self).clean()
         # Enforces IMMATERIAL::2.a)
-        if self.immaterial:
+        if not is_material(self):
             check_material_consistency(self)
 
         self._clean_partial_date()
@@ -262,7 +261,7 @@ class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
     def clean(self):
         super(Occurrence, self).clean()
         # Enforces IMMATERIAL::2.b)
-        if hasattr(self, "release") and self.release.immaterial:
+        if hasattr(self, "release") and not is_material(self.release):
             check_material_consistency(self)
 
 

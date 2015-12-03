@@ -7,13 +7,13 @@ from . import enumerations as enums
 
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import FieldDoesNotExist
 from django.forms.models import modelform_factory
 
 from functools import partial, partialmethod
 from collections import OrderedDict
 
 ## TODEL ##
-from .configuration import ReleaseSpecific
 #import wdb
 
 
@@ -80,6 +80,15 @@ class ReleaseForm(forms.ModelForm):
     #class Meta:
     #    widgets = {"partial_date_precision": widgets.RadioSelectOneLine} 
 
+
+def get_release_readonlyedit():
+    """ The immaterial field is not mandatory on Release, but if it is present is should not be changeable """
+    try:
+        Release._meta.get_field("immaterial")
+        return ("concept", "immaterial",)
+    except FieldDoesNotExist:
+        return ("concept",)
+
 class ReleaseAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
     #fieldsets = (
@@ -92,7 +101,7 @@ class ReleaseAdmin(CollecsterModelAdmin):
         ("custom_attributes",    (ReleaseCustomAttributeInline,)),
         ("composition",          (ReleaseCompositionInline,)),
     )) 
-    collecster_readonly_edit = ("concept", "immaterial")
+    collecster_readonly_edit = get_release_readonlyedit()
     form = ReleaseForm
 
 
@@ -199,5 +208,4 @@ admin.site.register(UserExtension)
 
 # For readonly debug
 admin.site.register(ConceptNature)
-admin.site.register(ReleaseSpecific.Hardware)
 admin.site.register(TagToOccurrence)

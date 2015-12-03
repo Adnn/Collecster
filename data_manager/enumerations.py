@@ -23,17 +23,17 @@ class Attribute:
 
     class Value:
         RATING_CHOICES = (
-            (u'M', u'Mint'),
-            (u'A', u'A'),
-            (u'B', u'B'),
-            (u'C', u'C'),
-            (u'D', u'D'),
-            (u'E', u'E'),
+            ("M", "Mint"),
+            ("A", "A"),
+            ("B", "B"),
+            ("C", "C"),
+            ("D", "D"),
+            ("E", "E"),
         )
 
         NULL_CHOICE     = ("", "----")
-        ABSENT_CHOICE   = (u'0', u'ABSENT')
-        PRESENT_CHOICE  = (u'1', u'PRESENT')
+        ABSENT_CHOICE   = ("0", "ABSENT")
+        PRESENT_CHOICE  = ("1", "PRESENT")
 
 
         @classmethod
@@ -63,12 +63,12 @@ class Attribute:
 
     DataTuple = collections.namedtuple("DataTuple", ["ui_value", "form_field"])
     DATA = {
-        Type.RATING:    DataTuple(u'Rating',     forms.ChoiceField( choices=Value.get_rating_choices()),      ),
-        Type.PRESENCE:  DataTuple(u'Presence',   forms.ChoiceField( choices=Value.get_presence_choices(),
+        Type.RATING:    DataTuple("Rating",     forms.ChoiceField( choices=Value.get_rating_choices()),      ),
+        Type.PRESENCE:  DataTuple("Presence",   forms.ChoiceField( choices=Value.get_presence_choices(),
                                                                     widget=forms.RadioSelect) ),
             # This would work, modulo the fact that, on "New occurence save", if the checkbox is not checked,
             # there is no value saved in the DB (but there is one saved when edition, going from true to false)
-        #Type.PRESENCE:  DataTuple(u'Presence',   CustBool() ),
+        #Type.PRESENCE:  DataTuple("Presence",   CustBool() ),
     }
 
 
@@ -106,3 +106,39 @@ class PartialDate:
     def choices_maxlength(cls):
         """ Returns the number of characters required to store any partial date precision in the DB """
         return max ([len(db_value) for db_value in cls.DATA])
+
+
+class Country:
+    LITHUANIA   = "LT"
+    FRANCE      = "FR"
+    GERMANY     = "DE"
+    ITALY       = "IT"
+    JAPAN       = "JP"
+    SPAIN       = "ES"
+    UK          = "UK"
+    USA         = "US"
+    CANADA      = "CA"
+
+    CHOICES = (
+        (UK, "UK"),
+        (JAPAN, "Japan"),
+        ("Europe",
+            ((LITHUANIA, "Lithuania"),
+            (FRANCE, "France"),
+            (GERMANY, "Germany"),
+            (ITALY, "Italy"),
+            (SPAIN, "Spain"),)
+        ),
+        ("America",
+            ((USA, "USA"),
+            (CANADA, "Canada"),) 
+        ),
+    )
+
+    @classmethod
+    def get_choices(cls):
+        return cls.CHOICES
+
+    @classmethod
+    def choices_maxlength(cls):
+        return 2

@@ -20,6 +20,15 @@ def is_material(release):
     return not release.immaterial
 
 
+##
+## Customization of the 3 base models
+##
+class ConceptDeploymentBase(models.Model):
+    """ An abstract base for the Concept model, allowing to give it deployment-specific fields without introducing """
+    """ an additional DB table. """  
+    class Meta:
+        abstract = True
+
 class ReleaseDeploymentBase(models.Model):
     """ An abstract base for the Release model, allowing to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
