@@ -211,7 +211,8 @@ admin.site.register(UserExtension)
 #admin.site.register(TagToOccurrence)
 
 # Custom (deployment)
-from .configuration import Artist, Label
-admin.site.register(Artist)
-admin.site.register(Label)
-
+try:
+    from .configuration import register_custom_models
+    register_custom_models()
+except:
+    pass #register_custom_model is an optional function for deployment customization
