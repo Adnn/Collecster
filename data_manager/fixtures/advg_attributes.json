@@ -1,0 +1,43 @@
+[
+  {
+    "model": "data_manager.attributecategory",
+    "pk": 1,
+    "fields": {
+      "name": "content"
+    }
+  },
+  {
+    "model": "data_manager.attributecategory",
+    "pk": 2,
+    "fields": {
+      "name": "packaging"
+    }
+  },
+  {
+    "model": "data_manager.attribute",
+    "pk": 1,
+    "fields": {
+      "category": 1,
+      "name": "self",
+      "value_type": "RTN"
+    }
+  },
+  {
+    "model": "data_manager.attribute",
+    "pk": 2,
+    "fields": {
+      "category": 1,
+      "name": "scart",
+      "value_type": "PRS"
+    }
+  },
+  {
+    "model": "data_manager.attribute",
+    "pk": 4,
+    "fields": {
+      "category": 2,
+      "name": "cardboard box",
+      "value_type": "RTN"
+    }
+  }
+]
