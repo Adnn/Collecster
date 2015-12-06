@@ -72,7 +72,7 @@ Data model consistency
 
 = IMMATERIAL =
 == Immaterial restrictions ==
-1) Prevent an immaterial release from having: attribute, custom attributes, or nested releases.
+1) Prevent an immaterial release from having nested releases.
 2.a) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
 2.b) For an Occurrence instantiating an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
 3) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
