@@ -62,14 +62,14 @@ class Attribute:
 
 
     DataTuple = collections.namedtuple("DataTuple", ["ui_value", "form_field"])
-    DATA = {
-        Type.RATING:    DataTuple("Rating",     forms.ChoiceField( choices=Value.get_rating_choices()),      ),
-        Type.PRESENCE:  DataTuple("Presence",   forms.ChoiceField( choices=Value.get_presence_choices(),
-                                                                    widget=forms.RadioSelect) ),
+    DATA = collections.OrderedDict((
+        (Type.RATING,   DataTuple("Rating",     forms.ChoiceField( choices=Value.get_rating_choices()),      )),
+        (Type.PRESENCE, DataTuple("Presence",   forms.ChoiceField( choices=Value.get_presence_choices(),
+                                                                    widget=forms.RadioSelect) )),
             # This would work, modulo the fact that, on "New occurence save", if the checkbox is not checked,
             # there is no value saved in the DB (but there is one saved when edition, going from true to false)
         #Type.PRESENCE:  DataTuple("Presence",   CustBool() ),
-    }
+    ))
 
 
 # Maps attribute types to the form field that should be used to populate values of this type.

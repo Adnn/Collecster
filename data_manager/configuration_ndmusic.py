@@ -137,11 +137,11 @@ class ConceptNature:
     RECORD = "REC"
 
     DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category", "automatic_attributes"])
-    DATA = {
-        COMBO:      DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (),             ),
+    DATA = ((
+        (COMBO,     DataTuple(COMBO,    UIGroup._HIDDEN,    ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (),             )),
 
-        RECORD:     DataTuple('Record',  UIGroup._TOPLEVEL,  ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,        automatic_any ),
-    }
+        (RECORD,    DataTuple('Record', UIGroup._TOPLEVEL,  ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,        automatic_any )),
+    ))
 
 
 ##
