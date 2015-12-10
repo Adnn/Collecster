@@ -1,3 +1,4 @@
+import data_manager
 import collections
 
 #TODEL
@@ -48,10 +49,11 @@ class ConceptNature:
         #toplevel = [(line[0], line[1]) for line in [tupl for tupl in cls.DATA.get(cls.UIGroup._TOPLEVEL, ())]]
         #return tuple(toplevel) + tuple(grouped)
         toplevel = []
-        sorted_groups = collections.defaultdict(list)
+        #sorted_groups = collections.defaultdict(list) # The default dict is not ordered, generating uneccessary migrations
+        sorted_groups = collections.OrderedDict()
         for db_value, data in cls.DATA.items():
             pair = (db_value, data.ui_value)
-            (toplevel if (data.ui_group is cls.UIGroup._TOPLEVEL) else sorted_groups[data.ui_group]).append(pair)
+            (toplevel if (data.ui_group is cls.UIGroup._TOPLEVEL) else sorted_groups.setdefault(data.ui_group, [])).append(pair)
         return tuple(toplevel + [(ui_group, tuple(pairs)) for ui_group, pairs in sorted_groups.items() if ui_group != cls.UIGroup._HIDDEN])
 
         #return (
