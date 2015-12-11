@@ -34,6 +34,7 @@ class UserExtension(models.Model):
     """ (to be managed by a central repo for Collecster """
     user = models.OneToOneField(User, primary_key=True)
     guid = id_field(unique=True)
+    person = models.ForeignKey("Person")
     
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)
@@ -51,7 +52,7 @@ class TagToOccurrence(models.Model):
         return "{}/{} -> {}".format(self.user.user, self.tag_occurrence_id, self.occurrence)
 
 
-class AbstractUserOwned(models.Model):
+class AbstractRecordOwnership(models.Model):
     """ Abstract class adding the fields to make a model owned by a user """
     class Meta:
         abstract = True
@@ -71,11 +72,10 @@ class ConceptNature(models.Model):
     nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
 
 
-class Concept(ConceptDeploymentBase, AbstractUserOwned):
-    common_name         = models.CharField(max_length= 60, blank=True)  
+class Concept(ConceptDeploymentBase, AbstractRecordOwnership):
     distinctive_name    = models.CharField(max_length=180, unique=True)  
+    common_name         = models.CharField(max_length= 60, blank=True)  
     primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-    # Todo: url optional
 
     def __str__(self):
         return self.common_name if self.common_name else self.distinctive_name
@@ -121,12 +121,9 @@ class Attribute(AbstractAttribute):
 ## Release
 ##########
 
-class Release(ReleaseDeploymentBase, AbstractUserOwned):
+class Release(ReleaseDeploymentBase, AbstractRecordOwnership):
     concept = models.ForeignKey(Concept)
     name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
-
-    # Todo specificity (text, or list ?)
-    # Todo edition ? What is that ?
 
     partial_date = models.DateField("Date", blank=True, null=True)
     partial_date_precision = models.CharField("Date precision",
@@ -134,6 +131,8 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
                                               max_length=enum.PartialDate.choices_maxlength(),
                                               default=enum.PartialDate.DAY,
                                               blank=True)
+
+    distinctions = models.ManyToManyField("Distinction", through="ReleaseDistinction")
 
     # Not symmetrical: if a release B is nested in A, then A is NOT nested in B
     nested_releases = models.ManyToManyField("self", through="ReleaseComposition", symmetrical=False,
@@ -176,6 +175,18 @@ class Release(ReleaseDeploymentBase, AbstractUserOwned):
             raise ValidationError(errors)
         
         
+class Distinction(models.Model):
+    name  = models.CharField(max_length=20, unique=True)
+    note = models.CharField(max_length=64, blank=True, help_text="Optional details about the meaning of this distinction.")
+
+    def __str__(self):
+        return self.name
+
+class ReleaseDistinction(models.Model):
+    release     = models.ForeignKey(Release)
+    distinction = models.ForeignKey(Distinction)
+    value       = models.CharField(max_length=30)
+
 
 class ReleaseAttribute(models.Model):
     """ Maps an Attribute to a Release, with an optional note. """
@@ -187,7 +198,7 @@ class ReleaseAttribute(models.Model):
 
     release     = models.ForeignKey(Release) # No release are attached for implicit attributes (that are determined by the Release nature), disabled
     attribute   = models.ForeignKey(Attribute)
-    note        = models.CharField(max_length=60, blank=True, help_text="Distinctive remark if the attribute is repeated.")
+    note       = models.CharField(max_length=60, blank=True, help_text="Distinctive remark if the attribute is repeated.")
 
     def __str__(self):
         return ("{} ({})" if self.note else "{}").format(self.attribute, self.note)
@@ -202,7 +213,7 @@ class ReleaseCustomAttribute(AbstractAttribute): # Inherits the fields of Abstra
         unique_together = AbstractAttribute._meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
 
     release     = models.ForeignKey(Release)
-    note        = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
+    note       = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
 
     @property
     def attribute(self):
@@ -246,12 +257,14 @@ class ReleaseComposition(models.Model):
 ## Occurrence
 #############
 
-class Occurrence(OccurrenceDeploymentBase, AbstractUserOwned):
+class Occurrence(OccurrenceDeploymentBase, AbstractRecordOwnership):
     release     = models.ForeignKey(Release)
-    #owner       = models.ForeignKey(Person) #TODO
+    owner       = models.ForeignKey("Person")
+
         ## Some automatic date fields
     add_date        = models.DateTimeField(auto_now_add=True)
     lastmodif_date  = models.DateTimeField(auto_now=True)
+
     nested_occurrences  = models.ManyToManyField("self", through="OccurrenceComposition", symmetrical=False,
                                                  through_fields = ("from_occurrence", "to_occurrence"))
 

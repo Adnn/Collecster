@@ -1,4 +1,4 @@
-from .configuration import is_material
+from .configuration import is_material, Person
 from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 from .models import *
 from . import utils
@@ -44,6 +44,10 @@ class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
                     raise forms.ValidationError("Immaterial release cannot be attached those inlines.",
                                                 code='invalid')
 
+
+class ReleaseDistinctionInline(admin.TabularInline):
+    extra = 3
+    model = ReleaseDistinction
 
 class ReleaseAttributeFormset(OnlyOnMaterialFormSet):
     collecster_instance_callback = utils.release_automatic_attributes
@@ -97,6 +101,7 @@ class ReleaseAdmin(CollecsterModelAdmin):
     #inlines = (ReleaseAttributeInline, ReleaseCustomAttributeInline, ReleaseCompositionInline)
     collecster_dynamic_inline_classes = OrderedDict((
         ("specific",             utils.release_specific_inlines),
+        ("distinctions",         (ReleaseDistinctionInline,)),
         ("attributes",           (ReleaseAttributeInline,)),
         ("custom_attributes",    (ReleaseCustomAttributeInline,)),
         ("composition",          (ReleaseCompositionInline,)),
@@ -191,6 +196,14 @@ class OccurrenceAdmin(CollecsterModelAdmin):
         if not change:
             TagToOccurrence(user=obj.created_by, tag_occurrence_id=obj.pk, occurrence=obj).save()
 
+    def get_changeform_initial_data(self, request):
+        """ Pre-populates the owner field with the Person corresponding to the logged-in user """
+        """ But does not override this value in case it was provided as GET data """
+        initial = super(OccurrenceAdmin, self).get_changeform_initial_data(request)
+        if "owner" not in initial:
+            initial["owner"] = Person.objects.get(userextension__user=request.user)
+        return initial
+
 
 ################
 ## Registrations
@@ -203,6 +216,8 @@ admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Attribute)
 admin.site.register(AttributeCategory)
 
+admin.site.register(Distinction)
+
 # For Administration
 admin.site.register(UserExtension)
 
@@ -213,6 +228,6 @@ admin.site.register(UserExtension)
 # Custom (deployment)
 try:
     from .configuration import register_custom_models
-    register_custom_models()
+    register_custom_models(admin.site)
 except:
     pass #register_custom_model is an optional function for deployment customization

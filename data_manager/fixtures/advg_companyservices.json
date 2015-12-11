@@ -1,0 +1,30 @@
+[
+  {
+    "model": "data_manager.companyservice",
+    "pk": 1,
+    "fields": {
+      "name": "Hardware manufacturer"
+    }
+  },
+  {
+    "model": "data_manager.companyservice",
+    "pk": 2,
+    "fields": {
+      "name": "Game developer"
+    }
+  },
+  {
+    "model": "data_manager.companyservice",
+    "pk": 3,
+    "fields": {
+      "name": "Publisher"
+    }
+  },
+  {
+    "model": "data_manager.companyservice",
+    "pk": 4,
+    "fields": {
+      "name": "Group"
+    }
+  }
+ ]

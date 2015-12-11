@@ -1,5 +1,5 @@
 from . import utils
-from .models import AbstractUserOwned, UserExtension
+from .models import AbstractRecordOwnership, UserExtension
 
 from django.contrib import admin
 from django import forms
@@ -29,11 +29,11 @@ class SaveInitialDataModelForm(forms.ModelForm):
 ## ModelAdmins
 ##########
 class CustomSaveModelAdmin(admin.ModelAdmin):
-    """ Saves the User that ADDed the instance if its model derives from AbstractUserOwned (-> it has a created_by field) """
+    """ Saves the User that ADDed the instance if its model derives from AbstractRecordOwnership (-> it has a created_by field) """
     """ Also introduce a post_model_save() hook, called as the last step in save_model() """
     def save_model(self, request, obj, form, change):
-        # If obj has a "created_by" field provided by AbstractUserOwned, and this is adding a new object (not editing one)
-        if issubclass(obj.__class__, AbstractUserOwned) and not change:
+        # If obj has a "created_by" field provided by AbstractRecordOwnership, and this is adding a new object (not editing one)
+        if issubclass(obj.__class__, AbstractRecordOwnership) and not change:
             obj.created_by = UserExtension.objects.get(user=request.user)
         super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)
         self.post_save_model(request, obj, form, change)

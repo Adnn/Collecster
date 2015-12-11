@@ -1,0 +1,16 @@
+[
+  {
+    "model": "data_manager.inputtype",
+    "pk": 1,
+    "fields": {
+      "name": "Digital"
+    }
+  },
+  {
+    "model": "data_manager.inputtype",
+    "pk": 2,
+    "fields": {
+      "name": "Analog"
+    }
+  }
+ ]

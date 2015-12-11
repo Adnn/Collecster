@@ -83,9 +83,9 @@ class Label(models.Model):
         return "{}".format(self.name)
 
 
-def register_custom_models():
-    admin.site.register(Artist)
-    admin.site.register(Label)
+def register_custom_models(site):
+    site.register(Artist)
+    site.register(Label)
 
 
 ##
