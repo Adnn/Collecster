@@ -2,6 +2,7 @@ from .config_utils import *
 
 from .enumerations import Country
 
+from django import forms
 from django.db import models
 from django.contrib import admin
 from django.core.exceptions import ValidationError
@@ -11,39 +12,24 @@ import collections
 import data_manager.models
 
 
-class Region:
-    FREE = "none"
-    ASIA = "NTSC-J"
-    CHINA = "NTSC-C"
-    NORTH_AMERICA = "NTSC-U/C"
-    PAL = "PAL"
-
-    class Nes:
-        NTSC = "NES-NTSC"
-        PAL_A = "NES-PALA"
-        PAL_B = "NES-PALB"
-
-    DATA = (
-        (FREE, "Region free"),
-        (PAL, "Pal regions"),
-        (NORTH_AMERICA, "North America"),
-        (ASIA, "Japan and Asia"),
-        (CHINA, "China"),
-        ("NES",
-            ((Nes.NTSC, "NTSC"),
-            (Nes.PAL_A, "PAL-A"),
-            (Nes.PAL_B, "PAL-B"),)
-        ),
-    )
-    
-    @classmethod
-    def get_choices(cls):
-        return cls.DATA
-    
-    @classmethod
-    def choices_maxlength(cls):
-        return 8
-
+#class ReleaseRegion:
+#    ASIA = "AS"
+#    CHINA = "CH"
+#    JAPAN = "JP"
+#    USA = "US"
+#
+#    DATA = (
+#        (ASIA, "Asia"),
+#        (JAPAN, "Japan"),
+#    )
+#    
+#    @classmethod
+#    def get_choices(cls):
+#        return cls.DATA
+#    
+#    @classmethod
+#    def choices_maxlength(cls):
+#        return 2
 
 class OccurrenceOrigin():
     ORIGINAL = u'OR'
@@ -70,6 +56,7 @@ class OccurrenceOrigin():
     @classmethod
     def choices_maxlength(cls):
         return max ([len(db_value) for db_value in cls.DATA])
+
 
 def is_material(release):
     """ The notion of immaterial needs to be a core concept, because some core behaviour depends on it"""
@@ -113,8 +100,7 @@ class ReleaseDeploymentBase(models.Model):
     loose   = models.BooleanField() 
 
     barcode = models.CharField(max_length=20, blank=True)
-    # Can be left blank, meaning it is unknown (there is a value for "region free")
-    region  = models.CharField(max_length=Region.choices_maxlength(), choices=Region.get_choices(), blank=True)
+    release_regions  = models.ManyToManyField("ReleaseRegion")
     version = models.CharField(max_length=20, blank=True) 
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
@@ -139,6 +125,26 @@ class OccurrenceDeploymentBase(models.Model):
 ## Extra models
 ##
 
+class TagRegion(models.Model):
+    name = models.CharField(max_length=3, unique=True, help_text="The value printed on the occurrence tag.")
+
+    def __str__(self):
+        return self.name
+
+
+class ReleaseRegion(models.Model):
+    name = models.CharField(max_length=60, unique=True)
+    parent_region = models.ForeignKey("self", blank=True, null=True)
+    tag_region = models.ForeignKey("TagRegion")
+
+    detail = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        display = "{}".format(self.name)
+        if self.parent_region:
+            display = "{}/{}".format(self.parent_region, display)
+        return display
+
 #
 # Company
 #
@@ -151,6 +157,7 @@ class CompanyService(models.Model):
 class Company(models.Model):
     class Meta:
         ordering = ("name",)
+        verbose_name_plural = "Companies"
 
     name = models.CharField(max_length=60, unique=True)
     services = models.ManyToManyField(CompanyService)
@@ -332,12 +339,132 @@ class Person(models.Model):
             return "{} {}".format(self.first_name, self.last_name)
 
 #
-# 
+# Platform
 #
-class SystemSpecification(models.Model):
+class LockoutRegion(models.Model):
+    region_name = models.CharField(max_length=10)
+    note        = models.CharField(max_length=60)
+    limit_scope = models.ManyToManyField("BaseSystem", blank=True)
+
+    def __str__(self):
+        display = "{}".format(self.region_name)
+        if self.limit_scope.count():
+            display = "({}) {}".format("/".join(["{}".format(scope.abbreviated_name) for scope in self.limit_scope.all()]), display)
+        return display
+
+    #FREE = "_none"
+    #ASIA = "NTSC-J"
+    #CHINA = "NTSC-C"
+    #NORTH_AMERICA = "NTSC-U/C"
+    #PAL = "PAL"
+
+    #class Nes:
+    #    NTSC = "NES-NTSC"
+    #    PAL_A = "NES-PALA"
+    #    PAL_B = "NES-PALB"
+
+    #DATA = (
+    #    (FREE, "Region free"),
+    #    (PAL, "Pal regions"),
+    #    (NORTH_AMERICA, "North America"),
+    #    (ASIA, "Japan and Asia"),
+    #    (CHINA, "China"),
+    #    ("NES",
+    #        ((Nes.NTSC, "NTSC"),
+    #        (Nes.PAL_A, "PAL-A"),
+    #        (Nes.PAL_B, "PAL-B"),)
+    #    ),
+    #)
+    #
+    #@classmethod
+    #def get_choices(cls):
+    #    return cls.DATA
+    #
+    #@classmethod
+    #def choices_maxlength(cls):
+    #    return 8
+
+
+class BaseSystem(models.Model):
+    ARCADE = "A"
+    HOME   = "H"
+
+    name = models.CharField(max_length=30, unique=True)
+    brand = models.ForeignKey(Company)
+    generation = models.DecimalField(max_digits=2, decimal_places=0)
+    destination = models.CharField(max_length=1, choices=((ARCADE, "Arcade"), (HOME, "Home entertainment")))
+    upgrade_for = models.ForeignKey("self", blank=True, null=True) # TODO: should prevent an instance from referencing itself
+
+    abbreviated_name = models.CharField(max_length=5, unique=True)
+
+    def __str__(self):
+        return "{} {}".format(self.brand, self.name)
+
+class SystemMediaPair(models.Model):
+    class Meta:
+        unique_together = ("system", "media")
+
+    system = models.ForeignKey(BaseSystem) 
+    media  = models.CharField(max_length=10)
+    wireless = models.BooleanField(default=False)
+
+    abbreviated_name = models.CharField(max_length=10, unique=True)
+
+    def __str__(self):
+        return "{}--{} ({})".format(self.system, self.media, self.abbreviated_name)
+
+
+class SystemInterfaceDescription(models.Model):
+    class Meta:
+        unique_together = ("reference_system", "internal_name")
+
+    # Useful for console on chip for example
+    reference_system = models.ForeignKey(BaseSystem)
+    internal_name = models.CharField(max_length=60)
+    provides = models.ManyToManyField(SystemMediaPair, through="ProvidedInterface", related_name="provided_to_set")
+    requires = models.ManyToManyField(SystemMediaPair, through="RequiredInterface", related_name="required_by_set")
+
+    def __str__(self):
+        return "{}: {}".format(self.reference_system, self.internal_name)
+
+# Need to separate as two tables, because Django would not be able to know if it is a provided or required otherwise
+class BaseSpecificationInterface(models.Model):
+    class Meta:
+        abstract = True
+
+    specification = models.ForeignKey(SystemInterfaceDescription)
+    interface = models.ForeignKey(SystemMediaPair)
+    cardinality = models.PositiveSmallIntegerField(default=1)
+    regional_lockout_override = models.ManyToManyField(LockoutRegion, blank=True)
+
+class ProvidedInterface(BaseSpecificationInterface):
     pass
 
+class RequiredInterface(BaseSpecificationInterface):
+    pass
 
+class SystemSpecification(models.Model):
+    # TODO M2M not allowed in unique_together clause, how to enforce ?
+    #class Meta:
+    #    unique_together = ("regional_lockout", "bios_version", "interface")
+
+    regional_lockout     = models.ManyToManyField(LockoutRegion)
+    bios_version         = models.CharField(max_length=10, blank=True)
+    interface_description = models.ForeignKey(SystemInterfaceDescription)
+
+    def __str__(self):
+        display = "{}".format(self.interface_description)
+        if self.regional_lockout.count():
+           display = "{} [{}]".format(display,
+                                      ", ".join(["{}".format(lockout) for lockout in self.regional_lockout.all()]))
+        if self.bios_version:
+           display = "{} (bios: {})".format(display, self.bios_version)
+        return display 
+
+
+#
+# Misc
+#
 class Color(models.Model):
     """ Color is a table listing available color choices (populated by fixture). """
     """ It appears as a more general solution over the fixed choice field in models, because it allows """
@@ -348,7 +475,13 @@ class Color(models.Model):
         return self.name
 
 
+class BatteryType(models.Model):
+    code = models.CharField(max_length=10, unique=True)
 
+    def __str__(self):
+        return self.name
+
+     
 class InputType(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
@@ -395,17 +528,60 @@ class BundleCompositionInline(admin.TabularInline):
 class AnyBundleAdmin(admin.ModelAdmin):
     inlines = [BundleCompositionInline]
 
+class ProvidedInterfaceInline(admin.TabularInline):
+   model = ProvidedInterface
+   extra = 3
+
+class RequiredInterfaceInline(admin.TabularInline):
+   model = RequiredInterface
+   extra = 3
+
+class SystemInterfaceDescriptionAdmin(admin.ModelAdmin):
+    inlines = (ProvidedInterfaceInline, RequiredInterfaceInline,)
+
+
+class SystemSpecificationForm(forms.ModelForm):
+    def clean(self):
+        """ Makes sure the selected lockout regions are available to the reference system """
+        """ If the reference system has specific regions associeted to it, then only those regions are allowed """
+        """ Otherwise, only non-scoped regions are allowed """
+        super(SystemSpecificationForm, self).clean()
+
+        allowed_lockout_regions = [region for region in LockoutRegion.objects.all() 
+                                          if self.instance.interface_description.reference_system in region.limit_scope.all()]
+        if not allowed_lockout_regions:
+            allowed_lockout_regions = [region for region in LockoutRegion.objects.all() if region.limit_scope.count()==0]
+
+        for lockout in self.cleaned_data["regional_lockout"]:
+            if lockout not in allowed_lockout_regions:
+                raise ValidationError({
+                        "regional_lockout": ValidationError("Only lockout with the correct scope are allowed here.",
+                                                             code="mandatory")
+                       })
+
+class SystemSpecificationAdmin(admin.ModelAdmin):
+    form = SystemSpecificationForm
+
+
 def register_custom_models(site):
-   site.register(Company)
-   site.register(StorageUnit)
-   site.register(Location)
-   site.register(Person)
+    site.register(ReleaseRegion)
+    site.register(TagRegion)
 
-   site.register(Donation, AnyBundleAdmin)
-   site.register(Purchase, AnyBundleAdmin)
+    site.register(Location)
+    site.register(StorageUnit)
+    site.register(Location)
+    site.register(Person)
 
-   site.register(PurchaseContext)
+    site.register(Donation, AnyBundleAdmin)
+    site.register(Purchase, AnyBundleAdmin)
 
+    site.register(PurchaseContext)
+
+    site.register(LockoutRegion)
+    site.register(BaseSystem)
+    site.register(SystemMediaPair)
+    site.register(SystemInterfaceDescription, SystemInterfaceDescriptionAdmin)
+    site.register(SystemSpecification, SystemSpecificationAdmin)
 ##
 ## Specifics
 ##
@@ -423,6 +599,8 @@ class ReleaseSpecific(object):
     class Hardware(AbstractBase):
         color = models.ManyToManyField("Color")
         manufacturer = models.ForeignKey('Company', blank=True, null=True)
+        wireless = models.BooleanField(default=False)
+        battery_type = models.ForeignKey(BatteryType, blank=True, null=True)
         #model = models.CharField(max_length=20, blank=True)  ## Probably useless, since there is already 'version'
 
         def __str__(self):
@@ -445,10 +623,8 @@ class ReleaseSpecific(object):
         autofire = models.BooleanField()
         slow     = models.BooleanField()
 
-#
-#
-#    class Console(AbstractBase):
-#       pass
+    class Console(AbstractBase):
+       console_on_chip = models.BooleanField(default=False, help_text="Is this a (re-)implementation of a system on a single chip ?")
 #
 #
 #    class Game(AbstractBase):
@@ -478,6 +654,7 @@ class ReleaseCategory:
     COMBO       = (RelSp.Combo,)
     SOFTWARE    = (RelSp.Software,)
     HARDWARE    = (RelSp.Hardware,)
+    CONSOLE     = compose(HARDWARE, (RelSp.Console,))
     DEMO        = compose(SOFTWARE, (RelSp.Demo,))
     MEMORY      = compose(HARDWARE, (RelSp.Memory,))
     DIR_INPUT   = compose(HARDWARE, (RelSp.DirectionalController,))
@@ -554,7 +731,7 @@ class ConceptNature(ConceptNature):
     DATA = collections.OrderedDict((
         (COMBO,     DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.COMBO,     OccurrenceCategory.EMPTY,    (),             )),
 
-        (CONSOLE,   DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.HARDWARE,  OccurrenceCategory.CONSOLE,      automatic_self )),
+        (CONSOLE,   DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,      automatic_self )),
         (GAME,      DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (DEMO,      DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (GUN,       DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),

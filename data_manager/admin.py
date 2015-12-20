@@ -46,7 +46,7 @@ class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
 
 
 class ReleaseDistinctionInline(admin.TabularInline):
-    extra = 3
+    extra = 1
     model = ReleaseDistinction
 
 class ReleaseAttributeFormset(OnlyOnMaterialFormSet):

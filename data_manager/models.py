@@ -91,6 +91,9 @@ class Concept(ConceptDeploymentBase, AbstractRecordOwnership):
 ############
 
 class AttributeCategory(models.Model):
+    class Meta:
+        verbose_name_plural = "Attribute categories"
+
     name = models.CharField(max_length=60, unique=True)
 
     def __str__(self):

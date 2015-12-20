@@ -1,0 +1,163 @@
+[
+{
+  "model": "data_manager.tagregion",
+  "pk": 1,
+  "fields": {
+    "name": "PAL"
+  }
+},
+{
+  "model": "data_manager.tagregion",
+  "pk": 2,
+  "fields": {
+    "name": "AMR"
+  }
+},
+{
+  "model": "data_manager.tagregion",
+  "pk": 3,
+  "fields": {
+    "name": "ASI"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 1,
+  "fields": {
+    "name": "EU",
+    "parent_region": null,
+    "tag_region": 1,
+    "detail": "Europe"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 2,
+  "fields": {
+    "name": "FR",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "France"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 3,
+  "fields": {
+    "name": "UK",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "United Kingdom"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 4,
+  "fields": {
+    "name": "DE",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Germany"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 5,
+  "fields": {
+    "name": "ES",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Spain"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 6,
+  "fields": {
+    "name": "IT",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Italy"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 7,
+  "fields": {
+    "name": "PT",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Portugal"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 8,
+  "fields": {
+    "name": "NL",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Netherlands"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 9,
+  "fields": {
+    "name": "NA",
+    "parent_region": null,
+    "tag_region": 2,
+    "detail": "North America"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 10,
+  "fields": {
+    "name": "US",
+    "parent_region": 9,
+    "tag_region": 2,
+    "detail": "United States"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 11,
+  "fields": {
+    "name": "CA",
+    "parent_region": 9,
+    "tag_region": 2,
+    "detail": "Canada"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 12,
+  "fields": {
+    "name": "BR",
+    "parent_region": null,
+    "tag_region": 2,
+    "detail": "Brazil"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 13,
+  "fields": {
+    "name": "JP",
+    "parent_region": null,
+    "tag_region": 3,
+    "detail": "Japan"
+  }
+},
+{
+  "model": "data_manager.releaseregion",
+  "pk": 14,
+  "fields": {
+    "name": "KR",
+    "parent_region": null,
+    "tag_region": 3,
+    "detail": "South Korea"
+  }
+}
+]

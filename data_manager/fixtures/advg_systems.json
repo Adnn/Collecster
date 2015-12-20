@@ -1,0 +1,79 @@
+[
+  {
+    "model": "data_manager.company",
+    "pk": 1,
+    "fields": {
+      "name": "Sega"
+    }
+  },
+  {
+    "model": "data_manager.company",
+    "pk": 2,
+    "fields": {
+      "name": "Nintendo"
+    }
+  },
+  {
+    "model": "data_manager.company",
+    "pk": 3,
+    "fields": {
+      "name": "Sony"
+    }
+  },
+  {
+    "model": "data_manager.company",
+    "pk": 4,
+    "fields": {
+      "name": "SNK"
+    }
+  },
+  {
+    "model": "data_manager.company",
+    "pk": 5,
+    "fields": {
+      "name": "NEC"
+    }
+  },
+  {
+    "model": "data_manager.company",
+    "pk": 6,
+    "fields": {
+      "name": "Microsoft"
+    }
+  },
+
+  {
+    "model": "data_manager.basesystem",
+    "pk": 1,
+    "fields": {
+      "name": "Master System",
+      "brand": "1",
+      "generation": "3",
+      "destination": "H",
+      "abbreviated_name": "MS"
+    }
+  },
+  {
+    "model": "data_manager.basesystem",
+    "pk": 2,
+    "fields": {
+      "name": "Mega Drive",
+      "brand": "1",
+      "generation": "4",
+      "destination": "H",
+      "abbreviated_name": "MD"
+    }
+  },
+  {
+    "model": "data_manager.basesystem",
+    "pk": 3,
+    "fields": {
+      "name": "Nintendo Entertainment System",
+      "brand": "2",
+      "generation": "3",
+      "destination": "H",
+      "abbreviated_name": "NES"
+    }
+  }
+
+ ]
