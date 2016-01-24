@@ -107,6 +107,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_ROOT = 'media'
+MEDIA_URL = '/media/'
+
 # Import local settings if they exist
 try:
     from .local_settings import *
