@@ -1,8 +1,11 @@
 from . import utils
-from .models import AbstractRecordOwnership, UserExtension
+from .models import AbstractRecordOwnership, UserExtension, Occurrence, Release
 
 from django.contrib import admin
 from django import forms
+
+#TODEL
+import wdb
 
 
 ##########
@@ -30,13 +33,27 @@ class SaveInitialDataModelForm(forms.ModelForm):
 ##########
 class CustomSaveModelAdmin(admin.ModelAdmin):
     """ Saves the User that ADDed the instance if its model derives from AbstractRecordOwnership (-> it has a created_by field) """
-    """ Also introduce a post_model_save() hook, called as the last step in save_model() """
+    """ Also introduces a post_model_save() hook, called after saving the model, but before saving the related models """
+    """ Plus attempt to call an "admin_post_save" method on the model instance, after itself and its related instances were saved """
+
     def save_model(self, request, obj, form, change):
         # If obj has a "created_by" field provided by AbstractRecordOwnership, and this is adding a new object (not editing one)
         if issubclass(obj.__class__, AbstractRecordOwnership) and not change:
             obj.created_by = UserExtension.objects.get(user=request.user)
         super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)
         self.post_save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        self._obj_post_save(obj);
+        return super(CustomSaveModelAdmin, self).response_add(request, obj, post_url_continue)
+
+    def response_change(self, request, obj):
+        self._obj_post_save(obj);
+        return super(CustomSaveModelAdmin, self).response_change(request, obj)
+
+    def _obj_post_save(self, obj):
+        if hasattr(obj, "admin_post_save"):
+            obj.admin_post_save()
 
     def post_save_model(self, request, obj, form, change):
         pass
@@ -90,6 +107,14 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         #yield formset, inline
 
 
+    def _collecster_fixup_request(self, request, obj, change):
+        """ Implementation detail, allows to forward some data from 'obj' into the request """
+        if type(obj) is Occurrence and hasattr(obj, "release"):
+            utils.set_request_payload(request, "release_id", obj.release.id)
+        elif type(obj) is Release and hasattr(obj, "concept"):
+            utils.set_request_payload(request, "concept_id", obj.concept.id)
+
+
     def _create_formsets(self, request, obj, change):
         """ Used to customize a static formset (number of forms, initial data, ...). """
         """ Each formset will have its "collecster_instance_callback" method run on creation """
@@ -97,7 +122,10 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         """ It would be best not to need to override this 'private' method, the rationale is obj propagation """
         """ _create_formsets does not propagate the object to get_formsets_with_inlines() when ADDing it (even if it partially or totally exists) """
         """ see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 """
-        """ Yet we need to save its value (at least the concept or release) for 'collecster_instance_callback' callback """
+        """ Yet we need its value (at least the concept or release): """
+        """   * for 'collecster_instance_callback' callback """
+        """   * when invoking callable dynamic inline classes (see get_inline_instances) """
+        self._collecster_fixup_request(request, obj, change)
         formsets, inlines = super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
         for formset in formsets:
             if hasattr(formset, "collecster_instance_callback"):

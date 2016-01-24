@@ -41,7 +41,13 @@ def get_concept_id(request, release=None, occurrence=None):
     elif occurrence is not None and hasattr(occurrence, "release"):
         return occurrence.release.concept.pk
     else:
-        return get_request_payload(request, "concept_id", 0)
+        concept_id = get_request_payload(request, "concept_id", 0)
+        if not concept_id:
+            release_id = get_request_payload(request, "release_id", 0)
+            if release_id:
+                concept_id = Release.objects.get(pk=release_id).concept.pk
+        return concept_id
+
 
 def get_release_id(request, occurrence=None):
     # Even if the forwarded object is not None, it could not have its related field not populated
@@ -121,6 +127,11 @@ def occurrence_composition_queryset(formset, request, obj):
 ##
 ## Request helpers
 ##
+def set_request_payload(request, key, value):
+    if not hasattr(request, "collecster_payload"):
+        request.collecster_payload = {}
+    request.collecster_payload[key] = value; 
+
 def get_request_payload(request, key, default=None):
     if hasattr(request, "collecster_payload") and key in request.collecster_payload:
         return request.collecster_payload[key] 
