@@ -2,34 +2,22 @@ from .config_utils import *
 
 from .enumerations import Country
 
+import data_manager.models
+
 from django import forms
 from django.db import models
 from django.contrib import admin
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.template import RequestContext, loader
+from django.shortcuts import render
 
-import collections
+import pyqrcode
 
-import data_manager.models
+import collections, os, struct
 
 
-#class ReleaseRegion:
-#    ASIA = "AS"
-#    CHINA = "CH"
-#    JAPAN = "JP"
-#    USA = "US"
-#
-#    DATA = (
-#        (ASIA, "Asia"),
-#        (JAPAN, "Japan"),
-#    )
-#    
-#    @classmethod
-#    def get_choices(cls):
-#        return cls.DATA
-#    
-#    @classmethod
-#    def choices_maxlength(cls):
-#        return 2
+configuration_name = "advg"
 
 class OccurrenceOrigin():
     ORIGINAL = u'OR'
@@ -64,6 +52,52 @@ def is_material(release):
     """ Yet not to force having an immaterial field (for cases were there are no immaterials), it is abstracted through this function """
     return not release.immaterial
 
+
+def generate_qrcode(occurrence, tag_to_occurrence):
+    reserved = 0 #For later use
+    #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
+    user_guid = tag_to_occurrence.user.guid
+    deployment = data_manager.models.Deployment.objects.get(configuration=configuration_name)
+    collection_id = data_manager.models.UserCollection.objects.get(user=user_guid, deployment=deployment).collection_local_id 
+    #TODO Handle the object type when other types will be allowed
+    objecttype_id = 1 # There is a single object type at the moment: the occurrence
+    tag_occurrence_id = tag_to_occurrence.tag_occurrence_id 
+    data = struct.pack("<BHBII", reserved, collection_id, objecttype_id, user_guid, tag_occurrence_id)
+
+    return pyqrcode.create(data, version=1, error="M", mode="binary")
+
+
+def generate_tag(occurrence):
+    tag_version = 2
+    qr_filename = "qr_v{}.png".format(tag_version)
+
+    tag_to_occurrence = data_manager.models.TagToOccurrence.objects.get(occurrence=occurrence)
+    
+    working = OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
+
+    template = loader.get_template('tag/v2.html')
+    context = {
+        "release": occurrence.release,
+        "tag": {"version": tag_version, "file": qr_filename},
+        "collection": {"shortname": "VG", "objecttype": "OCC"},
+        "occurrence": occurrence,
+        "working": working,
+    }
+    
+    # Here, uses the occurrence PK in the DB, not the tag_occurrence id, because we see this part of the filesystem
+    # like a direct extension to the DB
+    # As a consequence, a potential migration of a collection would need to rename those folder to map to the DB.
+    directory = "{}/data_manager/occurrences/{}/tags/".format(settings.MEDIA_ROOT, occurrence.pk)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    QR_MODULE_SIZE=8*4
+    qr = generate_qrcode(occurrence, tag_to_occurrence)
+    qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
+
+    f = open(os.path.join(directory, "v{}.html".format(tag_version)), "w") #TODO some date and time ?
+    f.write(template.render(context))
+    f.close()
 
 ##
 ## Customization of the 3 base models
@@ -107,6 +141,18 @@ class ReleaseDeploymentBase(models.Model):
 
     system_specification = models.ForeignKey("SystemSpecification", blank=True, null=True) # immaterials do not specify it
 
+    def tag_regions(self):
+        return list(collections.OrderedDict.fromkeys([region.tag_region for region in self.release_regions.all()]))
+        
+    def compatible_systems(self):
+        keys = []
+        if self.system_specification:
+            keys = [pair.system.abbreviated_name
+                    for pair in self.system_specification.interface_description.requires.all()]
+        return list(collections.OrderedDict.fromkeys(keys))
+            
+        
+            
 
 class OccurrenceDeploymentBase(models.Model):
     class Meta:
@@ -120,6 +166,12 @@ class OccurrenceDeploymentBase(models.Model):
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
+
+    def admin_post_save(self):
+        generate_tag(self)
+
+    def origin_color(self):
+        return OccurrenceOrigin.DATA[self.origin].tag_color
 
 ##
 ## Extra models
@@ -333,7 +385,7 @@ class Donation(Bundle):
 class Person(models.Model):
     first_name = models.CharField(max_length=20)
     last_name  = models.CharField(max_length=20)
-    nickname   = models.CharField(max_length=20, blank=True)
+    nickname   = models.CharField(max_length=20, unique=True) # Required, because it is printed on the tag
 
     def __str__(self):
             return "{} {}".format(self.first_name, self.last_name)
@@ -547,8 +599,11 @@ class SystemSpecificationForm(forms.ModelForm):
         """ Otherwise, only non-scoped regions are allowed """
         super(SystemSpecificationForm, self).clean()
 
+        if not "interface_description" in self.cleaned_data or not "regional_lockout" in self.cleaned_data:
+            return
+
         allowed_lockout_regions = [region for region in LockoutRegion.objects.all() 
-                                          if self.instance.interface_description.reference_system in region.limit_scope.all()]
+                                          if self.cleaned_data["interface_description"].reference_system in region.limit_scope.all()]
         if not allowed_lockout_regions:
             allowed_lockout_regions = [region for region in LockoutRegion.objects.all() if region.limit_scope.count()==0]
 
@@ -567,14 +622,15 @@ def register_custom_models(site):
     site.register(ReleaseRegion)
     site.register(TagRegion)
 
-    site.register(Location)
-    site.register(StorageUnit)
-    site.register(Location)
     site.register(Person)
+
+    site.register(Color)
 
     site.register(Donation, AnyBundleAdmin)
     site.register(Purchase, AnyBundleAdmin)
 
+    site.register(Location)
+    site.register(StorageUnit)
     site.register(PurchaseContext)
 
     site.register(LockoutRegion)
@@ -582,6 +638,8 @@ def register_custom_models(site):
     site.register(SystemMediaPair)
     site.register(SystemInterfaceDescription, SystemInterfaceDescriptionAdmin)
     site.register(SystemSpecification, SystemSpecificationAdmin)
+
+    site.register(Location) ## For some reason, the models registered after it do not show up ...
 ##
 ## Specifics
 ##
@@ -666,9 +724,9 @@ class OccurrenceSpecific(object):
     class AbstractBase(models.Model):
         class Meta:
             abstract = True
-        release = models.ForeignKey('Occurrence')
+        occurrence = models.ForeignKey('Occurrence')
 
-    class Operational(AbstractBase):
+    class OperationalOcc(AbstractBase):
         YES = "Y"
         NO = "N"
         UNKNOWN = "?"
@@ -680,7 +738,7 @@ class OccurrenceSpecific(object):
         )
         working_condition = models.CharField(max_length=1, choices=CHOICES, default=UNKNOWN)
 
-    class Console(AbstractBase):
+    class ConsoleOcc(AbstractBase):
         region_modded = models.BooleanField()
         copy_modded = models.BooleanField()
 
@@ -690,8 +748,8 @@ OccSp = OccurrenceSpecific
 
 class OccurrenceCategory:
     EMPTY       = ()
-    OPERATIONAL = (OccSp.Operational,)
-    CONSOLE     = (OccSp.Operational, OccSp.Console,)
+    OPERATIONAL = (OccSp.OperationalOcc,)
+    CONSOLE     = (OccSp.OperationalOcc, OccSp.ConsoleOcc,)
 
 
 def automatic_self():
@@ -727,13 +785,14 @@ class ConceptNature(ConceptNature):
     PAD = "PAD"
     GUN = "GUN"
 
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "release_category", "occurrence_category", "automatic_attributes"])
+    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "tag_color", "release_category", "occurrence_category", "automatic_attributes"])
     DATA = collections.OrderedDict((
-        (COMBO,     DataTuple(COMBO,        UIGroup._HIDDEN,    ReleaseCategory.COMBO,     OccurrenceCategory.EMPTY,    (),             )),
+        (COMBO,     DataTuple(COMBO,        UIGroup._HIDDEN,    "grey",     ReleaseCategory.COMBO,     OccurrenceCategory.EMPTY,    (),             )),
 
-        (CONSOLE,   DataTuple('Console',    UIGroup._TOPLEVEL,  ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,      automatic_self )),
-        (GAME,      DataTuple('Game',       UIGroup.SOFT,       ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
-        (DEMO,      DataTuple('Demo',       UIGroup.SOFT,       ReleaseCategory.DEMO,      OccurrenceCategory.OPERATIONAL,  automatic_self )),
-        (GUN,       DataTuple('Gun',        UIGroup.ACCESSORY,  ReleaseCategory.HARDWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
-        (PAD,       DataTuple('Pad',        UIGroup.ACCESSORY,  ReleaseCategory.DIR_INPUT, OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (CONSOLE,   DataTuple('Console',    UIGroup._TOPLEVEL,  "red",      ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,      automatic_self )),
+        (GAME,      DataTuple('Game',       UIGroup.SOFT,       "green",    ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (DEMO,      DataTuple('Demo',       UIGroup.SOFT,       "palegreen",ReleaseCategory.DEMO,      OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (GUN,       DataTuple('Gun',        UIGroup.ACCESSORY,  "blue",     ReleaseCategory.HARDWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (PAD,       DataTuple('Pad',        UIGroup.ACCESSORY,  "blue",     ReleaseCategory.DIR_INPUT, OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        # application -> purple
     ))

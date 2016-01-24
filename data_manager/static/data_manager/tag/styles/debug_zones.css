@@ -1,0 +1,23 @@
+body {
+    background-color: lightblue;
+}
+
+.human_content {
+    background-color: yellow;
+}
+
+.release_name {
+    background-color: grey;
+}
+
+.platform {
+    background-color: lightblue;
+}
+
+.tag_details {
+    background-color: red;
+}
+
+.occurrence {
+    background-color: blue;
+}

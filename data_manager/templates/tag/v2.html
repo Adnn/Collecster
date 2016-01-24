@@ -1,0 +1,106 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    {% load staticfiles %}
+    <!--
+    <link rel="stylesheet" href="debug_zones.css">
+    -->
+    <link rel="stylesheet" href="{% static "data_manager/tag/styles/layout.css" %}">
+    <link rel="stylesheet" href="{% static "data_manager/tag/styles/style.css" %}">
+
+    <!--<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>-->
+    <script type="text/javascript" src="{% static "data_manager/scripts/jquery-2.1.4.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "data_manager/tag/scripts/textfill.js" %}"></script>
+</head>
+
+<body>
+    <div class="complete">
+        <div class="human_content">
+            <div class="upper_content">
+
+                <div class="release_name jtextfill" style="color: {{ release.name_color }};">
+                    <div class="tweak">
+                        {{ release.display_name }}
+                    </div>
+                </div>
+
+                <div class="sp1"></div>
+
+                <div class="platform flex">
+                    <div class="region flex jtextfill">
+                        <svg class="bracket" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <polyline vector-effect="non-scaling-stroke" stroke-width="20" stroke="black" fill="none"
+                            points="100,0 0,0 0,100 100,100" />
+                        </svg>
+
+                        <div class="region_values">
+                            <!-- span, because it tightly hugs its content -->
+                            <span class="tweak">
+                                {{ release.tag_regions|join:" " }}
+                            </span>
+                        </div>
+
+                        <svg class="bracket" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <polyline vector-effect="non-scaling-stroke" stroke-width="20" stroke="black" fill="none"
+                            points="0,0 100,0 100,100 0,100" />
+                        </svg>
+                    </div>
+
+                    <div style="width:40px;"></div>
+
+                    <div class="systems jtextfill">
+                        <div class="tweak">
+                            {{ release.compatible_systems|join:" " }}
+                        </div>
+                    </div>
+
+                    {% if release.loose %}<div class="loose to_right">l0</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="sp2"></div>
+
+            <div class="tag_details flex">
+                <div>T:{{ tag.version}}</div>
+                <div class="to_right">{{ collection.shortname }}/{{ collection.objecttype }}</div>
+            </div>
+
+            <div class="sp0"></div>
+
+            <div class="occurrence flex">
+                <svg height="112" width="112">
+                    <circle cx="56" cy="56" r="56" fill="{{ occurrence.origin_color }}" />
+                </svg>
+                <div style="width:60px;"></div>
+
+                <span>W</span>
+                <svg height="112" width="112" viewBox="0 0 100 100">
+                    <rect width="100" height="100" vector-effect="non-scaling-stroke" stroke="black" stroke-width="4" fill="none"/>
+
+                    {% if working == 'Y' %}
+                    <polyline vector-effect="non-scaling-stroke" stroke-linecap="butt" stroke-linejoin="bevel" stroke-width="16" stroke="green" fill="none"
+                    points="15,10 50,90 85,10" />
+
+                    {% elif working == "N" %}
+                    <line vector-effect="non-scaling-stroke" stroke-linecap="butt" stroke-linejoin="bevel" stroke-width="16" stroke="red"
+                    x1="15" y1="10" x2="85" y2="90"/>
+                    <line vector-effect="non-scaling-stroke" stroke-linecap="butt" stroke-linejoin="bevel" stroke-width="16" stroke="red"
+                    x1="15" y1="90" x2="85" y2="10"/>
+     
+                    {% endif %}
+                </svg>
+
+                <div class="to_right">{{ occurrence.owner.nickname }}</div>
+                <div class="occurrence_id to_right">{{ occurrence.pk }}</div>
+            </div>
+        </div> <!-- /human_content-->
+
+        <div>
+            <img class="tag" src="{{ tag.file }}"/>
+        </div>
+    </div> <!-- /complete-->
+</body>
+</html>

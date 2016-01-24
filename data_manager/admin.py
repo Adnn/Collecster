@@ -221,6 +221,9 @@ admin.site.register(Distinction)
 # For Administration
 admin.site.register(UserExtension)
 
+admin.site.register(Deployment)
+admin.site.register(UserCollection)
+
 # For readonly debug
 #admin.site.register(ConceptNature)
 #admin.site.register(TagToOccurrence)

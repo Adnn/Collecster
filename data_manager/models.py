@@ -25,6 +25,30 @@ def id_field(**kwargs):
                                           # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
 
 
+#############
+## Deployment
+#############
+#TODO When several collections are allowed to exist as separate apps in the same Django, those tables should be moved
+class Deployment(models.Model):
+    # We do not authorize several version of the same config for the moment
+    configuration = models.CharField(max_length=20, unique=True)
+    version = models.PositiveSmallIntegerField(default=1)
+    
+    def __str__(self):
+        return "{} v.{}".format(self.configuration, self.version)
+
+
+class UserCollection(models.Model):
+    class Meta:
+        unique_together = (("user", "collection_local_id"), ("user", "deployment"),)
+
+    user = models.ForeignKey("UserExtension")
+    collection_local_id = id_field() #TODO ensure it cannot exceede 4 bytes, as it is encoded in the QR
+    deployment = models.ForeignKey(Deployment)
+
+    def __str__(self):
+        return "{}(collection: {}) -> {}".format(self.user.person.nickname, self.collection_local_id, self.deployment)
+
 ##########
 ## User
 ##########
@@ -34,7 +58,7 @@ class UserExtension(models.Model):
     """ (to be managed by a central repo for Collecster """
     user = models.OneToOneField(User, primary_key=True)
     guid = id_field(unique=True)
-    person = models.ForeignKey("Person")
+    person = models.OneToOneField("Person")
     
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)
@@ -44,6 +68,7 @@ class TagToOccurrence(models.Model):
     class Meta:
         unique_together = ("user", "tag_occurrence_id") # Enforces USER::3)
 
+    # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
     user              = models.ForeignKey(UserExtension)
     tag_occurrence_id = id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
@@ -141,8 +166,16 @@ class Release(ReleaseDeploymentBase, AbstractRecordOwnership):
     nested_releases = models.ManyToManyField("self", through="ReleaseComposition", symmetrical=False,
                                              through_fields = ("from_release", "to_release"))
 
+    def display_name(self):
+        return self.name if self.name else self.concept
+
+    def name_color(self):
+        """ Returns the color associated to this release, which is based on its nature """
+        """ Nota that this color will be based on the primary nature only """
+        return ConfNature.DATA[self.concept.primary_nature].tag_color;
+
     def __str__(self):
-        return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not is_material(self) else "", self.name if self.name else self.concept))
+        return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not is_material(self) else "", self.display_name()))
 
     def clean(self):
         super(Release, self).clean()

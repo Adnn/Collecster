@@ -1,0 +1,80 @@
+body {
+    margin: 0px;
+    width: 2040px;
+    height: 840px;
+}
+
+.flex {
+    display: flex;
+    display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+    display: -ms-flexbox;  /* TWEENER - IE 10 */
+    display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+}
+
+.to_left {
+    margin-right: auto;
+}
+
+.to_right {
+    margin-left: auto;
+}
+
+img.tag {
+    position: absolute;
+    top: 20px;
+    left: 1239px; /* offset of: 1px (the border) + 12px (the human content left margin) + 1226px (the human content content) */
+}
+
+svg.bracket {
+    width: 24px;
+    /* height: 100%; */ /* because asking for 100% prevents it from filling the height (yeah, least surprising is for morons) http://stackoverflow.com/a/20959601/1027706 */
+}
+
+.complete {
+    border-style: solid;
+    border-width: 1px;
+}
+
+.human_content {
+    margin-top: 27px; /* 28, minus 1 on top and bottom margins to accomodate for the 1px border */
+    margin-bottom: 27px;
+    margin-left: 12px; /* 14, minus 2 to accomodate for the 1px border on both sides */
+    height: 784px;
+    width: 1226px;
+}
+
+.upper_content {
+    height: 532px;
+}
+
+.release_name {
+    height: 392px;
+}
+
+.platform {
+    height: 112px;
+}
+
+.region_values {
+    max-width: 191px;
+}
+
+.tag_details {
+    height: 70px;
+}
+
+.occurrence {
+    height: 112px;
+}
+
+.sp0 {
+    height: 14px;
+}
+
+.sp1 {
+    height: 28px;
+}
+
+.sp2 {
+    height: 56px;
+}

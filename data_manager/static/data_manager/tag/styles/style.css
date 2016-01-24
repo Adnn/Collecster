@@ -1,0 +1,83 @@
+@font-face {
+    font-family: 'Liberation Mono Bold'; /*a name to be used later*/
+    src: url('fonts/liberation-mono/LiberationMono-Bold.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'Liberation Mono Italic'; /*a name to be used later*/
+    src: url('fonts/liberation-mono/LiberationMono-Italic.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'Liberation Mono'; /*a name to be used later*/
+    src: url('fonts/liberation-mono/LiberationMono-Regular.ttf'); /*URL to font*/
+}
+ 
+@font-face {
+    font-family: 'Liberation Sans'; /*a name to be used later*/
+    src: url('fonts/liberation-sans/LiberationSans-Regular.ttf'); /*URL to font*/
+}
+
+@font-face {
+    font-family: 'Liberation Sans Italic'; /*a name to be used later*/
+    src: url('fonts/liberation-sans/LiberationSans-Italic.ttf'); /*URL to font*/
+}
+ 
+body {
+    /*
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    */
+    background-color: white;
+}
+
+.release_name {
+    font-size: 200px;
+    font-family: "Liberation Mono Bold";
+}
+
+.systems {
+    /* font-family: Liberation Sans; */
+    /* font-size: 100px; */
+    /*height: 112px;*/
+    /*width: 600px;*/
+    /*display:inline-block;*/
+    /*display:inline-block;*/
+}
+
+.tag_details {
+    font-family: "Liberation Mono";
+    font-size: 61px;
+    color: grey;
+}
+
+.platform {
+    color: black;
+    font-family: "Liberation Sans Italic";
+    font-size: 101px; /* computed offline with JS for a 112px height of container */
+}
+
+.region {
+    /*display:inline-block;*/
+    /*display:inline-block;*/
+    font-family: "Liberation Sans";
+}
+
+.region_values {
+    font-family: "Liberation Mono";
+}
+
+.occurrence {
+    font-family: "Liberation Mono";
+    font-size: 101px; /* computed offline with JS for a 112px height of container */
+
+}
+
+.loose {
+    font-family: "Liberation Mono";
+}
+
+.occurrence_id {
+    /*font-family: "Liberation Sans";*/
+}
