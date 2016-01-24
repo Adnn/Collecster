@@ -74,9 +74,7 @@ function main_function()
             {
                 id = 0
             }
-            $.ajax("/data_manager/ajax/release/" + id  + "/specific_admin_formset/html/",
-                   { success: div_replacer})
-            $.ajax("/data_manager/ajax/release/" + id  + "/attributes_admin_formset/html/",
+            $.ajax("/data_manager/ajax/release/" + id  + "/admin_formsets/html/",
                    { success: div_replacer})
         })
 
@@ -88,7 +86,7 @@ function main_function()
             {
                 id = 0
             }
-            $.ajax("/data_manager/ajax/concept/" + id  + "/specific_admin_formset/html/",
+            $.ajax("/data_manager/ajax/concept/" + id  + "/admin_formsets/html/",
                    { success: div_replacer})
         })
 }

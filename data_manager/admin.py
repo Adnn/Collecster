@@ -187,10 +187,15 @@ class OccurrenceCompositionInline(admin.TabularInline):
 
 class OccurrenceAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
-    collecster_dynamic_inline_classes = {"specific": utils.occurrence_specific_inlines}
+    collecster_dynamic_inline_classes = OrderedDict((
+        ("specific",             (utils.occurrence_specific_inlines)),
+        ("attributes",           (OccurrenceAttributeInline,)),
+        ("custom_attributes",    (OccurrenceCustomAttributeInline,)),
+        ("composition",          (OccurrenceCompositionInline,)),
+    ))
+
     collecster_readonly_edit = ("release",)
 
-    inlines = (OccurrenceAttributeInline, OccurrenceCustomAttributeInline, OccurrenceCompositionInline)
 
     def post_save_model(self, request, obj, form, change):
         if not change:

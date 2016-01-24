@@ -5,6 +5,7 @@ from django.http        import HttpResponse
 
 from .admin import ReleaseAdmin, OccurrenceAdmin
 from .models import *
+from . import utils
 
 
 ##
@@ -21,10 +22,16 @@ def get_template(wrapped_formset):
     #                                          else "stacked")
     return wrapped_formset.opts.template
 
+
+def render_admin_formsets(admin_formsets):
+    return [loader.render_to_string(get_template(wrapped_fs), {"inline_admin_formset": wrapped_fs})
+            for wrapped_fs in admin_formsets]
+
+
 ##
 ## Views
 ##
-def ajax_release_specific_admin_formsets(request, concept_id):
+def ajax_release_admin_formsets(request, concept_id):
     release_adm = ReleaseAdmin(Release, admin.site)
 
     request_with_payload = request
@@ -34,54 +41,28 @@ def ajax_release_specific_admin_formsets(request, concept_id):
 
     ## The specifics
     request_with_payload.collecster_payload["inlines_groups"] = ("specific",)
-    admin_formsets = get_admin_formsets(release_adm, request_with_payload)
-
-    rendered_formsets = [loader.render_to_string(get_template(wrapped_fs), {"inline_admin_formset": wrapped_fs})
-                         for wrapped_fs in admin_formsets]
-
+    rendered_formsets = render_admin_formsets(get_admin_formsets(release_adm, request_with_payload))
     specifics_div = "<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets))
 
     ## The automatic attributes
     request_with_payload.collecster_payload["inlines_groups"] = ("attributes",)
-    formsets = get_admin_formsets(release_adm, request_with_payload)
+    rendered_attributes = render_admin_formsets(get_admin_formsets(release_adm, request_with_payload))
 
-    rendered_formsets = [] 
-    for wrapped_formset in formsets:
-    #for inline, wrapped_formset in zip(inline_instances, formsets):
-        template_file = get_template(wrapped_formset)
-        rendered_formsets.append(loader.render_to_string(template_file, {"inline_admin_formset": wrapped_formset}))
-    attributes_formset = rendered_formsets[0]
-
-    return HttpResponse("{}\n{}".format(specifics_div, attributes_formset))
+    return HttpResponse("{}\n{}".format(specifics_div, rendered_attributes[0]))
 
 
-def ajax_occurrence_specific_admin_formsets(request, release_id):
-    occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
-
-    request_with_payload = request
-    release_id = int(release_id)
-    request_with_payload.collecster_payload = {
-        "concept_id": (Release.objects.get(pk=release_id).concept.pk) if release_id else 0,
-        "inlines_groups": ("specific",) 
-    }
-
-    ## SAME AS ABOVE ##
-    rendered_formsets = [loader.render_to_string(get_template(wrapped_fs), {"inline_admin_formset": wrapped_fs})
-                         for wrapped_fs in get_admin_formsets(occurrence_adm, request_with_payload)]
-
-    return HttpResponse("<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets)))
-
-
-def ajax_occurrence_attributes_admin_formsets(request, release_id):
+def ajax_occurrence_admin_formsets(request, release_id):
     occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
 
     request.collecster_payload = { "release_id": int(release_id) }
 
-    formsets, inline_instances = occurrence_adm._create_formsets(request, occurrence_adm.model(), change=False)
-    formsets = occurrence_adm.get_inline_formsets(request, formsets, inline_instances)
+    ## The specifics
+    utils.set_request_payload(request, "inlines_groups", ("specific",))
+    rendered_formsets = render_admin_formsets(get_admin_formsets(occurrence_adm, request))
+    specifics_div = "<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets))
 
-    rendered_formsets = [] 
-    for inline, wrapped_formset in zip(inline_instances, formsets):
-        rendered_formsets.append(loader.render_to_string(inline.template, {"inline_admin_formset": wrapped_formset}))
+    ## The attributes and composition
+    utils.set_request_payload(request, "inlines_groups", ("attributes", "custom_attributes", "composition",))
+    rendered_attributes = render_admin_formsets(get_admin_formsets(occurrence_adm, request))
 
-    return HttpResponse("{}".format("\n".join(rendered_formsets)))
+    return HttpResponse("{}\n{}".format("\n".join(rendered_attributes), specifics_div))
