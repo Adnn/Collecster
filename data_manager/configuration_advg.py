@@ -120,6 +120,10 @@ class ConceptDeploymentBase(models.Model):
 
     developer = models.ForeignKey('Company')
 
+    name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True)
+    year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True)
+
+
 class ReleaseDeploymentBase(models.Model):
     """ An abstract base for the Release model, allowing to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
@@ -189,7 +193,7 @@ class ReleaseRegion(models.Model):
     parent_region = models.ForeignKey("self", blank=True, null=True)
     tag_region = models.ForeignKey("TagRegion")
 
-    detail = models.CharField(max_length=20, unique=True)
+    detail = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
         display = "{}".format(self.name)

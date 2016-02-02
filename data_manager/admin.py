@@ -27,9 +27,31 @@ class ConceptNatureInline(admin.TabularInline):
     can_delete = False
 
 
+class ConceptAdminForm(forms.models.ModelForm):
+    def clean(self):
+        data = self.cleaned_data
+        existing_same_name = (Concept.objects.filter(distinctive_name=data["distinctive_name"]) 
+                                             .exclude(pk=self.instance.pk))
+        for other_concept in existing_same_name:
+            if other_concept.year == data["year"]:
+                if not data["name_scope_restriction"] and not other_concept.name_scope_restriction.all():
+                    raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' worldwide.",
+                                                params={"concept_id": other_concept.pk,
+                                                        "name": data["distinctive_name"]},
+                                                code='invalid')
+                else:
+                    intersection = set(data["name_scope_restriction"]).intersection(other_concept.name_scope_restriction.all())
+                    if intersection:
+                        raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' for regions: %(regions)s.",
+                                                    params={"concept_id": other_concept.pk,
+                                                            "name": data["distinctive_name"],
+                                                            "regions": ["{}".format(region) for region in intersection]},
+                                                    code='invalid')
+
 class ConceptAdmin(CustomSaveModelAdmin):
     exclude = ("created_by",)
     inlines = (ConceptNatureInline,)
+    form = ConceptAdminForm
 
 
 ##########

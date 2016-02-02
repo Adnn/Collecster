@@ -98,12 +98,13 @@ class ConceptNature(models.Model):
 
 
 class Concept(ConceptDeploymentBase, AbstractRecordOwnership):
-    distinctive_name    = models.CharField(max_length=180, unique=True)  
+    distinctive_name    = models.CharField(max_length=180)  
     common_name         = models.CharField(max_length= 60, blank=True)  
     primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
 
     def __str__(self):
-        return self.common_name if self.common_name else self.distinctive_name
+        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
+                             " ({})".format(self.year) if self.year else "")
 
     @property
     def all_nature_tuple(self):
