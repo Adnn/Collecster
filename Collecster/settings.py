@@ -41,7 +41,7 @@ INSTALLED_APPS = (
     # Custom applications
     'OOModel_attributes',
     'OOModel_composition',
-    'data_manager',
+    #'data_manager',
     'validate_min',
 )
 

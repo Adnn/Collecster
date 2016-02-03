@@ -1,4 +1,6 @@
-from .configuration import is_material, Person
+#from .configuration import is_material, Person
+from shared import is_material
+
 from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 from .models import *
 from . import utils
@@ -90,7 +92,7 @@ class ReleaseCustomAttributeInline(admin.TabularInline):
 
 class ReleaseCompositionInline(admin.TabularInline):
     verbose_name = verbose_name_plural = "Release composition"
-    model = Release.nested_releases.through
+    model = ReleaseBase.nested_releases.through
     fk_name = 'from_release' # This seems to be the hardcoded name automatically given by Django 
     formset = OnlyOnMaterialFormSet
 
@@ -99,7 +101,7 @@ class ReleaseForm(forms.ModelForm):
     ## Override the partial_date_precision field for two customizations :
     ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
     ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
-    partial_date_precision = forms.ChoiceField(choices=Release._meta.get_field("partial_date_precision").choices, required=False,
+    partial_date_precision = forms.ChoiceField(choices=ReleaseBase._meta.get_field("partial_date_precision").choices, required=False,
                                                widget=widgets.RadioSelectOneLine)
         
     ## Would be less intrusive, but does not allow to control the choices proposed by the widget
@@ -109,11 +111,12 @@ class ReleaseForm(forms.ModelForm):
 
 def get_release_readonlyedit():
     """ The immaterial field is not mandatory on Release, but if it is present is should not be changeable """
-    try:
-        Release._meta.get_field("immaterial")
-        return ("concept", "immaterial",)
-    except FieldDoesNotExist:
-        return ("concept",)
+    # TODO
+    #try:
+    #    Release._meta.get_field("immaterial")
+    #    return ("concept", "immaterial",)
+    #except FieldDoesNotExist:
+    #    return ("concept",)
 
 class ReleaseAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
@@ -236,9 +239,10 @@ class OccurrenceAdmin(CollecsterModelAdmin):
 ## Registrations
 ################
 
-admin.site.register(Concept,    ConceptAdmin)
-admin.site.register(Release,    ReleaseAdmin)
-admin.site.register(Occurrence, OccurrenceAdmin)
+# TODO
+#admin.site.register(Concept,    ConceptAdmin)
+#admin.site.register(Release,    ReleaseAdmin)
+#admin.site.register(Occurrence, OccurrenceAdmin)
 
 admin.site.register(Attribute)
 admin.site.register(AttributeCategory)

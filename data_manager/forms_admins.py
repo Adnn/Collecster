@@ -1,5 +1,5 @@
 from . import utils
-from .models import AbstractRecordOwnership, UserExtension, Occurrence, Release
+from .models import AbstractRecordOwnership, UserExtension, OccurrenceBase, ReleaseBase
 
 from django.contrib import admin
 from django import forms
@@ -109,9 +109,9 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
 
     def _collecster_fixup_request(self, request, obj, change):
         """ Implementation detail, allows to forward some data from 'obj' into the request """
-        if type(obj) is Occurrence and hasattr(obj, "release"):
+        if type(obj) is OccurrenceBase and hasattr(obj, "release"):
             utils.set_request_payload(request, "release_id", obj.release.id)
-        elif type(obj) is Release and hasattr(obj, "concept"):
+        elif type(obj) is ReleaseBase and hasattr(obj, "concept"):
             utils.set_request_payload(request, "concept_id", obj.concept.id)
 
 

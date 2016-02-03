@@ -13,7 +13,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Custom applications
-    'data_manager',
+    "advg",
+    "data_manager",
 )
 
 # The secret key is now to be found in $DJANGO_SECRET_KEY env var. This file is no longer private !
