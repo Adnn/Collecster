@@ -16,6 +16,10 @@ from django.forms.models import BaseInlineFormSet
 ## TODEL
 #import wdb
 
+def get_app_name():
+    #return string(models.__dict__["__package__"])
+    return globals()["__package__"]
+
 
 class OneFormFormSet(BaseInlineFormSet):
     """ We just need to have validate_min and _max set to True on the FormSet class used by the Admin """
