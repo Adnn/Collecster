@@ -108,7 +108,7 @@ def automatic_any():
     )
 
 
-class ConceptNature(ConceptNature):
+class ConfigNature(ConfigNature):
     class UIGroup:
         _HIDDEN         = "_HIDDEN"
         _TOPLEVEL       = ""

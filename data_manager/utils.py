@@ -1,12 +1,8 @@
-
-#from . import configuration as conf
-#from shared import ConfNature as ConceptNature
-
-# TODO
+# TODO sort out enumeration
 from data_manager import enumerations as enum
 
 from .models import *
-from .configuration import ConceptNature
+from .configuration import ConfigNature
 
 from django import forms
 from django.contrib import admin
@@ -78,11 +74,11 @@ def get_concept_inlines(concept_id, specifics_retriever):
 
 def release_specific_inlines(request, obj):
     concept_id = get_concept_id(request, release=obj)
-    return get_concept_inlines(concept_id, ConceptNature.get_release_specifics) if concept_id != 0 else []
+    return get_concept_inlines(concept_id, ConfigNature.get_release_specifics) if concept_id != 0 else []
 
 def occurrence_specific_inlines(request, obj):
     concept_id = get_concept_id(request, release=obj)
-    return get_concept_inlines(concept_id, ConceptNature.get_occurrence_specifics) if concept_id != 0 else []
+    return get_concept_inlines(concept_id, ConfigNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
 def release_automatic_attributes(formset, request, obj):
@@ -165,7 +161,7 @@ def retrieve_release_composition(release_id):
     #return Release.objects.get(pk=release_id).nested_releases.all()
 
 def retrieve_automatic_attributes(concept_id):
-    return ConceptNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
+    return ConfigNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
 
 def all_release_attributes(release_id):
     if not release_id:
@@ -178,7 +174,7 @@ def all_release_attributes(release_id):
 
     attributes = []
     # get the implicit attributes first, disabled
-    #attributes = ConceptNature.get_release_implicit_attributes(release)
+    #attributes = ConfigNature.get_release_implicit_attributes(release)
 
     # then the explicit (non-custom) attributes
     attributes.extend(retrieve_any_attributes(ReleaseAttribute, release))

@@ -146,7 +146,7 @@ def self_software(release):
 ##
 ## Defines the natures and all their associeted data
 ##
-class ConceptNature(ConceptNature):
+class ConfigNature(ConfigNature):
     class UIGroup:
         _HIDDEN         = "_HIDDEN"
         _TOPLEVEL       = ""

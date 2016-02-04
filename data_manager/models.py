@@ -1,20 +1,14 @@
-#from advg.configuration_advg import ConceptNature as ConfNature, is_material
-from .configuration import ConceptNature as ConfNature, is_material
+from .configuration import ConfigNature, is_material
 
 from data_manager import enumerations as enum
 from data_manager import fields
-
-# TODO remove
-#from videogame.configuration import ConceptNature as ConfNature#, is_material
-
-#import shared
-#from shared import ConfNature
 
 from django.db import models
 from django.core.exceptions import ValidationError
 
 # TODEL
 #import wdb
+
 
 ##########
 ## Utils functions
@@ -61,7 +55,7 @@ class ConceptNatureBase(models.Model):
         unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
 
     concept = models.ForeignKey("Concept", related_name="additional_nature_set")
-    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+    nature  = models.CharField(max_length=ConfigNature.choices_maxlength(), choices=ConfigNature.get_choices())
 
 
 class ConceptBase(AbstractRecordOwnership):
@@ -70,7 +64,7 @@ class ConceptBase(AbstractRecordOwnership):
 
     distinctive_name    = models.CharField(max_length=180)  
     common_name         = models.CharField(max_length= 60, blank=True)  
-    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+    primary_nature      = models.CharField(max_length=ConfigNature.choices_maxlength(), choices=ConfigNature.get_choices())
 
     def __str__(self):
         return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
@@ -148,7 +142,7 @@ class ReleaseBase(AbstractRecordOwnership):
     def name_color(self):
         """ Returns the color associated to this release, which is based on its nature """
         """ Nota that this color will be based on the primary nature only """
-        return ConfNature.DATA[self.concept.primary_nature].tag_color;
+        return ConfigNature.DATA[self.concept.primary_nature].tag_color;
 
     def __str__(self):
         return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not is_material(self) else "", self.display_name()))

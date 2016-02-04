@@ -29,7 +29,7 @@ def self_software(release):
     return implicit_self(release) if material else ()
 
 
-class ConceptNature:
+class ConfigNature:
     """ Use should extend this class by deriving it from itself (http://stackoverflow.com/a/15526901/1027706) """
     """ And define a DATA class member """
 
