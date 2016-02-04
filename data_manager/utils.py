@@ -1,12 +1,15 @@
-from django.contrib import admin
 
 #from . import configuration as conf
-from shared import ConfNature as ConceptNature
+#from shared import ConfNature as ConceptNature
 
-from . import enumerations as enum
+# TODO
+from data_manager import enumerations as enum
+
 from .models import *
+from .configuration import ConceptNature
 
 from django import forms
+from django.contrib import admin
 from django.db.models import Q
 from django.forms.models import BaseInlineFormSet
 

@@ -1,5 +1,6 @@
 from . import utils
-from .models import AbstractRecordOwnership, UserExtension, OccurrenceBase, ReleaseBase
+from .models import AbstractRecordOwnership, OccurrenceBase, ReleaseBase
+from supervisor.models import UserExtension
 
 from django.contrib import admin
 from django import forms

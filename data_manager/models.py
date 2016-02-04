@@ -1,12 +1,14 @@
 #from advg.configuration_advg import ConceptNature as ConfNature, is_material
 from . import enumerations as enum
 
-import shared
-from shared import ConfNature
+# TODO remove
+#from videogame.configuration import ConceptNature as ConfNature#, is_material
+
+#import shared
+#from shared import ConfNature
 
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
 
 # TODEL
 #import wdb
@@ -23,65 +25,20 @@ def check_material_consistency(model_instance):
         if errors_dict:
             raise ValidationError(errors_dict)
 
+# TODO factorize with supervisor
 def id_field(**kwargs):
     return models.IntegerField(**kwargs) # From the documentation, it is the type of primary keys
                                           # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
 
 
-#############
-## Deployment
-#############
-#TODO When several collections are allowed to exist as separate apps in the same Django, those tables should be moved
-class Deployment(models.Model):
+
+class TagToOccurrenceBase(models.Model):
     class Meta:
-        app_label = "data_manager"
-        
-    # We do not authorize several version of the same config for the moment
-    configuration = models.CharField(max_length=20, unique=True)
-    version = models.PositiveSmallIntegerField(default=1)
-    
-    def __str__(self):
-        return "{} v.{}".format(self.configuration, self.version)
-
-
-class UserCollection(models.Model):
-    class Meta:
-        unique_together = (("user", "collection_local_id"), ("user", "deployment"),)
-        app_label = "data_manager"
-        
-
-    user = models.ForeignKey("UserExtension")
-    collection_local_id = id_field() #TODO ensure it cannot exceede 4 bytes, as it is encoded in the QR
-    deployment = models.ForeignKey(Deployment)
-
-    def __str__(self):
-        return "{}(collection: {}) -> {}".format(self.user.person.nickname, self.collection_local_id, self.deployment)
-
-##########
-## User
-##########
-
-class UserExtension(models.Model):
-    class Meta:
-        app_label = "data_manager"
-        
-    """ Extends Django contrib's User model, to attach a globally unique ID """
-    """ (to be managed by a central repo for Collecster """
-    user = models.OneToOneField(User, primary_key=True)
-    guid = id_field(unique=True)
-    person = models.OneToOneField("{}.Person".format(shared.config_name))
-    
-    def __str__(self):
-        return "{} (guid: {})".format(self.user, self.guid)
-
-
-class TagToOccurrence(models.Model):
-    class Meta:
-        app_label = shared.config_name
+        abstract = True
         unique_together = ("user", "tag_occurrence_id") # Enforces USER::3)
 
     # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
-    user              = models.ForeignKey("data_manager.UserExtension")
+    user              = models.ForeignKey("supervisor.UserExtension")
     tag_occurrence_id = id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
@@ -94,47 +51,47 @@ class AbstractRecordOwnership(models.Model):
     class Meta:
         abstract = True
 
-    created_by  = models.ForeignKey("data_manager.UserExtension")
+    created_by  = models.ForeignKey("supervisor.UserExtension")
 
 
 ##########
 ## Concept
 ##########
 
-class ConceptNature(models.Model):
-    class Meta:
-        app_label = shared.config_name
-        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
-
-    concept = models.ForeignKey("Concept", related_name="additional_nature_set")
-    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-
-
-class ConceptBase(AbstractRecordOwnership):
-    class Meta:
-        abstract = True
-
-    distinctive_name    = models.CharField(max_length=180)  
-    common_name         = models.CharField(max_length= 60, blank=True)  
-    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-
-    def __str__(self):
-        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
-                             " ({})".format(self.year) if self.year else "")
-
-    @property
-    def all_nature_tuple(self):
-        return (self.primary_nature,) \
-             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
-    
+#class ConceptNatureBase(models.Model):
+#    class Meta:
+#        abstract = True
+#        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
+#
+#    concept = models.ForeignKey("Concept", related_name="additional_nature_set")
+#    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+#
+#
+#class ConceptBase(AbstractRecordOwnership):
+#    class Meta:
+#        abstract = True
+#
+#    distinctive_name    = models.CharField(max_length=180)  
+#    common_name         = models.CharField(max_length= 60, blank=True)  
+#    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+#
+#    def __str__(self):
+#        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
+#                             " ({})".format(self.year) if self.year else "")
+#
+#    @property
+#    def all_nature_tuple(self):
+#        return (self.primary_nature,) \
+#             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
+#    
 
 ############
 ## Attribute
 ############
 
-class AttributeCategory(models.Model):
+class AttributeCategoryBase(models.Model):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         verbose_name_plural = "Attribute categories"
 
     name = models.CharField(max_length=60, unique=True)
@@ -148,7 +105,7 @@ class AbstractAttribute(models.Model):
     class Meta:
         abstract = True
 
-    category    = models.ForeignKey(AttributeCategory)
+    category    = models.ForeignKey("AttributeCategory")
     name        = models.CharField(max_length=60)
     description = models.CharField(max_length=180, blank=True)
     value_type  = models.CharField(max_length=enum.Attribute.Type.choices_maxlength(),
@@ -158,9 +115,9 @@ class AbstractAttribute(models.Model):
         return "[{}]{}".format(self.category, self.name)
 
 
-class Attribute(AbstractAttribute):
+class AttributeBase(AbstractAttribute):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         unique_together = ("category", "name")
 
 
@@ -233,9 +190,9 @@ class ReleaseBase(AbstractRecordOwnership):
             raise ValidationError(errors)
         
         
-class Distinction(models.Model):
+class DistinctionBase(models.Model):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         
     name  = models.CharField(max_length=20, unique=True)
     note = models.CharField(max_length=64, blank=True, help_text="Optional details about the meaning of this distinction.")
@@ -243,39 +200,39 @@ class Distinction(models.Model):
     def __str__(self):
         return self.name
 
-class ReleaseDistinction(models.Model):
+class ReleaseDistinctionBase(models.Model):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         
     release     = models.ForeignKey("Release")
-    distinction = models.ForeignKey(Distinction)
+    distinction = models.ForeignKey("Distinction")
     value       = models.CharField(max_length=30)
 
 
-class ReleaseAttribute(models.Model):
+class ReleaseAttributeBase(models.Model):
     """ Maps an Attribute to a Release, with an optional note. """
     """ The note is manadatory if the same attribute is present multiple times on the same Release """
 
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         unique_together = ("release", "attribute", "note") # Seems to be a bug: when ADDing the parent object, it is possible to save instances violating this constraint
                                                     # TODO: report to the Django project
 
     release     = models.ForeignKey("Release") # No release are attached for implicit attributes (that are determined by the Release nature), disabled
-    attribute   = models.ForeignKey(Attribute)
+    attribute   = models.ForeignKey("Attribute")
     note       = models.CharField(max_length=60, blank=True, help_text="Distinctive remark if the attribute is repeated.")
 
     def __str__(self):
         return ("{} ({})" if self.note else "{}").format(self.attribute, self.note)
 
 
-class ReleaseCustomAttribute(AbstractAttribute): # Inherits the fields of AbstractAttribute, direct composition
+class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of AbstractAttribute, direct composition
     """ Inherits from AbstractAttribute: the attribute is custom to a single release """
     """ Since it is not shared, there is no need for mapping to an external attribute: """
     """ this is the attribute itself, mapped to a Release. """
 
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         unique_together = AbstractAttribute._meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
 
     release     = models.ForeignKey("Release")
@@ -290,9 +247,9 @@ class ReleaseCustomAttribute(AbstractAttribute): # Inherits the fields of Abstra
         return ("{} ({})" if self.note else "{}").format(super(ReleaseCustomAttribute, self).__str__(), self.note)
 
 
-class ReleaseComposition(models.Model):
+class ReleaseCompositionBase(models.Model):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         
     from_release    = models.ForeignKey("Release", related_name="+") # "+" disable the reverse relation: not needed here,
                                                                    # because we can access it through the 'nested_releases' field.
@@ -331,7 +288,7 @@ class OccurrenceBase(AbstractRecordOwnership):
         abstract = True
 
     release     = models.ForeignKey("Release")
-    owner       = models.ForeignKey("{}.Person".format(shared.config_name))
+    owner       = models.ForeignKey("supervisor.Person")
 
         ## Some automatic date fields
     add_date        = models.DateTimeField(auto_now_add=True)
@@ -378,25 +335,25 @@ class OccurrenceAnyAttributeBase(models.Model):
             raise ValidationError("The assigned value is not allowed by the Attribute value type.", code='invalid')
 
 
-class OccurrenceAttribute(OccurrenceAnyAttributeBase):
+class OccurrenceAttributeBase(OccurrenceAnyAttributeBase):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         
-    release_corresponding_entry = models.ForeignKey(ReleaseAttribute)
+    release_corresponding_entry = models.ForeignKey("ReleaseAttribute")
 
-class OccurrenceCustomAttribute(OccurrenceAnyAttributeBase):
+class OccurrenceCustomAttributeBase(OccurrenceAnyAttributeBase):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         
-    release_corresponding_entry = models.ForeignKey(ReleaseCustomAttribute)
+    release_corresponding_entry = models.ForeignKey("ReleaseCustomAttribute")
 
 
-class OccurrenceComposition(models.Model):
+class OccurrenceCompositionBase(models.Model):
     class Meta:
-        app_label = shared.config_name
+        abstract = True
         unique_together = ("release_composition", "from_occurrence") # Enforces COMPOSITION::2.b)
 
-    release_composition = models.ForeignKey(ReleaseComposition)
+    release_composition = models.ForeignKey("ReleaseComposition")
     from_occurrence = models.ForeignKey("Occurrence", related_name="+") # "+" disable the reverse relation: not needed here,
                                                                       # because we can access it through the 'nested_occurrences' field.
      ## This one has to be optional: if a nested occurrence is absent, we store a blank to_occurrence:

@@ -1,11 +1,13 @@
 #from .configuration import is_material, Person
-from shared import is_material
+#from shared import is_material
 
-from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
-from .models import *
 from . import utils
-from . import widgets 
-from . import enumerations as enums
+from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
+
+from .models import *
+
+from data_manager import widgets 
+from data_manager import enumerations as enums
 
 from django import forms
 from django.contrib import admin
@@ -92,7 +94,7 @@ class ReleaseCustomAttributeInline(admin.TabularInline):
 
 class ReleaseCompositionInline(admin.TabularInline):
     verbose_name = verbose_name_plural = "Release composition"
-    model = ReleaseBase.nested_releases.through
+    model = Release.nested_releases.through
     fk_name = 'from_release' # This seems to be the hardcoded name automatically given by Django 
     formset = OnlyOnMaterialFormSet
 
@@ -111,12 +113,11 @@ class ReleaseForm(forms.ModelForm):
 
 def get_release_readonlyedit():
     """ The immaterial field is not mandatory on Release, but if it is present is should not be changeable """
-    # TODO
-    #try:
-    #    Release._meta.get_field("immaterial")
-    #    return ("concept", "immaterial",)
-    #except FieldDoesNotExist:
-    #    return ("concept",)
+    try:
+        Release._meta.get_field("immaterial")
+        return ("concept", "immaterial",)
+    except FieldDoesNotExist:
+        return ("concept",)
 
 class ReleaseAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
@@ -239,29 +240,15 @@ class OccurrenceAdmin(CollecsterModelAdmin):
 ## Registrations
 ################
 
-# TODO
-#admin.site.register(Concept,    ConceptAdmin)
-#admin.site.register(Release,    ReleaseAdmin)
-#admin.site.register(Occurrence, OccurrenceAdmin)
+admin.site.register(Concept,    ConceptAdmin)
+admin.site.register(Release,    ReleaseAdmin)
+admin.site.register(Occurrence, OccurrenceAdmin)
 
 admin.site.register(Attribute)
 admin.site.register(AttributeCategory)
 
 admin.site.register(Distinction)
 
-# For Administration
-admin.site.register(UserExtension)
-
-admin.site.register(Deployment)
-admin.site.register(UserCollection)
-
 # For readonly debug
 #admin.site.register(ConceptNature)
 #admin.site.register(TagToOccurrence)
-
-# Custom (deployment)
-try:
-    from .configuration import register_custom_models
-    register_custom_models(admin.site)
-except:
-    pass #register_custom_model is an optional function for deployment customization
