@@ -1,23 +1,17 @@
-#import shared
-#shared.config_name = "videogame"
+#from data_manager.models import * # Absolute path import, we do not execute this one because we can do without !
+## Actually, we hardly can do without: tie Concept base models are depending on ConfNature, defined per application.
+with open("data_manager/models.py") as f:
+        code = compile(f.read(), "data_manager/models.py", 'exec')
+        exec(code)
 
-from .configuration import ConceptNature as ConfNature#, is_material
+from .configuration import OccurrenceSpecific
+from . import tag
 
-from data_manager.models import *
-#from data_manager.models import ConceptBase, ReleaseBase, OccurrenceBase
-
-#from .configuration import ConceptNature, is_material
-#shared.ConfNature = ConceptNature
-#shared.is_material = is_material
-
+# TODO
 from data_manager.enumerations import Country
-
-from django.db import models
 
 import collections
 
-
-configuration_name = "advg"
 
 class OccurrenceOrigin():
     ORIGINAL = u'OR'
@@ -45,88 +39,13 @@ class OccurrenceOrigin():
     def choices_maxlength(cls):
         return max ([len(db_value) for db_value in cls.DATA])
 
-def generate_qrcode(occurrence, tag_to_occurrence):
-    reserved = 0 #For later use
-    #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
-    user_guid = tag_to_occurrence.user.guid
-    deployment = data_manager.models.Deployment.objects.get(configuration=configuration_name)
-    collection_id = data_manager.models.UserCollection.objects.get(user=user_guid, deployment=deployment).collection_local_id 
-    #TODO Handle the object type when other types will be allowed
-    objecttype_id = 1 # There is a single object type at the moment: the occurrence
-    tag_occurrence_id = tag_to_occurrence.tag_occurrence_id 
-    data = struct.pack("<BHBII", reserved, collection_id, objecttype_id, user_guid, tag_occurrence_id)
-
-    return pyqrcode.create(data, version=1, error="M", mode="binary")
-
-
-def generate_tag(occurrence):
-    tag_version = 2
-    qr_filename = "qr_v{}.png".format(tag_version)
-
-    tag_to_occurrence = data_manager.models.TagToOccurrence.objects.get(occurrence=occurrence)
-    
-    working = OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
-
-    template = loader.get_template('tag/v2.html')
-    context = {
-        "release": occurrence.release,
-        "tag": {"version": tag_version, "file": qr_filename},
-        "collection": {"shortname": "VG", "objecttype": "OCC"},
-        "occurrence": occurrence,
-        "working": working,
-    }
-    
-    # Here, uses the occurrence PK in the DB, not the tag_occurrence id, because we see this part of the filesystem
-    # like a direct extension to the DB
-    # As a consequence, a potential migration of a collection would need to rename those folder to map to the DB.
-    directory = "{}/data_manager/occurrences/{}/tags/".format(settings.MEDIA_ROOT, occurrence.pk)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    QR_MODULE_SIZE=8*4
-    qr = generate_qrcode(occurrence, tag_to_occurrence)
-    qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
-
-    f = open(os.path.join(directory, "v{}.html".format(tag_version)), "w") #TODO some date and time ?
-    f.write(template.render(context))
-    f.close()
-
-
-##
-## TODO
-##
-
-class ConceptNatureBase(models.Model):
-    class Meta:
-        abstract = True
-        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
-
-    concept = models.ForeignKey("Concept", related_name="additional_nature_set")
-    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-
-
-class ConceptBase(AbstractRecordOwnership):
-    class Meta:
-        abstract = True
-
-    distinctive_name    = models.CharField(max_length=180)  
-    common_name         = models.CharField(max_length= 60, blank=True)  
-    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-
-    def __str__(self):
-        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
-                             " ({})".format(self.year) if self.year else "")
-
-    @property
-    def all_nature_tuple(self):
-        return (self.primary_nature,) \
-             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
-    
-
 
 ##
 ## Forwarding most models
 ##
+class ConceptNature(ConceptNatureBase):
+    pass
+
 class TagToOccurrence(TagToOccurrenceBase):
     pass
 
@@ -158,9 +77,6 @@ class OccurrenceCustomAttribute(OccurrenceCustomAttributeBase):
     pass
 
 class OccurrenceComposition(OccurrenceCompositionBase):
-    pass
-
-class ConceptNature(ConceptNatureBase):
     pass
 
 ##
@@ -227,7 +143,7 @@ class Occurrence(OccurrenceBase):
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
 
     def admin_post_save(self):
-        generate_tag(self)
+        tag.generate_tag(self)
 
     def origin_color(self):
         return OccurrenceOrigin.DATA[self.origin].tag_color

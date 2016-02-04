@@ -61,7 +61,7 @@ ROOT_URLCONF = 'Collecster.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["Collecster/templates"], # Where we store templates that are used by all configurations (i.e., not tied to a specific app)
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -13,3 +13,7 @@ from .models import *
 
 admin.site.register(Company)
 admin.site.register(CompanyService)
+admin.site.register(ReleaseRegion)
+admin.site.register(TagRegion)
+admin.site.register(Color)
+

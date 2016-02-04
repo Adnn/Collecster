@@ -5,6 +5,7 @@ from . import utils
 from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 
 from .models import *
+from supervisor.models import Person
 
 from data_manager import widgets 
 from data_manager import enumerations as enums

@@ -1,5 +1,7 @@
 #from advg.configuration_advg import ConceptNature as ConfNature, is_material
-from . import enumerations as enum
+from .configuration import ConceptNature as ConfNature, is_material
+
+from data_manager import enumerations as enum
 
 # TODO remove
 #from videogame.configuration import ConceptNature as ConfNature#, is_material
@@ -58,32 +60,32 @@ class AbstractRecordOwnership(models.Model):
 ## Concept
 ##########
 
-#class ConceptNatureBase(models.Model):
-#    class Meta:
-#        abstract = True
-#        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
-#
-#    concept = models.ForeignKey("Concept", related_name="additional_nature_set")
-#    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-#
-#
-#class ConceptBase(AbstractRecordOwnership):
-#    class Meta:
-#        abstract = True
-#
-#    distinctive_name    = models.CharField(max_length=180)  
-#    common_name         = models.CharField(max_length= 60, blank=True)  
-#    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
-#
-#    def __str__(self):
-#        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
-#                             " ({})".format(self.year) if self.year else "")
-#
-#    @property
-#    def all_nature_tuple(self):
-#        return (self.primary_nature,) \
-#             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
-#    
+class ConceptNatureBase(models.Model):
+    class Meta:
+        abstract = True
+        unique_together = ("concept", "nature") # Enforce CONCEPT::1.a)
+
+    concept = models.ForeignKey("Concept", related_name="additional_nature_set")
+    nature  = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+
+
+class ConceptBase(AbstractRecordOwnership):
+    class Meta:
+        abstract = True
+
+    distinctive_name    = models.CharField(max_length=180)  
+    common_name         = models.CharField(max_length= 60, blank=True)  
+    primary_nature      = models.CharField(max_length=ConfNature.choices_maxlength(), choices=ConfNature.get_choices())
+
+    def __str__(self):
+        return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
+                             " ({})".format(self.year) if self.year else "")
+
+    @property
+    def all_nature_tuple(self):
+        return (self.primary_nature,) \
+             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
+    
 
 ############
 ## Attribute
@@ -244,7 +246,7 @@ class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of Ab
         return self
 
     def __str__(self):
-        return ("{} ({})" if self.note else "{}").format(super(ReleaseCustomAttribute, self).__str__(), self.note)
+        return ("{} ({})" if self.note else "{}").format(super(ReleaseCustomAttributeBase, self).__str__(), self.note)
 
 
 class ReleaseCompositionBase(models.Model):

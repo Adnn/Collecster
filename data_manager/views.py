@@ -1,11 +1,11 @@
+from .admin import ReleaseAdmin, OccurrenceAdmin
+from .models import *
+from . import utils
+
 from django.shortcuts   import render
 from django.template    import loader
 from django.contrib     import admin
 from django.http        import HttpResponse
-
-from .admin import ReleaseAdmin, OccurrenceAdmin
-from .models import *
-from . import utils
 
 
 ##
