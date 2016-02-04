@@ -7,7 +7,7 @@ with open("data_manager/models.py") as f:
 from .configuration import OccurrenceSpecific
 from . import tag
 
-# TODO
+# TODO sort out the enumeration
 from data_manager.enumerations import Country
 
 import collections

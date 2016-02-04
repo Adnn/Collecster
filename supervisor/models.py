@@ -1,10 +1,7 @@
+from data_manager import fields
+
 from django.db import models
 from django.contrib.auth.models import User
-
-
-def id_field(**kwargs):
-    return models.IntegerField(**kwargs) # From the documentation, it is the type of primary keys
-                                          # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
 
 
 #############
@@ -26,7 +23,7 @@ class UserCollection(models.Model):
         
 
     user = models.ForeignKey("UserExtension")
-    collection_local_id = id_field() #TODO ensure it cannot exceede 4 bytes, as it is encoded in the QR
+    collection_local_id = fields.id_field() #TODO ensure it cannot exceede 4 bytes, as it is encoded in the QR
     deployment = models.ForeignKey(Deployment)
 
     def __str__(self):
@@ -51,11 +48,8 @@ class UserExtension(models.Model):
     """ Extends Django contrib's User model, to attach a globally unique ID """
     """ (to be managed by a central repo for Collecster """
     user = models.OneToOneField(User, primary_key=True)
-    guid = id_field(unique=True)
+    guid = fields.id_field(unique=True)
     person = models.OneToOneField("Person")
     
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)
-
-
-# Create your models here.

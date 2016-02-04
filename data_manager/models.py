@@ -2,6 +2,7 @@
 from .configuration import ConceptNature as ConfNature, is_material
 
 from data_manager import enumerations as enum
+from data_manager import fields
 
 # TODO remove
 #from videogame.configuration import ConceptNature as ConfNature#, is_material
@@ -27,12 +28,6 @@ def check_material_consistency(model_instance):
         if errors_dict:
             raise ValidationError(errors_dict)
 
-# TODO factorize with supervisor
-def id_field(**kwargs):
-    return models.IntegerField(**kwargs) # From the documentation, it is the type of primary keys
-                                          # see: https://docs.djangoproject.com/en/1.8/ref/models/fields/#autofield
-
-
 
 class TagToOccurrenceBase(models.Model):
     class Meta:
@@ -41,7 +36,7 @@ class TagToOccurrenceBase(models.Model):
 
     # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
     user              = models.ForeignKey("supervisor.UserExtension")
-    tag_occurrence_id = id_field()
+    tag_occurrence_id = fields.id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
     def __str__(self):
