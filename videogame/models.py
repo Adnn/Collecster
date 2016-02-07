@@ -360,7 +360,7 @@ class Donation(Bundle):
 class LockoutRegion(models.Model):
     region_name = models.CharField(max_length=10)
     note        = models.CharField(max_length=60)
-    limit_scope = models.ManyToManyField("BaseSystem", blank=True)
+    limit_scope = models.ManyToManyField("BaseSystem", blank=True, help_text="When specified, this lockout will be limited to the selected systems.")
 
     def __str__(self):
         display = "{}".format(self.region_name)
@@ -405,13 +405,13 @@ class BaseSystem(models.Model):
     ARCADE = "A"
     HOME   = "H"
 
-    name = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=30, unique=True, help_text="eg. 'Mega Drive', 'NES', ...")
     brand = models.ForeignKey(Company)
     generation = models.DecimalField(max_digits=2, decimal_places=0)
     destination = models.CharField(max_length=1, choices=((ARCADE, "Arcade"), (HOME, "Home entertainment")))
     upgrade_for = models.ForeignKey("self", blank=True, null=True) # TODO: should prevent an instance from referencing itself
 
-    abbreviated_name = models.CharField(max_length=5, unique=True)
+    abbreviated_name = models.CharField(max_length=5, unique=True, help_text="Abbreviated name for the system, independently of any interface.")
 
     def __str__(self):
         return "{} {}".format(self.brand, self.name)
