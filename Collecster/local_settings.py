@@ -16,7 +16,7 @@ INSTALLED_APPS = (
     #"advg",
     "supervisor",
     "videogame",
-    #"data_manager",
+    "ndmusic",
 )
 
 # The secret key is now to be found in $DJANGO_SECRET_KEY env var. This file is no longer private !
