@@ -10,7 +10,45 @@ from .models import *
 
 from django.contrib import admin
 
+##
+## Edit the data_manager admin
+##
+class ConceptAdminForm(forms.models.ModelForm):
+    def clean(self):
+        """ Enforces some uniqueness constraints : """
+        """ If two concepts have the same "distinctive name" and the same "year" """
+        """ their name need to have different "scopes" """
+        data = self.cleaned_data
+        existing_same_name = (Concept.objects.filter(distinctive_name=data["distinctive_name"]) 
+                                             .exclude(pk=self.instance.pk))
+        for other_concept in existing_same_name:
+            if other_concept.year == data["year"]:
+                if not data["name_scope_restriction"] and not other_concept.name_scope_restriction.all():
+                    raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' worldwide.",
+                                                params={"concept_id": other_concept.pk,
+                                                        "name": data["distinctive_name"]},
+                                                code='invalid')
+                else:
+                    intersection = set(data["name_scope_restriction"]).intersection(other_concept.name_scope_restriction.all())
+                    if intersection:
+                        raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' for regions: %(regions)s.",
+                                                    params={"concept_id": other_concept.pk,
+                                                            "name": data["distinctive_name"],
+                                                            "regions": ["{}".format(region) for region in intersection]},
+                                                    code='invalid')
 
+        return super(ConceptAdminForm, self).clean()
+
+
+class ConceptAdmin(ConceptAdmin):
+    form = ConceptAdminForm
+
+base_register(admin.site)
+
+
+##
+## Admin for extra models
+## 
 class BundleCompositionInline(admin.TabularInline):
    model = BundleComposition
    extra = 4
@@ -56,7 +94,6 @@ class SystemSpecificationForm(forms.ModelForm):
 
 class SystemSpecificationAdmin(admin.ModelAdmin):
     form = SystemSpecificationForm
-
 
 admin.site.register(Company)
 admin.site.register(CompanyService)

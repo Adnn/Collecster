@@ -1,4 +1,4 @@
-from .configuration import ConfigNature, is_material
+from .configuration import ConfigNature
 
 from data_manager import enumerations as enum
 from data_manager import fields
@@ -29,7 +29,7 @@ class TagToOccurrenceBase(models.Model):
         unique_together = ("user", "tag_occurrence_id") # Enforces USER::3)
 
     # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
-    user              = models.ForeignKey("supervisor.UserExtension")
+    user              = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
     tag_occurrence_id = fields.id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
@@ -42,7 +42,7 @@ class AbstractRecordOwnership(models.Model):
     class Meta:
         abstract = True
 
-    created_by  = models.ForeignKey("supervisor.UserExtension")
+    created_by  = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_created_set")
 
 
 ##########
@@ -136,6 +136,18 @@ class ReleaseBase(AbstractRecordOwnership):
     nested_releases = models.ManyToManyField("self", through="ReleaseComposition", symmetrical=False,
                                              through_fields = ("from_release", "to_release"))
 
+
+    def is_material(self):
+        """ The notion of immaterial needs to be a core concept, because some core behaviour depends on it"""
+        """ eg. define application logic that an immterial cannot have nested elements """
+        """ Yet not to force having an immaterial field (for cases were there are no immaterials), """
+        """ it is abstracted through this function which implements a sensible default, but can be overriden. """
+        if hasattr(self, "immaterial"):
+            return not self.immaterial
+        else:
+            return True
+
+
     def display_name(self):
         return self.name if self.name else self.concept
 
@@ -145,12 +157,12 @@ class ReleaseBase(AbstractRecordOwnership):
         return ConfigNature.DATA[self.concept.primary_nature].tag_color;
 
     def __str__(self):
-        return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not is_material(self) else "", self.display_name()))
+        return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not self.is_material() else "", self.display_name()))
 
     def clean(self):
         super(ReleaseBase, self).clean()
         # Enforces IMMATERIAL::2.a)
-        if not is_material(self):
+        if not self.is_material():
             check_material_consistency(self)
 
         self._clean_partial_date()
@@ -279,7 +291,7 @@ class OccurrenceBase(AbstractRecordOwnership):
         abstract = True
 
     release     = models.ForeignKey("Release")
-    owner       = models.ForeignKey("supervisor.Person")
+    owner       = models.ForeignKey("supervisor.Person", related_name="%(app_label)s_%(class)s_owned_set")
 
         ## Some automatic date fields
     add_date        = models.DateTimeField(auto_now_add=True)
@@ -294,7 +306,7 @@ class OccurrenceBase(AbstractRecordOwnership):
     def clean(self):
         super(OccurrenceBase, self).clean()
         # Enforces IMMATERIAL::2.b)
-        if hasattr(self, "release") and not is_material(self.release):
+        if hasattr(self, "release") and not self.release.is_material():
             check_material_consistency(self)
 
 

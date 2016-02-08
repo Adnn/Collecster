@@ -6,16 +6,7 @@ from data_manager.enumerations import Country
 from django.db import models
 from django.conf import settings
 
-import pyqrcode
-
-import collections, os, struct
-
-
-def is_material(release):
-    """ The notion of immaterial needs to be a core concept, because some core behaviour depends on it"""
-    """ eg. define application logic that an immterial cannot have attribute nor nested elements """
-    """ Yet not to force having an immaterial field (for cases were there are no immaterials), it is abstracted through this function """
-    return not release.immaterial
+import collections
 
 
 ##
