@@ -111,27 +111,53 @@ class PartialDate:
 class Country:
     LITHUANIA   = "LT"
     FRANCE      = "FR"
+    BELGIUM     = "BE"
     GERMANY     = "DE"
     ITALY       = "IT"
-    JAPAN       = "JP"
+    NETHERLANDS = "NL"
+    PORTUGAL    = "PT"
     SPAIN       = "ES"
+    IRELAND     = "IE"
+    SWITZERLAND = "CH"
     UK          = "UK"
+    MOROCCO     = "MA"
+    ALGERIA     = "DZ"
+    TUNISIA     = "TN"
+    CHINA       = "CN"
+    KOREA       = "KR"
+    JAPAN       = "JP"
     USA         = "US"
     CANADA      = "CA"
+    BRAZIL      = "BR"
 
     CHOICES = (
+        (SWITZERLAND, "Switzerland"),
         (UK, "UK"),
-        (JAPAN, "Japan"),
+        (IRELAND, "Ireland"),
+        ("Asia",
+            ((CHINA, "China"),
+            (KOREA, "Korea"),
+            (JAPAN, "Japan"),)
+        ),
         ("Europe",
             ((LITHUANIA, "Lithuania"),
+            (BELGIUM, "Belgium"),
             (FRANCE, "France"),
             (GERMANY, "Germany"),
             (ITALY, "Italy"),
+            (NETHERLANDS, "Netherlands"),
+            (PORTUGAL, "Portugal"),
             (SPAIN, "Spain"),)
         ),
         ("America",
             ((USA, "USA"),
-            (CANADA, "Canada"),) 
+            (CANADA, "Canada"),
+            (BRAZIL, "Brazil"),) 
+        ),
+        ("Maghreb",
+            ((ALGERIA, "Algeria"),
+            (MOROCCO, "Morocco"),
+            (TUNISIA, "Tunisia"),)
         ),
     )
 

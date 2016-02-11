@@ -1,8 +1,5 @@
 from .config_utils import *
 
-# TODO
-from data_manager.enumerations import Country
-
 from django.db import models
 from django.conf import settings
 

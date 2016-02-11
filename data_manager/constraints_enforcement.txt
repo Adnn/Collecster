@@ -10,6 +10,11 @@ This project is very dynamic in the formsets its presenting on the admin pages. 
 1.b) Its primary nature cannot be the same as any of its secondary nature.
     Model-level: TODO Could be done in ConceptNature::clean(), but it would not work for ConceptNature inline on a Concept form.
 
+== Uniqueness ==
+2.a) The "distinctive_name" and "year" pair must be unique.
+2.a) VIDEOGAME: Different concept instances can have the same "distinctive_name" and the same "year" if their name have distinct "scope"
+    No scope means worldwide, and is distinct from any non-empty scope, but is the same as another empty scope.
+    Two non-empty scopes are distinct only if their union is empty.
 
 = SPECIFIC =
 == Enforcing Specific on Release and Occurrence ==
