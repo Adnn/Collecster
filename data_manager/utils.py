@@ -29,8 +29,11 @@ class OneFormFormSet(BaseInlineFormSet):
 
 
 def admininline_factory(Model, Inline):
+    from .forms_admins import SaveInitialDataModelForm
     classname = "{}{}".format(Model.__name__, "AdminInline")
-    return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet,
+    ## Note: sets the "form" to SaveInitialDataModelForm: in a situation where the model for this inline has defaults
+    ## for each field, we want it to be saved to DB even if the user leaves all fields to default (eg. the specifics)
+    return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet, "form": SaveInitialDataModelForm,
                                        "min_num": 1, "max_num": 1, "can_delete": False})
     #tp = type(classname, (Inline,), {"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model, formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)})
     #wdb.set_trace() 
