@@ -51,7 +51,7 @@ class UserExtension(models.Model):
     """ (to be managed by a central repo for Collecster) """
     user = models.OneToOneField(User, primary_key=True)
     guid = fields.id_field(unique=True)
-    person = models.OneToOneField("Person")
+    person = models.ForeignKey("Person") # Several users can correspond to the same person
     
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)

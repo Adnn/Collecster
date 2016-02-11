@@ -29,15 +29,16 @@ class TagToOccurrenceBase(models.Model):
     """ And the actual application Occurrences kept in the database. """
     class Meta:
         abstract = True
-        unique_together = ("user", "user_occurrence_id") # Enforces USER::3)
+        unique_together = ("user_creator", "user_occurrence_id") # Enforces USER::3)
 
-    # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
-    user               = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
+    # This is *NOT* the Occurrence.owner. It is the user that created the occurrence instance.
+    # It is thus the same value as Occurrence.created_by.
+    user_creator       = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
     user_occurrence_id = fields.id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
     def __str__(self):
-        return "{}/{} -> {}".format(self.user.user, self.user_occurrence_id, self.occurrence)
+        return "{}/{} -> {}".format(self.user_creator.user, self.user_occurrence_id, self.occurrence)
 
 
 class AbstractRecordOwnership(models.Model):

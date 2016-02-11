@@ -12,7 +12,7 @@ import os, struct
 def generate_qrcode(occurrence, tag_to_occurrence):
     reserved = 0 #For later use
     #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
-    user_guid = tag_to_occurrence.user.guid
+    user_guid = tag_to_occurrence.user_creator.guid
     deployment = Deployment.objects.get(configuration=advideogame.utils.get_app_name())
     user_collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).user_collection_id 
     #TODO Handle the object type when other types will be allowed

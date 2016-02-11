@@ -201,7 +201,7 @@ class OccurrenceAdmin(CollecsterModelAdmin):
 
     def post_save_model(self, request, obj, form, change):
         if not change:
-            TagToOccurrence(user=obj.created_by, user_occurrence_id=obj.pk, occurrence=obj).save()
+            TagToOccurrence(user_creator=obj.created_by, user_occurrence_id=obj.pk, occurrence=obj).save()
 
     def get_changeform_initial_data(self, request):
         """ Pre-populates the owner field with the Person corresponding to the logged-in user """
