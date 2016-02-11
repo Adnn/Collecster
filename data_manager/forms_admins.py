@@ -1,5 +1,6 @@
 from . import utils
-from .models import AbstractRecordOwnership, UserExtension, Occurrence, Release
+from .models import AbstractRecordOwnership, Occurrence, Release
+from supervisor.models import UserExtension
 
 from django.contrib import admin
 from django import forms
@@ -68,6 +69,7 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
 
     class Media:
         js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
+              "/{}/view_scripts/app_name.js".format(utils.get_app_name()), # a view that generates JS code making app name available to form_ajax.js
               "data_manager/scripts/form_ajax.js",)
 
 

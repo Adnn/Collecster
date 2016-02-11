@@ -1,9 +1,11 @@
-from .configuration import is_material, Person
-from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
-from .models import *
 from . import utils
-from . import widgets 
-from . import enumerations as enums
+from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
+
+from .models import *
+from supervisor.models import Person
+
+from data_manager import widgets 
+from data_manager import enumerations as enums
 
 from django import forms
 from django.contrib import admin
@@ -27,31 +29,9 @@ class ConceptNatureInline(admin.TabularInline):
     can_delete = False
 
 
-class ConceptAdminForm(forms.models.ModelForm):
-    def clean(self):
-        data = self.cleaned_data
-        existing_same_name = (Concept.objects.filter(distinctive_name=data["distinctive_name"]) 
-                                             .exclude(pk=self.instance.pk))
-        for other_concept in existing_same_name:
-            if other_concept.year == data["year"]:
-                if not data["name_scope_restriction"] and not other_concept.name_scope_restriction.all():
-                    raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' worldwide.",
-                                                params={"concept_id": other_concept.pk,
-                                                        "name": data["distinctive_name"]},
-                                                code='invalid')
-                else:
-                    intersection = set(data["name_scope_restriction"]).intersection(other_concept.name_scope_restriction.all())
-                    if intersection:
-                        raise forms.ValidationError("The concept with index: %(concept_id)i, with the same year value, already uses the name '%(name)s' for regions: %(regions)s.",
-                                                    params={"concept_id": other_concept.pk,
-                                                            "name": data["distinctive_name"],
-                                                            "regions": ["{}".format(region) for region in intersection]},
-                                                    code='invalid')
-
 class ConceptAdmin(CustomSaveModelAdmin):
     exclude = ("created_by",)
     inlines = (ConceptNatureInline,)
-    form = ConceptAdminForm
 
 
 ##########
@@ -60,7 +40,7 @@ class ConceptAdmin(CustomSaveModelAdmin):
 
 class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
     def clean(self):
-        if not is_material(self.instance):
+        if not self.instance.is_material():
             for form in self:
                 if form.has_changed(): # This is the criterion used by BaseModelfFormSet.save_new_object() to decide whether to save the object
                     raise forms.ValidationError("Immaterial release cannot be attached those inlines.",
@@ -99,7 +79,7 @@ class ReleaseForm(forms.ModelForm):
     ## Override the partial_date_precision field for two customizations :
     ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
     ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
-    partial_date_precision = forms.ChoiceField(choices=Release._meta.get_field("partial_date_precision").choices, required=False,
+    partial_date_precision = forms.ChoiceField(choices=ReleaseBase._meta.get_field("partial_date_precision").choices, required=False,
                                                widget=widgets.RadioSelectOneLine)
         
     ## Would be less intrusive, but does not allow to control the choices proposed by the widget
@@ -236,28 +216,16 @@ class OccurrenceAdmin(CollecsterModelAdmin):
 ## Registrations
 ################
 
-admin.site.register(Concept,    ConceptAdmin)
-admin.site.register(Release,    ReleaseAdmin)
-admin.site.register(Occurrence, OccurrenceAdmin)
+def base_register(site):
+    site.register(Concept,    ConceptAdmin)
+    site.register(Release,    ReleaseAdmin)
+    site.register(Occurrence, OccurrenceAdmin)
 
-admin.site.register(Attribute)
-admin.site.register(AttributeCategory)
+    site.register(Attribute)
+    site.register(AttributeCategory)
 
-admin.site.register(Distinction)
-
-# For Administration
-admin.site.register(UserExtension)
-
-admin.site.register(Deployment)
-admin.site.register(UserCollection)
+    site.register(Distinction)
 
 # For readonly debug
 #admin.site.register(ConceptNature)
 #admin.site.register(TagToOccurrence)
-
-# Custom (deployment)
-try:
-    from .configuration import register_custom_models
-    register_custom_models(admin.site)
-except:
-    pass #register_custom_model is an optional function for deployment customization

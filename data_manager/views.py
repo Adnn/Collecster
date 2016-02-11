@@ -1,11 +1,11 @@
+from .admin import ReleaseAdmin, OccurrenceAdmin
+from .models import *
+from . import utils
+
 from django.shortcuts   import render
 from django.template    import loader
 from django.contrib     import admin
 from django.http        import HttpResponse
-
-from .admin import ReleaseAdmin, OccurrenceAdmin
-from .models import *
-from . import utils
 
 
 ##
@@ -66,3 +66,7 @@ def ajax_occurrence_admin_formsets(request, release_id):
     rendered_attributes = render_admin_formsets(get_admin_formsets(occurrence_adm, request))
 
     return HttpResponse("{}\n{}".format("\n".join(rendered_attributes), specifics_div))
+
+
+def app_name_script(request):
+    return HttpResponse("window.collecster_app_name = \"{}\"".format(utils.get_app_name()))

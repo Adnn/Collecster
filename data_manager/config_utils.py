@@ -1,4 +1,3 @@
-import data_manager
 import collections
 
 #TODEL
@@ -13,11 +12,11 @@ def compose(*args):
     return tuple([element for tupl in args for element in tupl])
 
 def get_attribute_category(category_name):
-    models = data_manager.models
+    from . import models # Circular import from models otherwise
     return models.AttributeCategory.objects.get(name=category_name)
 
 def get_attribute(category_name, attribute_name):
-    models = data_manager.models
+    from . import models
     return models.Attribute.objects.get(category=get_attribute_category(category_name), name=attribute_name)
 
 # Intended to be used for implicit occurence attributes (unused now)
@@ -30,7 +29,7 @@ def self_software(release):
     return implicit_self(release) if material else ()
 
 
-class ConceptNature:
+class ConfigNature:
     """ Use should extend this class by deriving it from itself (http://stackoverflow.com/a/15526901/1027706) """
     """ And define a DATA class member """
 
@@ -81,7 +80,6 @@ class ConceptNature:
     @classmethod
     def get_concept_automatic_attributes(cls, concept):
         unique_automatic_attribs = collections.OrderedDict()
-        models = data_manager.models
 
         for nature in concept.all_nature_tuple:
             automatics = cls.DATA[nature].automatic_attributes 
