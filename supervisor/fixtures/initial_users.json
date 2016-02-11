@@ -1,0 +1,18 @@
+[
+    {
+        "model": "supervisor.Person",
+        "pk": 1,
+        "fields": {
+            "first_name": "Administrator",
+            "nickname": "admin"
+        }
+    },
+    {
+        "model": "supervisor.UserExtension",
+        "pk": 1,
+        "fields": {
+            "guid": "1",
+            "person": "1"
+        }
+    }
+]

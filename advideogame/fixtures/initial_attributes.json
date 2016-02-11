@@ -1,0 +1,284 @@
+[
+{
+    "fields": {
+        "name": "content"
+    },
+    "model": "advideogame.attributecategory",
+    "pk": 1
+},
+{
+    "fields": {
+        "name": "packaging"
+    },
+    "model": "advideogame.attributecategory",
+    "pk": 2
+},
+{
+    "fields": {
+        "name": "papers"
+    },
+    "model": "advideogame.attributecategory",
+    "pk": 3
+},
+
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "cardboard box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 1
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "sheath",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 2
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "dvd box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 3
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "cardboard inlay non-decorative",
+        "description": "Cardboard shaped to hold the content of a box in place."
+    },
+    "model": "advideogame.attribute",
+    "pk": 4
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "leaflet",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 5
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "manual",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 6
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "baggies",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 7
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "warranty",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 8
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "PRS",
+        "name": "scart",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 9
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "PRS",
+        "name": "cord-220v",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 10
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "PRS",
+        "name": "cord-110v",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 11
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "jewel box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 12
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "RTN",
+        "name": "self",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 13
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "registration card",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 14
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "insert : jewel box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 15
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "spine card",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 16
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "transparent thermoplastic",
+        "description": "A transparent semi-rigid plastic that is sealed around its content."
+    },
+    "model": "advideogame.attribute",
+    "pk": 17
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "printed cardboard inlay",
+        "description": "A cardboard inlay (color) printed, usually used with transparent packaging."
+    },
+    "model": "advideogame.attribute",
+    "pk": 18
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "disposable connector protection",
+        "description": "A connector protection that is not integral to what it protects."
+    },
+    "model": "advideogame.attribute",
+    "pk": 19
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "big-jewel box",
+        "description": "Playstation and Dreamcast like disc boxes"
+    },
+    "model": "advideogame.attribute",
+    "pk": 20
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "PRS",
+        "name": "intrinsic connector cap",
+        "description": "Essential plastic caps to protect connectors, designed to be put in place after use."
+    },
+    "model": "advideogame.attribute",
+    "pk": 21
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "cartridge box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 22
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "inlay polystyrene",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 23
+},
+{
+    "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "catalog",
+        "description": "Editor's catalog sometime added in a box."
+    },
+    "model": "advideogame.attribute",
+    "pk": 24
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "RTN",
+        "name": "cardboard cd sleeve",
+        "description": " Alternative to plastic CD boxes."
+    },
+    "model": "advideogame.attribute",
+    "pk": 25
+},
+{
+    "fields": {
+        "category": 2,
+        "value_type": "PRS",
+        "name": "hang on tab",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 26
+}
+]

@@ -24,21 +24,24 @@ def check_material_consistency(model_instance):
 
 
 class TagToOccurrenceBase(models.Model):
+    """ This model makes the link between user occurrence IDs """
+    """ (which are immutable identifiers assigned to each occurrence, only unique per user) """
+    """ And the actual application Occurrences kept in the database. """
     class Meta:
         abstract = True
-        unique_together = ("user", "tag_occurrence_id") # Enforces USER::3)
+        unique_together = ("user", "user_occurrence_id") # Enforces USER::3)
 
     # This is a duplication of the Occurrence.owner. Perhaps remove it on Occurrence ?
-    user              = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
-    tag_occurrence_id = fields.id_field()
+    user               = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
+    user_occurrence_id = fields.id_field()
     occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
 
     def __str__(self):
-        return "{}/{} -> {}".format(self.user.user, self.tag_occurrence_id, self.occurrence)
+        return "{}/{} -> {}".format(self.user.user, self.user_occurrence_id, self.occurrence)
 
 
 class AbstractRecordOwnership(models.Model):
-    """ Abstract class adding the fields to make a model owned by a user """
+    """ Abstract class adding the fields to make the inheriting model instances owned by a user """
     class Meta:
         abstract = True
 

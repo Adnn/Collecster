@@ -1,0 +1,16 @@
+[
+  {
+    "model": "advideogame.inputtype",
+    "pk": 1,
+    "fields": {
+      "name": "Digital"
+    }
+  },
+  {
+    "model": "advideogame.inputtype",
+    "pk": 2,
+    "fields": {
+      "name": "Analog"
+    }
+  }
+ ]

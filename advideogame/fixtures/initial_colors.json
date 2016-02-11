@@ -1,0 +1,100 @@
+[
+    {
+        "model": "advideogame.color",
+        "pk": 1,
+        "fields": {
+            "name": "Black"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 2,
+        "fields": {
+            "name": "White"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 3,
+        "fields": {
+            "name": "Grey"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 4,
+        "fields": {
+            "name": "Red"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 5,
+        "fields": {
+            "name": "Green"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 6,
+        "fields": {
+            "name": "Blue"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 7,
+        "fields": {
+            "name": "Yellow"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 8,
+        "fields": {
+            "name": "Orange"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 9,
+        "fields": {
+            "name": "Pink"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 10,
+        "fields": {
+            "name": "Brown"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 11,
+        "fields": {
+            "name": "Purple"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 12,
+        "fields": {
+            "name": "Gold"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 13,
+        "fields": {
+            "name": "Silver"
+        }
+    },
+    {
+        "model": "advideogame.color",
+        "pk": 14,
+        "fields": {
+            "name": "Bronze"
+        }
+    }
+]

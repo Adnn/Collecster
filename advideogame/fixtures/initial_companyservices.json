@@ -1,0 +1,30 @@
+[
+  {
+    "model": "advideogame.companyservice",
+    "pk": 1,
+    "fields": {
+      "name": "Hardware manufacturer"
+    }
+  },
+  {
+    "model": "advideogame.companyservice",
+    "pk": 2,
+    "fields": {
+      "name": "Game developer"
+    }
+  },
+  {
+    "model": "advideogame.companyservice",
+    "pk": 3,
+    "fields": {
+      "name": "Publisher"
+    }
+  },
+  {
+    "model": "advideogame.companyservice",
+    "pk": 4,
+    "fields": {
+      "name": "Group"
+    }
+  }
+ ]

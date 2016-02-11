@@ -1,0 +1,173 @@
+[
+{
+  "model": "advideogame.tagregion",
+  "pk": 1,
+  "fields": {
+    "name": "PAL"
+  }
+},
+{
+  "model": "advideogame.tagregion",
+  "pk": 2,
+  "fields": {
+    "name": "AMR"
+  }
+},
+{
+  "model": "advideogame.tagregion",
+  "pk": 3,
+  "fields": {
+    "name": "ASI"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 1,
+  "fields": {
+    "name": "EU",
+    "parent_region": null,
+    "tag_region": 1,
+    "detail": "Europe"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 2,
+  "fields": {
+    "name": "FR",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "France"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 3,
+  "fields": {
+    "name": "UK",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "United Kingdom"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 4,
+  "fields": {
+    "name": "DE",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Germany"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 5,
+  "fields": {
+    "name": "ES",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Spain"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 6,
+  "fields": {
+    "name": "IT",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Italy"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 7,
+  "fields": {
+    "name": "PT",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Portugal"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 8,
+  "fields": {
+    "name": "NL",
+    "parent_region": 1,
+    "tag_region": 1,
+    "detail": "Netherlands"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 9,
+  "fields": {
+    "name": "NA",
+    "parent_region": null,
+    "tag_region": 2,
+    "detail": "North America"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 10,
+  "fields": {
+    "name": "US",
+    "parent_region": 9,
+    "tag_region": 2,
+    "detail": "United States"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 11,
+  "fields": {
+    "name": "CA",
+    "parent_region": 9,
+    "tag_region": 2,
+    "detail": "Canada"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 12,
+  "fields": {
+    "name": "BR",
+    "parent_region": null,
+    "tag_region": 2,
+    "detail": "Brazil"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 13,
+  "fields": {
+    "name": "JP",
+    "parent_region": null,
+    "tag_region": 3,
+    "detail": "Japan"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 14,
+  "fields": {
+    "name": "KR",
+    "parent_region": null,
+    "tag_region": 3,
+    "detail": "South Korea"
+  }
+},
+{
+  "model": "advideogame.releaseregion",
+  "pk": 15,
+  "fields": {
+    "name": "AU",
+    "parent_region": null,
+    "tag_region": 1,
+    "detail": "Australia"
+  }
+}
+]

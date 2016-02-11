@@ -14,12 +14,11 @@ def generate_qrcode(occurrence, tag_to_occurrence):
     #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
     user_guid = tag_to_occurrence.user.guid
     deployment = Deployment.objects.get(configuration=advideogame.utils.get_app_name())
-    print ("{} {}".format(user_guid, deployment))
-    collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).collection_local_id 
+    user_collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).user_collection_id 
     #TODO Handle the object type when other types will be allowed
     objecttype_id = 1 # There is a single object type at the moment: the occurrence
-    tag_occurrence_id = tag_to_occurrence.tag_occurrence_id 
-    data = struct.pack("<BHBII", reserved, collection_id, objecttype_id, user_guid, tag_occurrence_id)
+    user_occurrence_id = tag_to_occurrence.user_occurrence_id 
+    data = struct.pack("<BHBII", reserved, user_collection_id, objecttype_id, user_guid, user_occurrence_id)
 
     return pyqrcode.create(data, version=1, error="M", mode="binary")
 
@@ -52,6 +51,5 @@ def generate_tag(occurrence):
     qr = generate_qrcode(occurrence, tag_to_occurrence)
     qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
 
-    f = open(os.path.join(directory, "v{}.html".format(tag_version)), "w") #TODO some date and time ?
-    f.write(template.render(context))
-    f.close()
+    with open(os.path.join(directory, "v{}.html".format(tag_version)), "w") as f: #TODO some date and time ?
+        f.write(template.render(context))

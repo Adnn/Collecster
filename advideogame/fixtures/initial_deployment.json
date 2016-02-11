@@ -1,0 +1,10 @@
+[
+    {
+        "model": "supervisor.Deployment",
+        "pk": null,
+        "fields": {
+            "configuration": "advideogame",
+            "version": "1.00"
+        }
+    }
+]
