@@ -13,9 +13,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Custom applications
-    #"advg",
     "supervisor",
-    "videogame",
+    "advideogame",
     "ndmusic",
 )
 

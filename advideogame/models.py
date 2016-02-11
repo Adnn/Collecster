@@ -96,7 +96,7 @@ class Concept(ConceptBase):
     url = models.URLField(blank=True) # Ideally, it should be unique, except for the "blank" value.
                                       # But that poses a problem because the blank is empty string (see: http://stackoverflow.com/a/1400046/1027706)
 
-    developer = models.ForeignKey('Company')
+    developer = models.ForeignKey('Company', null=True) # Allows null but not blank, for the _COMBO concept special case
 
     name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True)
     year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True)

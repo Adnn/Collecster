@@ -20,6 +20,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     #url(r'^OO_attrib/', include('OOModel_attributes.urls')),
     #url(r'^OO_compo/', include('OOModel_composition.urls')),
-    url(r'^videogame/', include('videogame.urls')),
+    url(r'^advideogame/', include('advideogame.urls')),
     url(r'^ndmusic/', include('ndmusic.urls')),
 ]
