@@ -27,6 +27,10 @@ class OneFormFormSet(BaseInlineFormSet):
         self.validate_min = True
         self.validate_max = True
 
+class SpecificStackedInline(admin.StackedInline):
+    collecster_wrapped_template = admin.StackedInline.template
+    template = "collecster/admin_edit_inline_wrapper.html"
+
 
 def admininline_factory(Model, Inline):
     from .forms_admins import SaveInitialDataModelForm
@@ -65,23 +69,23 @@ def get_release_id(request, occurrence=None):
         return get_request_payload(request, "release_id", 0)
 
 
-def get_concept_inlines(concept_id, specifics_retriever):
+def get_concept_specific_inlines(concept_id, specifics_retriever):
     nature_set = Concept.objects.get(pk=concept_id).all_nature_tuple
 
     AdminInlines = []
-    for ReleaseSpecific in specifics_retriever(nature_set):
-        AdminInlines.append(admininline_factory(ReleaseSpecific, admin.StackedInline))
+    for SpecificModel in specifics_retriever(nature_set):
+        AdminInlines.append(admininline_factory(SpecificModel, SpecificStackedInline))
 
     return AdminInlines
 
 
 def release_specific_inlines(request, obj):
     concept_id = get_concept_id(request, release=obj)
-    return get_concept_inlines(concept_id, ConfigNature.get_release_specifics) if concept_id != 0 else []
+    return get_concept_specific_inlines(concept_id, ConfigNature.get_release_specifics) if concept_id != 0 else []
 
 def occurrence_specific_inlines(request, obj):
     concept_id = get_concept_id(request, release=obj)
-    return get_concept_inlines(concept_id, ConfigNature.get_occurrence_specifics) if concept_id != 0 else []
+    return get_concept_specific_inlines(concept_id, ConfigNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
 def release_automatic_attributes(formset, request, obj):

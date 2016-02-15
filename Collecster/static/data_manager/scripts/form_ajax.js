@@ -43,6 +43,9 @@ function main_function()
     // prepares the spot for specifics
     $(".submit-row").before("<div id=\"collecster_specifics\"></div>")
 
+    // moves potential specifics that would be present at page load (eg. correction of form error)
+    // under the 'collectsr_specifis' div
+    $(".collecster_specific_wrapper").appendTo("#collecster_specifics")
     
     // Hack to have the Django Admin Popup trigger a change event on the <select> when it completes
     // see: http://stackoverflow.com/a/33937138/1027706
