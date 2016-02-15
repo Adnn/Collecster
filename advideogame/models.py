@@ -142,8 +142,12 @@ class Occurrence(OccurrenceBase):
 
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
 
+    tag_url = models.URLField(null=True)
+
     def admin_post_save(self):
-        tag.generate_tag(self)
+        if self.release.is_material():
+            self.tag_url = tag.generate_tag(self)
+            self.save()
 
     def origin_color(self):
         return OccurrenceOrigin.DATA[self.origin].tag_color

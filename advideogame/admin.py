@@ -40,8 +40,12 @@ class ConceptAdminForm(forms.models.ModelForm):
         return super(ConceptAdminForm, self).clean()
 
 
+# TODO just add this property, avoid auto inheriting from the same name
 class ConceptAdmin(ConceptAdmin):
     form = ConceptAdminForm
+
+OccurrenceAdmin.collecster_exclude_create = ("tag_url",)
+OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_url",)
 
 base_register(admin.site)
 
@@ -116,3 +120,7 @@ admin.site.register(BaseSystem)
 admin.site.register(SystemMediaPair)
 admin.site.register(SystemInterfaceDescription, SystemInterfaceDescriptionAdmin)
 admin.site.register(SystemSpecification, SystemSpecificationAdmin)
+
+## Debug
+admin.site.register(TagToOccurrence)
+

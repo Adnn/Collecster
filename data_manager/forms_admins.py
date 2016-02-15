@@ -81,6 +81,19 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         else:
             return self.readonly_fields
 
+    def get_form(self, request, obj=None, **kwargs):
+        """ For 'collectser_exclude_create' """
+        AdminClass = self.__class__
+        original_exclude = self.exclude
+        if not obj and hasattr(AdminClass, "collecster_exclude_create"):
+            if self.exclude is None:
+                self.exclude = ()
+            self.exclude = self.exclude + AdminClass.collecster_exclude_create
+        form = super(CollecsterModelAdmin, self).get_form(request, obj, **kwargs)
+        self.exclude = original_exclude
+        return form
+
+
         # Nota: Sadly, this happend too late: after the formset validation. 
         # Yet, in cases where the callback would change some fields on the form, it is important that the new fields
         # would be used for validation !

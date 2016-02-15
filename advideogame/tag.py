@@ -31,7 +31,8 @@ def generate_tag(occurrence):
     
     working = advideogame.models.OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
 
-    template = loader.get_template('tag/v2.html')
+    template_file = "v2.html"
+    template = loader.get_template("tag/{}".format(template_file))
     context = {
         "release": occurrence.release,
         "tag": {"version": tag_version, "file": qr_filename},
@@ -53,3 +54,5 @@ def generate_tag(occurrence):
 
     with open(os.path.join(directory, "v{}.html".format(tag_version)), "w") as f: #TODO some date and time ?
         f.write(template.render(context))
+
+    return "/{}{}".format(directory, template_file)
