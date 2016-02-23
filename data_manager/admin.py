@@ -45,34 +45,69 @@ class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
                 if form.has_changed(): # This is the criterion used by BaseModelfFormSet.save_new_object() to decide whether to save the object
                     raise forms.ValidationError("Immaterial release cannot be attached those inlines.",
                                                 code='invalid')
+        return super(OnlyOnMaterialFormSet, self).clean()
 
+
+class ReleaseAnyAttributeFormset(OnlyOnMaterialFormSet):
+    """ The unique_together constraint of any Attribute class includes the Release PK """
+    """ Creating the Release, it is not yet saved into the DB when the Attribute model validate_unique() method is called """
+    """ To avoid a DB exception ruining usability, we must validate this uniqueness at the formset level """
+    def clean(self):
+        super(ReleaseAnyAttributeFormset, self).clean()
+        errors = []
+        attribute_note = {}
+
+        for id, form in enumerate(self):
+            data = form.cleaned_data
+
+            # Note: this formset should work with both ReleaseAttribute and ReleaseCustomAttribute, which do not have the same "attribute" definition
+            # We first try to retrieve the attribute definition from a ReleaseCustomAttribute, and if empty we try for a ReleaseAttribute
+            # This order is important, as ("", "") does not evaluat false, but "" does.
+            attribute = (data.get("category", ""), data.get("name", ""))
+            if attribute == ("", ""):
+                attribute = data.get("attribute", "")
+
+            # If an attribute is found in the form (i.e., not left blank), check that the note makes it unique, using dictionary lookup
+            if attribute:
+                pair = (attribute, data.get("note", ""))
+                if pair not in attribute_note:
+                    attribute_note[pair] = None
+                else:
+                    errors.append(forms.ValidationError("Uniqueness violation for attribute %(attribute)s. Use a distinctive 'note'.",
+                                                        params={"attribute": attribute},
+                                                        code='invalid'))
+        if errors:
+            raise forms.ValidationError(errors)
+            
 
 class ReleaseDistinctionInline(admin.TabularInline):
     extra = 1
     model = ReleaseDistinction
 
-class ReleaseAttributeFormset(OnlyOnMaterialFormSet):
+class ReleaseAttributeFormset(ReleaseAnyAttributeFormset):
     collecster_instance_callback = utils.release_automatic_attributes
 
 class ReleaseAttributeInline(admin.TabularInline):
     extra = 3
     model = ReleaseAttribute
     can_delete = False
-    formset = ReleaseAttributeFormset
+    formset = ReleaseAttributeFormset  #Enforces ATTRIBUTES::1) and IMMATERIAL::6)
+    # Must provide SaveInitialDataModelFrom, or unchanged automatic attributes would not be saved
     form = modelform_factory(ReleaseAttribute, form=SaveInitialDataModelForm, fields="__all__")
 
 class ReleaseCustomAttributeInline(admin.TabularInline):
     extra = 0
     model = ReleaseCustomAttribute
     can_delete = False
-    formset = OnlyOnMaterialFormSet
+    formset = ReleaseAnyAttributeFormset #Enforces ATTRIBUTES::1) and IMMATERIAL::6)
 
 
 class ReleaseCompositionInline(admin.TabularInline):
     verbose_name = verbose_name_plural = "Release composition"
     model = Release.nested_releases.through
     fk_name = 'from_release' # This seems to be the hardcoded name automatically given by Django 
-    formset = OnlyOnMaterialFormSet
+    formset = OnlyOnMaterialFormSet #Enforces IMMATERIAL::5)
+
 
 
 class ReleaseForm(forms.ModelForm):
@@ -140,7 +175,7 @@ class BaseAttributeFormset(forms.BaseInlineFormSet):
                                                         code='invalid'))
 
             if errors:
-                raise errors
+                raise forms.ValidationError(errors)
 
 
 def AnyAttributeFormset_factory(classname, retr_func):
