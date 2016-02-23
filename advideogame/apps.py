@@ -36,4 +36,4 @@ class AdvideogameConfig(AppConfig):
 
     def ready(self):
         super(AdvideogameConfig, self).ready() # Probably useless, as it is a hook
-        register(Tags.models)(check_material_fields)
+        #register(Tags.models)(check_material_fields)

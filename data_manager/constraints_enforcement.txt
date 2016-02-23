@@ -78,9 +78,14 @@ Data model consistency
 = IMMATERIAL =
 == Immaterial restrictions ==
 1) Prevent an immaterial release from having nested releases.
-2.a) For an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
-2.b) For an Occurrence instantiating an immaterial release, the material fields must be left blank (ex: "loose", "barcode").
-3) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
+2.a) For an immaterial release, the material fields must be left blank (eg. "loose", "barcode").
+2.b) For an Occurrence instantiating an immaterial release, the material fields must be left blank (eg. "blister").
+3.a) For a material release, the required_on_material fields must have a non-empty value. (eg. "release_regions")
+3.b) For an Occurrence instantiating a material release, the required_on_material fields must have a non-empty value.
+4) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
+5) immaterial Releases cannot have nested Releases.
+6) immaterial Releases cannot have attributes attached. [to be removed]
+    6) immaterial Releases should not have a [content]self attribute.
 
 
 = PARTIAL DATE =

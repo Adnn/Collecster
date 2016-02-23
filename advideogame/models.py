@@ -105,18 +105,22 @@ class Concept(ConceptBase):
 class Release(ReleaseBase):
     """ An abstract base for the Release model, allowing to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
-    collecster_material_fields = ("loose", "barcode", "region", "system_specification")
+
+    ## Note that these material configurations are designed with "games embedded on a physical support" in mind
+    ## not digital distribution (eg. Steam).
+    collecster_material_fields = ("loose", "barcode", "system_specification", "release_regions")
+    collecster_required_on_material = ("release_regions", "system_specification")
 
     immaterial  = models.BooleanField(default=False) 
 
-    url = models.URLField(blank=True) # Ideally, it should be unique, except for the "blank" value.
+    url = models.URLField(blank=True) #TODO it should be unique, except for the "blank" value.
     loose   = models.BooleanField() 
 
-    barcode = models.CharField(max_length=20, blank=True)
-    release_regions  = models.ManyToManyField("ReleaseRegion")
-    version = models.CharField(max_length=20, blank=True) 
-
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
+    ## neither will immaterials
+    barcode = models.CharField(max_length=20, blank=True)
+    release_regions  = models.ManyToManyField("ReleaseRegion", blank=True)
+    version = models.CharField(max_length=20, blank=True) 
 
     system_specification = models.ForeignKey("SystemSpecification", blank=True, null=True) # immaterials do not specify it
 

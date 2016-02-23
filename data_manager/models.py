@@ -13,15 +13,36 @@ from django.core.exceptions import ValidationError
 ##########
 ## Utils functions
 ##########
-def check_material_consistency(model_instance):
-    if hasattr(model_instance, "collecster_material_fields"):
-        errors_dict = {}
-        for field_name in model_instance.collecster_material_fields:
-            if getattr(model_instance, field_name):
-                errors_dict[field_name]=ValidationError("Not allowed on immaterial releases.", code='invalid')
-        if errors_dict:
-            raise ValidationError(errors_dict)
 
+## Nota: this function would implement the material consistency checks at the DB model level.
+## Sadly, there is a limitation for ManyToMany fields, which are throwing a ValueError when trying to retrieve them
+## on an instance not yet saved in the DB, making those fields not enforcable at the DB model level.
+## Instead, this check is now run at the form level (eg. see admin.ReleaseForm).
+def check_material_consistency(model_instance, is_material):
+    errors_dict = check_material_consistency_generic(model_instance, is_material, getattr) 
+    if errors_dict:
+        raise ValidationError(errors_dict)
+
+def check_material_consistency_generic(model_instance, is_material, data_getter):
+    errors_dict = {}
+
+    if not is_material and hasattr(model_instance, "collecster_material_fields"):
+        for field_name in model_instance.collecster_material_fields:
+            field = model_instance._meta.get_field(field_name)
+            #if data_getter(model_instance, field_name) not in field.empty_values:
+            ## Nota: With boolean fields, we want "False" to be allowed on material fields of immaterial instances,
+            ## but "False" is not an empty value.
+            if data_getter(model_instance, field_name):
+                errors_dict[field_name] = ValidationError("This field is not allowed on immaterial releases.", code="invalid")
+    
+    if is_material and hasattr(model_instance, "collecster_required_on_material"):
+        # see: https://github.com/django/django/blob/1.9/django/db/models/base.py#L1147-L1158
+        for field_name in model_instance.collecster_required_on_material:
+            field = model_instance._meta.get_field(field_name)
+            if data_getter(model_instance, field_name) in field.empty_values:
+                errors_dict[field_name] = ValidationError("This field is required on material releases.", code="invalid")
+
+    return errors_dict
 
 class TagToOccurrenceBase(models.Model):
     """ This model makes the link between user occurrence IDs """
@@ -163,13 +184,24 @@ class ReleaseBase(AbstractRecordOwnership):
     def __str__(self):
         return ("Rel #{}: {}{}".format(self.pk, "[immat] " if not self.is_material() else "", self.display_name()))
 
+    ## Currently useless, as it is not taken into account by the form validation
+    #def full_clean(self, exclude=None, validate_unique=True):
+    #    """ Makes required fields not-required (excluded from validation) when the instance is immaterial and the field """
+    #    """ appears in collecster_material_fields. Sadly is not working with forms, because the field is also cleaned at the form level """
+    #    """ which does not take the exclusions into considerations. """
+    #    """ (see: forms._cleand_fields(), https://github.com/django/django/blob/1.9/django/forms/forms.py#L366) """
+    #    """ Had to introduce the 'collecster_required_on_material' model attribute, so the model fields are not marked as required """
+    #    """ But Collecster can still enforce that the fields must be present on material instances (check_material_consistency_generic) """
+    #    if not self.is_material() and hasattr(self, "collecster_material_fields"):
+    #        exclude = exclude + list(self.collecster_material_fields)
+    #    super(ReleaseBase, self).full_clean(exclude, validate_unique)
+
     def clean(self):
         super(ReleaseBase, self).clean()
-        # Enforces IMMATERIAL::2.a)
-        if not self.is_material():
-            check_material_consistency(self)
-
         self._clean_partial_date()
+        ## Enforces IMMATERIAL::2.a), now enforced at the form level
+        #check_material_consistency(self, self.is_material())
+
 
     def _clean_partial_date(self):
         # Implements PARTIAL DATE::1)
@@ -240,7 +272,8 @@ class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of Ab
 
     class Meta:
         abstract = True
-        unique_together = AbstractAttribute._meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
+        # Note that AttributeBase is not the parent, but it defines the right unique_together clause that we need to extend
+        unique_together = AttributeBase.Meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
 
     release     = models.ForeignKey("Release")
     note       = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
@@ -307,11 +340,11 @@ class OccurrenceBase(AbstractRecordOwnership):
     def __str__(self):
         return ("Occurrence #{} of {}".format(self.pk, self.release))
 
-    def clean(self):
-        super(OccurrenceBase, self).clean()
-        # Enforces IMMATERIAL::2.b)
-        if hasattr(self, "release") and not self.release.is_material():
-            check_material_consistency(self)
+    #def clean(self):
+    #    super(OccurrenceBase, self).clean()
+    #    # Enforces IMMATERIAL::2.b), now enforced at the form level
+    #    if hasattr(self, "release"):
+    #        check_material_consistency(self, self.release.is_material())
 
 
 class OccurrenceAnyAttributeBase(models.Model):
