@@ -1,0 +1,58 @@
+[
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 1,
+        "fields": {
+            "code": "AA"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 2,
+        "fields": {
+            "code": "AAA"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 3,
+        "fields": {
+            "code": "AAAA"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 4,
+        "fields": {
+            "code": "C"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 5,
+        "fields": {
+            "code": "D"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 6,
+        "fields": {
+            "code": "9V"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 7,
+        "fields": {
+            "code": "Proprietary (removable)"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 8,
+        "fields": {
+            "code": "Proprietary (builtin)"
+        }
+    }
+]

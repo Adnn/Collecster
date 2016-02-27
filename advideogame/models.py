@@ -503,10 +503,17 @@ class BatteryType(models.Model):
     code = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.code
 
      
 class InputType(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class MediaType(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):

@@ -1,0 +1,23 @@
+[
+  {
+    "model": "advideogame.mediatype",
+    "pk": 1,
+    "fields": {
+      "name": "Image"
+    }
+  },
+  {
+    "model": "advideogame.mediatype",
+    "pk": 2,
+    "fields": {
+      "name": "Audio"
+    }
+  },
+  {
+    "model": "advideogame.mediatype",
+    "pk": 3,
+    "fields": {
+      "name": "Video"
+    }
+  }
+ ]
