@@ -6,11 +6,15 @@ with open("data_manager/models.py") as f:
 
 from .configuration import OccurrenceSpecific
 from . import tag
+from . import utils_path
 
 # TODO sort out the enumeration
 from data_manager.enumerations import Country
 
-import collections
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+import collections, os
 
 
 class OccurrenceOrigin():
@@ -361,6 +365,66 @@ class Purchase(Bundle):
 
 class Donation(Bundle):
     donator = models.ForeignKey("supervisor.Person")
+
+#
+# Pictures
+#
+class PictureDetail():
+    GROUP = u'GRP'
+    FRONT = u'FRT'
+    BACK = u'BCK'
+    SIDE = u'SID'
+    SIDE_LABEL = u'SLB'
+    INSIDE = u'INS'
+    DEFECT = u'DEF'
+
+    DICT = collections.OrderedDict((
+        (GROUP,     ("Group",)),
+        (FRONT,     ("Front",)),
+        (BACK,      ("Back",)),
+        (SIDE,      ("Side",)),
+        (SIDE_LABEL, ("Side label",)),
+        (INSIDE,    ("Inside",)),
+        (DEFECT,    ("Defect",)),
+    ))
+
+    @classmethod
+    def get_choices(cls):
+        return [(key, value[0]) for key, value in cls.DICT.items()]
+   
+    @classmethod
+    def choices_maxlength(cls):
+        return 3
+
+def name_occurrence_picture(occurrence_picture, filename):
+    return os.path.join(utils_path.instance_media_dir(Occurrence, occurrence_picture.occurrence, False), "pictures", filename)
+
+def name_bundle_picture(bundle_picture, filename):
+    return os.path.join(utils_path.instance_media_dir(Bundle, bundle_picture.bundle, False), "pictures", filename)
+
+def name_release_picture(release_picture, filename):
+    return os.path.join(utils_path.instance_media_dir(Release, release_picture.release, False), "pictures", filename)
+
+
+class OccurrencePicture(models.Model):
+    occurrence  = models.ForeignKey("Occurrence")
+    # The 3 following fields implement a "generic relation"
+    #(see: https://docs.djangoproject.com/en/1.9/ref/contrib/contenttypes/#generic-relations)
+    # Note that the generic relation is not mandatory: for group pictures, no attribute should be specified
+    attribute_type  = models.ForeignKey(ContentType, null=True)
+    attribute_id    = models.PositiveIntegerField(null=True)
+    attribute_object = GenericForeignKey("attribute_type", "attribute_id")
+
+    detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
+    image_file      = models.ImageField(upload_to=name_occurrence_picture)
+
+class BundlePicture(models.Model):
+    bundle      = models.ForeignKey("Bundle")
+    image_file  = models.ImageField(upload_to=name_bundle_picture)
+
+class ReleasePicture(models.Model):
+    release     = models.ForeignKey("Release")
+    image_file  = models.ImageField(upload_to=name_release_picture)
 
 #
 # Platform

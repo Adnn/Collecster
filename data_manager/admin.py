@@ -168,6 +168,7 @@ class ReleaseAdmin(CollecsterModelAdmin):
         ("custom_attributes",    (ReleaseCustomAttributeInline,)),
         ("composition",          (ReleaseCompositionInline,)),
     )) 
+    collecster_refresh_inline_classes = ["attributes",] ## For the automatic attributes, depending on the nature(s)
     collecster_readonly_edit = get_release_readonlyedit()
     form = ReleaseForm
 
@@ -262,6 +263,7 @@ class OccurrenceAdmin(CollecsterModelAdmin):
         ("custom_attributes",    (OccurrenceCustomAttributeInline,)),
         ("composition",          (OccurrenceCompositionInline,)),
     ))
+    collecster_refresh_inline_classes = ["attributes", "custom_attributes", "composition",] ## Each determined by the release
 
     collecster_readonly_edit = ("release",)
     form = OccurrenceForm

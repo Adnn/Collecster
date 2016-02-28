@@ -12,11 +12,6 @@ from django.forms.models import BaseInlineFormSet
 ## TODEL
 #import wdb
 
-def get_app_name():
-    #return string(models.__dict__["__package__"])
-    return globals()["__package__"]
-
-
 class OneFormFormSet(BaseInlineFormSet):
     """ We just need to have validate_min and _max set to True on the FormSet class used by the Admin """
     """ It seems impossible to forward them: https://groups.google.com/d/msg/django-users/xu2Ef7y4DPQ/u3z30vl_BwAJ """
@@ -171,6 +166,8 @@ def retrieve_automatic_attributes(concept_id):
     return ConfigNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
 
 def all_release_attributes(release_id):
+    """ Returns non-custom attributes for a Release """
+    """ Is a layer of abstraction in case we later introduce implicit attributes (not stored in the DB for each release, but logically present) """
     if not release_id:
         return []
 

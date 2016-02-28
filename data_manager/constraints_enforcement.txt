@@ -111,6 +111,11 @@ Data model consistency
 3) The TAG occurrence id are unique per user.
     Model-level: unique_together on TagToOccurrence
 
+= ADVIDEOGAME =
+1.a) OccurrencePicture should have a generic relation to a ReleaseAttribute or a CustomReleaseAttribute associated with the Release
+of the related Occurrence.
+1.b) This relation should be left blank for the GROUP detail.
+1.c) This relation is mandatory for all other details.
 
 = Tweaking the Admin interface to fit the application =
 

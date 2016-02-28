@@ -1,8 +1,10 @@
 import advideogame
 
+from . import utils_path
+
 from supervisor.models import * # for generate_qr_code 
+
 from django.template import loader
-from django.conf import settings
 
 import pyqrcode
 
@@ -13,7 +15,7 @@ def generate_qrcode(occurrence, tag_to_occurrence):
     reserved = 0 #For later use
     #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
     user_guid = tag_to_occurrence.user_creator.guid
-    deployment = Deployment.objects.get(configuration=advideogame.utils.get_app_name())
+    deployment = Deployment.objects.get(configuration=advideogame.utils_path.get_app_name())
     user_collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).user_collection_id 
     #TODO Handle the object type when other types will be allowed
     objecttype_id = 1 # There is a single object type at the moment: the occurrence
@@ -42,9 +44,9 @@ def generate_tag(occurrence):
     }
     
     # Here, uses the occurrence PK in the DB, not the tag_occurrence id, because we see this part of the filesystem
-    # like a direct extension to the DB
-    # As a consequence, a potential migration of a collection would need to rename those folder to map to the DB.
-    directory = "{}/{}/occurrences/{}/tags/".format(settings.MEDIA_ROOT, advideogame.utils.get_app_name(), occurrence.pk)
+    # like a direct extension of the DB.
+    # As a consequence, a potential migration of a collection would impose to rename those folders to map to the DB.
+    directory = os.path.join(utils_path.instance_media_dir(Occurrence, occurrence, True), "tags")
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -55,4 +57,4 @@ def generate_tag(occurrence):
     with open(os.path.join(directory, "v{}.html".format(tag_version)), "w") as f: #TODO some date and time ?
         f.write(template.render(context))
 
-    return "/{}{}".format(directory, template_file)
+    return "/{}".format(os.path.join(directory, template_file))

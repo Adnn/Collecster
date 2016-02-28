@@ -13,6 +13,8 @@ from django.contrib import admin
 ##
 ## Edit the data_manager admin
 ##
+
+## Concept name scoping ##
 class ConceptAdminForm(forms.models.ModelForm):
     def clean(self):
         """ Enforces some uniqueness constraints : """
@@ -44,8 +46,92 @@ class ConceptAdminForm(forms.models.ModelForm):
 class ConceptAdmin(ConceptAdmin):
     form = ConceptAdminForm
 
+## Occurrence pictures relation to any attribute ##
+def populate_occurrence_picture_attributes_choices(formset, request, obj):
+    """ Populates the any_attribute ChoiceField of OccurrencePictureForm with all attributes (incl. CustomReleaseAttributes) """
+    """ available on the Release of the related occurrence. Also populates its initial data for edition form. """
+    release_id = utils.get_release_id(request, obj)
+    
+    choices = [("", "----")]
+
+    attributes = utils.all_release_attributes(release_id)
+    attribute_contenttype = ContentType.objects.get_for_model(ReleaseAttribute)
+    choices.extend([ ("{}_{}".format(attribute_contenttype.pk, attribute.pk), "{}".format(attribute))
+                     for attribute in attributes])
+
+    custom_attributes = utils.retrieve_any_attributes(ReleaseCustomAttribute, release_id)
+    custom_attribute_contenttype = ContentType.objects.get_for_model(ReleaseCustomAttribute)
+    choices.extend([ ("{}_{}".format(custom_attribute_contenttype.pk, attribute.pk), "{} (custom)".format(attribute))
+                     for attribute in custom_attributes])
+
+    for form in formset:
+        form.fields["any_attribute"].choices = choices
+        if form.instance.attribute_id:
+            form.fields["any_attribute"].initial = "{}_{}".format(form.instance.attribute_type.pk, form.instance.attribute_id)
+    
+class OccurrencePictureForm(forms.ModelForm):
+    class Meta:
+        exclude = ("attribute_type", "attribute_id")
+
+    # Choices are populated dynamically by populate_occurrence_picture_attributes_choices
+    any_attribute = forms.ChoiceField(label="Attribute", required=False)
+    
+    def cleaned_attribute(self):
+        attribute = None
+        try:
+            attribute = self.cleaned_data["any_attribute"]
+        except KeyError:
+            pass
+        return attribute
+
+    def clean(self, *args, **kwargs):
+        """ Ensures that detail==Group pictures have no attributes associated, but all other "details" have one """
+        error = None
+        detail = self.cleaned_data["detail"]
+        attribute = self.cleaned_attribute()
+        
+        if detail == PictureDetail.GROUP:
+            if attribute:
+               error = ValidationError("This field must be blank for {} pictures.".format(PictureDetail.DICT[detail][0]),
+                                       code="invalid")
+        else:
+            if not attribute:
+               error = ValidationError("This field is mandatory for {} pictures.".format(PictureDetail.DICT[detail][0]),
+                                       code="invalid")
+                
+        if error:
+            raise ValidationError({"any_attribute": error})
+
+        return super(OccurrencePictureForm, self).clean()
+
+    def save(self, *args, **kwargs):
+        """ Populates the model fields of the generic relation (attribute_type, attribute_id) using the selected value """
+        if self.cleaned_attribute():
+            attribute_type_pk, self.instance.attribute_id = self.cleaned_attribute().split("_")
+            self.instance.attribute_type = ContentType.objects.get(id=attribute_type_pk)
+        return super(OccurrencePictureForm, self).save(*args, **kwargs)
+
+     
+class OccurrencePictureFormSet(forms.BaseInlineFormSet):
+    collecster_instance_callback = populate_occurrence_picture_attributes_choices
+
+class OccurrencePictureInline(admin.TabularInline):
+    model   = OccurrencePicture
+    formset = OccurrencePictureFormSet
+    form    = OccurrencePictureForm
+
 OccurrenceAdmin.collecster_exclude_create = ("tag_url",)
 OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_url",)
+OccurrenceAdmin.collecster_dynamic_inline_classes["pictures"] = (OccurrencePictureInline,)
+OccurrenceAdmin.collecster_refresh_inline_classes.extend( ("pictures",) )
+
+## Release picture ##
+class ReleasePictureInline(admin.TabularInline):
+    model   = ReleasePicture
+    extra   = 1
+
+ReleaseAdmin.collecster_dynamic_inline_classes["pictures"] = (ReleasePictureInline,)
+
 
 base_register(admin.site)
 
@@ -57,8 +143,12 @@ class BundleCompositionInline(admin.TabularInline):
    model = BundleComposition
    extra = 4
        
+class BundlePictureInline(admin.TabularInline):
+   model = BundlePicture
+   extra = 1
+
 class AnyBundleAdmin(admin.ModelAdmin):
-    inlines = [BundleCompositionInline]
+    inlines = (BundleCompositionInline, BundlePictureInline,)
 
 class ProvidedInterfaceInline(admin.TabularInline):
    model = ProvidedInterface
