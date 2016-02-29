@@ -65,10 +65,20 @@ class Distinction(DistinctionBase):
 class ReleaseDistinction(ReleaseDistinctionBase):
     pass
 
-class ReleaseAttribute(ReleaseAttributeBase):
+class ReleaseAttributeCodeExtension(models.Model):
+    class Meta:
+        abstract = True
+    code = models.CharField(max_length=64, blank=True)
+    code_type = models.CharField(blank=True, max_length=1, choices = (("S", "Serial number"), ("C", "Catalog / Internal"), ))
+
+    def clean(self):
+        if (self.code and not self.code_type) or (not self.code and self.code_type):
+            raise ValidationError("code and code type must either be both specified or both left blank.", code="invalid")
+
+class ReleaseAttribute(ReleaseAttributeBase, ReleaseAttributeCodeExtension):
     pass
 
-class ReleaseCustomAttribute(ReleaseCustomAttributeBase):
+class ReleaseCustomAttribute(ReleaseCustomAttributeBase, ReleaseAttributeCodeExtension):
     pass
 
 class ReleaseComposition(ReleaseCompositionBase):
