@@ -159,6 +159,9 @@ class Occurrence(OccurrenceBase):
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
+    # Uses a CharField, in case some "numbers" contain alphabetic characters
+    unique_number = models.CharField(max_length=32, blank=True,
+                help_text="An identifier uniquely attached to this occurrence (eg. collector numbered edition).")
 
     tag_url = models.URLField(null=True)
 
