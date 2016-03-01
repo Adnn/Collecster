@@ -48,7 +48,7 @@ class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
         return super(OnlyOnMaterialFormSet, self).clean()
 
 
-class ReleaseAnyAttributeFormset(OnlyOnMaterialFormSet):
+class ReleaseAnyAttributeFormset(forms.BaseInlineFormSet):
     """ The unique_together constraint of any Attribute class includes the Release PK """
     """ Creating the Release, it is not yet saved into the DB when the Attribute model validate_unique() method is called """
     """ To avoid a DB exception ruining usability, we must validate this uniqueness at the formset level """
@@ -75,7 +75,7 @@ class ReleaseAnyAttributeFormset(OnlyOnMaterialFormSet):
                 else:
                     errors.append(forms.ValidationError("Uniqueness violation for attribute %(attribute)s. Use a distinctive 'note'.",
                                                         params={"attribute": attribute},
-                                                        code='invalid'))
+                                                        code="invalid"))
         if errors:
             raise forms.ValidationError(errors)
             
@@ -84,16 +84,32 @@ class ReleaseDistinctionInline(admin.TabularInline):
     extra = 1
     model = ReleaseDistinction
 
+
+# Must derive from SaveInitialDataModelFrom, or unchanged automatic attributes would not be saved
+class ReleaseAttributeForm(SaveInitialDataModelForm):
+    _forbidden_on_immaterial = [] # Ad-hoc solution, so an app could extend this to provent specific attributes on immaterials.
+
+    def extra_clean_for_immaterial(self):
+        if self.instance.attribute in self._forbidden_on_immaterial:
+            self.add_error("attribute", forms.ValidationError("This attribute is not allowed on immaterial releases.",
+                                                              code="invalid"))
+ 
 class ReleaseAttributeFormset(ReleaseAnyAttributeFormset):
     collecster_instance_callback = utils.release_automatic_attributes
 
+    def clean(self):
+        if not self.instance.is_material():
+            for form in self:
+                if form.has_changed(): # This is the criterion used by BaseModelfFormSet.save_new_object() to decide whether to save the object
+                    form.extra_clean_for_immaterial() 
+        return super(ReleaseAttributeFormset, self).clean()
+   
 class ReleaseAttributeInline(admin.TabularInline):
     extra = 3
     model = ReleaseAttribute
     can_delete = False
     formset = ReleaseAttributeFormset  #Enforces ATTRIBUTES::1) and IMMATERIAL::6)
-    # Must provide SaveInitialDataModelFrom, or unchanged automatic attributes would not be saved
-    form = modelform_factory(ReleaseAttribute, form=SaveInitialDataModelForm, fields="__all__")
+    form = ReleaseAttributeForm
 
 class ReleaseCustomAttributeInline(admin.TabularInline):
     extra = 0

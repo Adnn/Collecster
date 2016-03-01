@@ -7,6 +7,7 @@ with open("data_manager/admin.py") as f:
 ##
 
 from .models import *
+from . import config_utils
 
 from django.contrib import admin
 
@@ -131,6 +132,9 @@ class ReleasePictureInline(admin.TabularInline):
     extra   = 1
 
 ReleaseAdmin.collecster_dynamic_inline_classes["pictures"] = (ReleasePictureInline,)
+
+## Release attributes ##
+ReleaseAttributeForm._forbidden_on_immaterial.append(config_utils.get_attribute("content", "self"))
 
 
 base_register(admin.site)
