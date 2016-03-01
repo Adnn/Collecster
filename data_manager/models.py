@@ -17,30 +17,33 @@ from django.core.exceptions import ValidationError
 ## Nota: this function would implement the material consistency checks at the DB model level.
 ## Sadly, there is a limitation for ManyToMany fields, which are throwing a ValueError when trying to retrieve them
 ## on an instance not yet saved in the DB, making those fields not enforcable at the DB model level.
-## Instead, this check is now run at the form level (eg. see admin.ReleaseForm).
+## Instead, this check is now run at the form level (eg. see PropertyAwareModelForm).
 def check_material_consistency(model_instance, is_material):
-    errors_dict = check_material_consistency_generic(model_instance, is_material, getattr) 
+    errors_dict = check_property_consistency_impl(model_instance, is_material, "material", getattr, required=model_instance.required_on_material) 
+    errors_dict.update( check_property_consistency_impl(model_instance, not is_material, "non_material", getattr, forbidden=model_instance.forbidden_on_non_material) )
     if errors_dict:
         raise ValidationError(errors_dict)
 
-def check_material_consistency_generic(model_instance, is_material, data_getter):
+def check_property_consistency(model_instance, property_value, property_name, data_getter, forbidden=(), required=()):
     errors_dict = {}
 
-    if not is_material and hasattr(model_instance, "collecster_material_fields"):
-        for field_name in model_instance.collecster_material_fields:
+    if property_value and forbidden:
+        for field_name in forbidden:
             field = model_instance._meta.get_field(field_name)
             #if data_getter(model_instance, field_name) not in field.empty_values:
             ## Nota: With boolean fields, we want "False" to be allowed on material fields of immaterial instances,
             ## but "False" is not an empty value.
             if data_getter(model_instance, field_name):
-                errors_dict[field_name] = ValidationError("This field is not allowed on immaterial releases.", code="invalid")
+                errors_dict[field_name] = ValidationError("This field is not allowed on %(property)s releases.", 
+                                                          params = {"property": property_name}, code="invalid")
     
-    if is_material and hasattr(model_instance, "collecster_required_on_material"):
+    if property_value and required: 
         # see: https://github.com/django/django/blob/1.9/django/db/models/base.py#L1147-L1158
-        for field_name in model_instance.collecster_required_on_material:
+        for field_name in required:
             field = model_instance._meta.get_field(field_name)
             if data_getter(model_instance, field_name) in field.empty_values:
-                errors_dict[field_name] = ValidationError("This field is required on material releases.", code="invalid")
+                errors_dict[field_name] = ValidationError("This field is required on %(property)s releases.",
+                                                          params = {"property": property_name}, code="invalid")
 
     return errors_dict
 
@@ -339,6 +342,12 @@ class OccurrenceBase(AbstractRecordOwnership):
 
     def __str__(self):
         return ("Occurrence #{} of {}".format(self.pk, self.release))
+
+    def material_is_known(self):
+        return hasattr(self, "release")
+
+    def is_material(self):
+        return self.release.is_material()
 
     #def clean(self):
     #    super(OccurrenceBase, self).clean()

@@ -1,6 +1,8 @@
 from .admin import ReleaseAdmin, OccurrenceAdmin
 from .models import *
-from . import utils, utils_path
+from . import utils_path
+
+from data_manager import utils_payload
 
 from django.shortcuts   import render
 from django.template    import loader
@@ -57,12 +59,12 @@ def ajax_occurrence_admin_formsets(request, release_id):
     request.collecster_payload = { "release_id": int(release_id) }
 
     ## The specifics
-    utils.set_request_payload(request, "inlines_groups", ("specific",))
+    utils_payload.set_request_payload(request, "inlines_groups", ("specific",))
     rendered_formsets = render_admin_formsets(get_admin_formsets(occurrence_adm, request))
     specifics_div = "<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets))
 
     ## Other inlines marked for refresh
-    utils.set_request_payload(request, "inlines_groups", OccurrenceAdmin.collecster_refresh_inline_classes)
+    utils_payload.set_request_payload(request, "inlines_groups", OccurrenceAdmin.collecster_refresh_inline_classes)
     rendered_attributes = render_admin_formsets(get_admin_formsets(occurrence_adm, request))
 
     return HttpResponse("{}\n{}".format("\n".join(rendered_attributes), specifics_div))

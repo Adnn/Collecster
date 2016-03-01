@@ -21,6 +21,10 @@ class ReleaseSpecific(object):
             abstract = True
         release = models.ForeignKey('Release')
 
+        def get_parent_instance(self):
+            return self.release
+
+
     class Combo(AbstractBase):
         brand = models.ForeignKey('Company', blank=True, null=True)
 
@@ -109,6 +113,10 @@ class OccurrenceSpecific(object):
         class Meta:
             abstract = True
         occurrence = models.ForeignKey('Occurrence')
+
+        def get_parent_instance():
+            return self.occurrence
+
 
     class OperationalOcc(AbstractBase):
         YES = "Y"

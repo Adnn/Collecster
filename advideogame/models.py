@@ -120,12 +120,15 @@ class Release(ReleaseBase):
     """ An abstract base for the Release model, allowing to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
 
-    ## Note that these material configurations are designed with "games embedded on a physical support" in mind
-    ## not digital distribution (eg. Steam).
-    collecster_material_fields = ("loose", "barcode", "system_specification", "release_regions")
-    collecster_required_on_material = ("release_regions", "system_specification")
+    collecster_properties = {
+        "forbidden_on_material":                ("digitally_distributed", ),
+        "forbidden_on_non_material":            ("loose", "barcode", ),
+        "forbidden_on_embedded_immaterial":     ("system_specification", "release_regions", "partial_date", ),
+        "required_on_non_embedded_immaterial":  ("release_regions", "system_specification", ),
+    }
 
-    immaterial  = models.BooleanField(default=False) 
+    immaterial              = models.BooleanField(default=False) 
+    digitally_distributed  = models.BooleanField(default=False) 
 
     url = models.URLField(blank=True) #TODO it should be unique, except for the "blank" value.
     loose   = models.BooleanField() 
@@ -137,6 +140,12 @@ class Release(ReleaseBase):
     version = models.CharField(max_length=20, blank=True) 
 
     system_specification = models.ForeignKey("SystemSpecification", blank=True, null=True) # immaterials do not specify it
+
+    def is_embedded_immaterial(self):
+        return not self.is_material() and not self.digitally_distributed
+
+    def is_digital_immaterial(self):
+        return not self.is_material() and self.digitally_distributed
 
     def tag_regions(self):
         return list(collections.OrderedDict.fromkeys([region.tag_region for region in self.release_regions.all()]))
@@ -166,7 +175,7 @@ class Occurrence(OccurrenceBase):
     tag_url = models.URLField(null=True)
 
     def admin_post_save(self):
-        if self.release.is_material():
+        if self.is_material():
             self.tag_url = tag.generate_tag(self)
             self.save()
 

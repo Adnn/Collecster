@@ -1,8 +1,10 @@
 # TODO sort out enumeration
 from data_manager import enumerations as enum
+from data_manager import utils_payload
 
 from .models import *
 from .configuration import ConfigNature
+from .forms_admins import PropertyAwareSaveInitialDataModelForm
 
 from django import forms
 from django.contrib import admin
@@ -22,17 +24,29 @@ class OneFormFormSet(BaseInlineFormSet):
         self.validate_min = True
         self.validate_max = True
 
+
+## Note: inherits from SaveInitialDataModelForm: in a situation where the model for a specific has defaults
+## for each required field, we want it to be saved to DB even if the user leaves all fields to default.
+## Also inherits from PropertyAware, so "collecster_properties" rule are available on specifics.
+class SpecificForm(PropertyAwareSaveInitialDataModelForm):
+    def get_base_instance(self):
+        """ Needs to forward the base instance as the instance to which the specific as a relation. """
+        return self.instance.get_parent_instance()
+
 class SpecificStackedInline(admin.StackedInline):
+    """ This derived inline allows to render the inline using admin_edit_inline_wrapper template. """
+    """ This template simply render the original template, but wrapped in an additional custom <div>. """
+    """ Those custom divs can then be identified by a JS script and be re-rooted under  """
+    """ the #collecster_specifics <div>, supposed to contain all specifics. """
+    """ """
+    """ It also allows to specify a custom form, to handle collecster properties """
     collecster_wrapped_template = admin.StackedInline.template
     template = "collecster/admin_edit_inline_wrapper.html"
-
+    form = SpecificForm
 
 def admininline_factory(Model, Inline):
-    from .forms_admins import SaveInitialDataModelForm
     classname = "{}{}".format(Model.__name__, "AdminInline")
-    ## Note: sets the "form" to SaveInitialDataModelForm: in a situation where the model for this inline has defaults
-    ## for each field, we want it to be saved to DB even if the user leaves all fields to default (eg. the specifics)
-    return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet, "form": SaveInitialDataModelForm,
+    return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet,
                                        "min_num": 1, "max_num": 1, "can_delete": False})
     #tp = type(classname, (Inline,), {"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model, formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)})
     #wdb.set_trace() 
@@ -48,9 +62,9 @@ def get_concept_id(request, release=None, occurrence=None):
     elif occurrence is not None and hasattr(occurrence, "release"):
         return occurrence.release.concept.pk
     else:
-        concept_id = get_request_payload(request, "concept_id", 0)
+        concept_id = utils_payload.get_request_payload(request, "concept_id", 0)
         if not concept_id:
-            release_id = get_request_payload(request, "release_id", 0)
+            release_id = utils_payload.get_request_payload(request, "release_id", 0)
             if release_id:
                 concept_id = Release.objects.get(pk=release_id).concept.pk
         return concept_id
@@ -61,7 +75,7 @@ def get_release_id(request, occurrence=None):
     if occurrence is not None and hasattr(occurrence, "release"):
         return occurrence.release.pk
     else:
-        return get_request_payload(request, "release_id", 0)
+        return utils_payload.get_request_payload(request, "release_id", 0)
 
 
 def get_concept_specific_inlines(concept_id, specifics_retriever):
@@ -129,20 +143,6 @@ def occurrence_composition_queryset(formset, request, obj):
             )
             print(form.fields["to_occurrence"].queryset)
             form.fields["to_occurrence"].label     = "Nested {} occurrence".format(release.name)
-
-
-##
-## Request helpers
-##
-def set_request_payload(request, key, value):
-    if not hasattr(request, "collecster_payload"):
-        request.collecster_payload = {}
-    request.collecster_payload[key] = value; 
-
-def get_request_payload(request, key, default=None):
-    if hasattr(request, "collecster_payload") and key in request.collecster_payload:
-        return request.collecster_payload[key] 
-    return default 
 
 
 ##

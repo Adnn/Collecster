@@ -1,5 +1,5 @@
 from . import utils
-from .forms_admins import SaveInitialDataModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
+from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 
 from .models import *
 from supervisor.models import Person
@@ -109,33 +109,7 @@ class ReleaseCompositionInline(admin.TabularInline):
     formset = OnlyOnMaterialFormSet #Enforces IMMATERIAL::5)
 
 
-class MaterialAwareModelForm(forms.ModelForm):
-    def get_form_cleaned_data(self, model_instance, field_name):
-        cleaned = self.cleaned_data[field_name]
-        if isinstance(cleaned, models.QuerySet):
-            cleaned = [value for value in cleaned.all()]
-        return cleaned
-
-    def _materiality_known(self):
-        """ Can be overriden in cases where the material attribute of an instance cannot be determined """
-        """ (eg. an Occurrence whose Release has not been filled-in) """
-        return True
-
-    def _is_material(self):
-        return self.instance.is_material()
-
-    # Enforces IMMATERIAL::2.a)
-    def _post_clean(self):
-        super(MaterialAwareModelForm, self)._post_clean()
-        if (self._materiality_known()):
-            # Enforces IMMATERIAL::2.a) IMMATERIAL::2.b) IMMATERIAL::3.a) IMMATERIAL::3.b)
-            errors = check_material_consistency_generic(self.instance, self._is_material(),
-                                                        self.get_form_cleaned_data)
-            for field_name, error in errors.items():
-                self.add_error(field_name, error)
-
-
-class ReleaseForm(MaterialAwareModelForm):
+class ReleaseForm(PropertyAwareModelForm):
     ## Override the partial_date_precision field for two customizations :
     ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
     ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
@@ -247,13 +221,6 @@ class OccurrenceCompositionInline(admin.TabularInline):
                              widgets={"release_composition": widgets.labelwidget_factory(ReleaseComposition)})
     can_delete = False #Remove the delete checkbox on each composition form (on edit page)
 
-class OccurrenceForm(MaterialAwareModelForm):
-    def _materiality_known(self):
-        return hasattr(self.instance, "release")
-
-    def _is_material(self):
-        return self.instance.release.is_material()
-
 
 class OccurrenceAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
@@ -266,7 +233,7 @@ class OccurrenceAdmin(CollecsterModelAdmin):
     collecster_refresh_inline_classes = ["attributes", "custom_attributes", "composition",] ## Each determined by the release
 
     collecster_readonly_edit = ("release",)
-    form = OccurrenceForm
+    form = PropertyAwareModelForm
 
 
     def post_save_model(self, request, obj, form, change):

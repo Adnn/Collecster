@@ -1,8 +1,11 @@
-from . import utils, utils_path
-from .models import AbstractRecordOwnership, Occurrence, Release
+from . import utils_path
+from .models import AbstractRecordOwnership, Occurrence, Release, check_property_consistency
+
+from data_manager import utils_payload
 from supervisor.models import UserExtension
 
 from django.contrib import admin
+from django.db.models import QuerySet
 from django import forms
 
 #TODEL
@@ -28,6 +31,74 @@ class SaveInitialDataModelForm(forms.ModelForm):
                 return True
         return False
 
+
+class PropertyAwareModelForm(forms.ModelForm):
+    """ Completly handles the validation of models "collecster_properties" dictionnary, on the form side """
+    """ """
+    """ The models can define logical boolean properties, whose value should be queriable on their instance through """
+    """ a "is_{positive_property_name}" getter. In case the property value is not always known (eg. some determinant fiels has not be filled in) """
+    """ the model can also define a "{positive_property_name}_is_known" method, returning False when the property cannot be queried. """
+    """ """
+    """ This class can be used to controle fields on the base models (i.e., Release or Occurrence) directly, """
+    """ but it can also be used on inline forms of releated models (eg. Specific). In this case, the related model should """
+    """ derive this form for itself, overriding the "get_base_instance" method to return the instance of the base model """
+    """ it relates to."""
+    def get_form_cleaned_data(self, model_instance, field_name):
+        try:
+            cleaned = self.cleaned_data[field_name]
+        except KeyError:
+            # There is no cleaned_data entry for an emtpy ModelMultipleChoiceField, thus raising a KeyError
+            cleaned = None
+
+        if isinstance(cleaned, QuerySet):
+            # ModelMultipleChoiceField normalize to a QuerySet
+            cleaned = [value for value in cleaned.all()]
+
+        return cleaned
+
+    @staticmethod
+    def _split_property(property_name):
+        """ Splites the property name found on the collecster_properties dictionary, """
+        """ between the sign (False if "non_" prefix, True otherwise) and the positive property name """
+        splits = property_name.split("_", maxsplit=1) 
+        if (len(splits) == 2) and (splits[0] =="non"):
+            return False, splits[1]
+        else:
+            return True, "_".join(splits)
+
+    def get_base_instance(self):
+        """ To be overriden, notably by Specific models, which are presented in inline formsets of the base model """
+        return self.instance
+
+    def is_property_known(self, property_name):
+        """ Checks whether the base model defines a "{property}_is_known" member, and calls it if available. """
+        sign_DISCARDED, positive_property = PropertyAwareModelForm._split_property(property_name)
+        availability_check = "{}_is_known".format(positive_property)
+        if hasattr(self.get_base_instance(), availability_check):
+            return getattr(self.get_base_instance(), availability_check)()
+        else:
+            return True
+
+    def get_property_value(self, property_name):
+        sign, positive_property = PropertyAwareModelForm._split_property(property_name)
+        return sign == getattr(self.get_base_instance(), "is_{}".format(positive_property))()
+
+    def _post_clean(self):
+        super(PropertyAwareModelForm, self)._post_clean()
+        # Enforces IMMATERIAL::2.a) IMMATERIAL::2.b) IMMATERIAL::3.a) IMMATERIAL::3.b)
+        if hasattr(self.instance, "collecster_properties"):
+            for key, fields in self.instance.collecster_properties.items():
+                instruction, DISCARDED, property_name = key.split("_", maxsplit=2)
+                if self.is_property_known(property_name):
+                    errors = check_property_consistency(self.instance, self.get_property_value(property_name),
+                                                        property_name, self.get_form_cleaned_data,
+                                                        **{instruction: fields})
+                    for field_name, error in errors.items():
+                        self.add_error(field_name, error)
+
+class PropertyAwareSaveInitialDataModelForm(PropertyAwareModelForm, SaveInitialDataModelForm):
+    """ Provides the functionnality of bot PropertyAware and SaveInitialData model forms """
+    pass
 
 ##########
 ## ModelAdmins
@@ -125,9 +196,9 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
     def _collecster_fixup_request(self, request, obj, change):
         """ Implementation detail, allows to forward some data from 'obj' into the request """
         if type(obj) is Occurrence and hasattr(obj, "release"):
-            utils.set_request_payload(request, "release_id", obj.release.id)
+            utils_payload.set_request_payload(request, "release_id", obj.release.id)
         elif type(obj) is Release and hasattr(obj, "concept"):
-            utils.set_request_payload(request, "concept_id", obj.concept.id)
+            utils_payload.set_request_payload(request, "concept_id", obj.concept.id)
 
 
     def _create_formsets(self, request, obj, change):
@@ -158,7 +229,7 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         """ All the AdminInlines for all groups are returned, except if the payload limits groups using its "collecster_inlines_group" entry """
         AdminClass = self.__class__
         added = []
-        requested_inlines = utils.get_request_payload(request, "inlines_groups")
+        requested_inlines = utils_payload.get_request_payload(request, "inlines_groups")
         if hasattr(AdminClass, "collecster_dynamic_inline_classes"):
             filter_func = (lambda x: x in requested_inlines) if requested_inlines else (lambda x: True)
             for inlines in [inlines for group, inlines in self.collecster_dynamic_inline_classes.items() if filter_func(group)]:
