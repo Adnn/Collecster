@@ -10,6 +10,7 @@ from .models import *
 from . import config_utils
 
 from django.contrib import admin
+from django.utils.html import format_html
 
 ##
 ## Edit the data_manager admin
@@ -121,10 +122,22 @@ class OccurrencePictureInline(admin.TabularInline):
     formset = OccurrencePictureFormSet
     form    = OccurrencePictureForm
 
-OccurrenceAdmin.collecster_exclude_create = ("tag_url",)
-OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_url",)
 OccurrenceAdmin.collecster_dynamic_inline_classes["pictures"] = (OccurrencePictureInline,)
 OccurrenceAdmin.collecster_refresh_inline_classes.extend( ("pictures",) )
+
+## Display the tag link as a clickable read-only url, only when editing ##
+def tag_link(self, instance):
+    """ By default, an UrlField does not display as a clickable link when it is read-only """
+    """ so we rely on the ModelAdmin.readonly_fields ability to use a callable to output the link """
+    """ see: http://stackoverflow.com/q/35708814/1027706 """
+    if instance.tag_url:
+        return format_html('<a href="{url}" target=_blank>{url}</a>', url=instance.tag_url)
+    else:
+        return "-" # What was displayed by default by the readonly UrlField when the tag was not set
+
+OccurrenceAdmin.tag_link = tag_link # Has to be a method on the model or the ModelAdmin
+OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_link",)
+OccurrenceAdmin.exclude = OccurrenceAdmin.exclude + ("tag_url",)
 
 ## Release picture ##
 class ReleasePictureInline(admin.TabularInline):
