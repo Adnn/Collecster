@@ -162,6 +162,23 @@ class ReleaseUrlInline(admin.TabularInline):
 ReleaseAdmin.collecster_dynamic_inline_classes["urls"] = (ReleaseUrlInline,)
 ReleaseAdmin.collecster_dynamic_inline_classes.move_to_end("urls", last=False)
 
+## Validates the selected regions ##
+class ReleaseFormRegions(ReleaseForm):
+    """ Inherit from ReleaseForm and assign it as the ReleaseAdmin form """
+    """ We could have defined a free function instead, and assigned it to ReleaseForm.clean, but it would override """
+    """ a potential clean member already present on ReleaseForm """
+    def clean(self):
+        super(ReleaseFormRegions, self).clean()
+        regions = self.cleaned_data.get("release_regions")
+        for region in regions:
+            if region.parent_region in regions:
+                self.add_error("release_regions",
+                               forms.ValidationError("Release regions cannot contain the region %(nested_region)s "
+                                                     "and its parent region %(parent_region)s at the same time.",
+                                                     params={"nested_region": region, "parent_region": region.parent_region},
+                                                     code="invalid"))
+
+ReleaseAdmin.form = ReleaseFormRegions
 
 base_register(admin.site)
 

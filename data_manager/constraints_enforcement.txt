@@ -117,6 +117,10 @@ of the related Occurrence.
 1.b) This relation should be left blank for the GROUP detail.
 1.c) This relation is mandatory for all other details.
 
+== RELEASE_REGIONS ==
+1) It is not allowed to specify at the same time a release region and any of its nested regions, as the parent regions implies all the regions it contains.
+
+
 = Tweaking the Admin interface to fit the application =
 
 * Removing the '+' sign on formsets (allowing to add more forms)
