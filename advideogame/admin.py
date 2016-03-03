@@ -43,10 +43,14 @@ class ConceptAdminForm(forms.models.ModelForm):
 
         return super(ConceptAdminForm, self).clean()
 
+ConceptAdmin.form = ConceptAdminForm
 
-# TODO just add this property, avoid auto inheriting from the same name
-class ConceptAdmin(ConceptAdmin):
-    form = ConceptAdminForm
+
+class ConceptUrlInline(admin.TabularInline):
+    extra = 1
+    model = ConceptUrl
+
+ConceptAdmin.inlines = ConceptAdmin.inlines + (ConceptUrlInline,)
 
 ## Occurrence pictures relation to any attribute ##
 def populate_occurrence_picture_attributes_choices(formset, request, obj):
@@ -148,6 +152,15 @@ ReleaseAdmin.collecster_dynamic_inline_classes["pictures"] = (ReleasePictureInli
 
 ## Release attributes ##
 ReleaseAttributeForm._forbidden_on_immaterial.append(config_utils.get_attribute("content", "self"))
+
+## Release urls ##
+class ReleaseUrlInline(admin.TabularInline):
+    extra = 1
+    model = ReleaseUrl
+
+#ReleaseAdmin.inlines = (ReleaseUrlInline,) + ReleaseAdmin.inlines
+ReleaseAdmin.collecster_dynamic_inline_classes["urls"] = (ReleaseUrlInline,)
+ReleaseAdmin.collecster_dynamic_inline_classes.move_to_end("urls", last=False)
 
 
 base_register(admin.site)

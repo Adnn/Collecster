@@ -107,9 +107,6 @@ class Concept(ConceptBase):
     """ Specialization of the Concept model, to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
 
-    url = models.URLField(blank=True) # Ideally, it should be unique, except for the "blank" value.
-                                      # But that poses a problem because the blank is empty string (see: http://stackoverflow.com/a/1400046/1027706)
-
     developer = models.ForeignKey('Company', null=True) # Allows null but not blank, for the _COMBO concept special case
 
     name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True)
@@ -130,7 +127,6 @@ class Release(ReleaseBase):
     immaterial              = models.BooleanField(default=False) 
     digitally_distributed  = models.BooleanField(default=False) 
 
-    url = models.URLField(blank=True) #TODO it should be unique, except for the "blank" value.
     loose   = models.BooleanField() 
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
@@ -185,6 +181,14 @@ class Occurrence(OccurrenceBase):
 ##
 ## Extra models
 ##
+
+class ConceptUrl(models.Model):
+    concept = models.ForeignKey("Concept")
+    url = models.URLField(unique=True)
+
+class ReleaseUrl(models.Model):
+    release = models.ForeignKey("Release")
+    url = models.URLField(unique=True)
 
 class TagRegion(models.Model):
     name = models.CharField(max_length=3, unique=True, help_text="The value printed on the occurrence tag.")
