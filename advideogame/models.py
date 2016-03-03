@@ -14,6 +14,7 @@ from data_manager.enumerations import Country
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from functools import partial
 import collections, os
 
 
@@ -422,14 +423,9 @@ class PictureDetail():
     def choices_maxlength(cls):
         return 3
 
-def name_occurrence_picture(occurrence_picture, filename):
-    return os.path.join(utils_path.instance_media_dir(Occurrence, occurrence_picture.occurrence, False), "pictures", filename)
 
-def name_bundle_picture(bundle_picture, filename):
-    return os.path.join(utils_path.instance_media_dir(Bundle, bundle_picture.bundle, False), "pictures", filename)
-
-def name_release_picture(release_picture, filename):
-    return os.path.join(utils_path.instance_media_dir(Release, release_picture.release, False), "pictures", filename)
+def name_instance_picture(instance, filename, base_model_access = lambda instance: instance):
+    return os.path.join(utils_path.instance_media_dir(base_model_access(instance), False), "pictures", filename)
 
 
 class OccurrencePicture(models.Model):
@@ -442,15 +438,16 @@ class OccurrencePicture(models.Model):
     attribute_object = GenericForeignKey("attribute_type", "attribute_id")
 
     detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
-    image_file      = models.ImageField(upload_to=name_occurrence_picture)
+    image_file      = models.ImageField(upload_to=partial(name_instance_picture,
+                                                          base_model_access=lambda x: x.occurrence))
 
 class BundlePicture(models.Model):
     bundle      = models.ForeignKey("Bundle")
-    image_file  = models.ImageField(upload_to=name_bundle_picture)
+    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.bundle))
 
 class ReleasePicture(models.Model):
     release     = models.ForeignKey("Release")
-    image_file  = models.ImageField(upload_to=name_release_picture)
+    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.release))
 
 #
 # Platform

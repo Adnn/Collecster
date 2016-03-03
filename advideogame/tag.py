@@ -46,7 +46,7 @@ def generate_tag(occurrence):
     # Here, uses the occurrence PK in the DB, not the tag_occurrence id, because we see this part of the filesystem
     # like a direct extension of the DB.
     # As a consequence, a potential migration of a collection would impose to rename those folders to map to the DB.
-    directory = os.path.join(utils_path.instance_media_dir(Occurrence, occurrence, True), "tags")
+    directory = os.path.join(utils_path.instance_media_dir(occurrence, True), "tags")
     if not os.path.exists(directory):
         os.makedirs(directory)
 

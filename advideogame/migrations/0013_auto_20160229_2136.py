@@ -3,7 +3,10 @@
 from __future__ import unicode_literals
 
 import advideogame.models
+from advideogame.models import name_instance_picture
 from django.db import migrations, models
+
+from functools import partial
 
 
 class Migration(migrations.Migration):
@@ -36,11 +39,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='bundlepicture',
             name='image_file',
-            field=models.ImageField(upload_to=advideogame.models.name_bundle_picture),
+            #field=models.ImageField(upload_to=advideogame.models.name_bundle_picture),
+            field=models.ImageField(default=0, upload_to=partial(name_instance_picture, base_model_access=lambda x: x.bundle)),
         ),
         migrations.AlterField(
             model_name='releasepicture',
             name='image_file',
-            field=models.ImageField(upload_to=advideogame.models.name_release_picture),
+            #field=models.ImageField(upload_to=advideogame.models.name_release_picture),
+            field=models.ImageField(default=0, upload_to=partial(name_instance_picture, base_model_access=lambda x: x.release)),
         ),
     ]

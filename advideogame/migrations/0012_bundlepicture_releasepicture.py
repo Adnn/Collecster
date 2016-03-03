@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 
 import advideogame.models
+from advideogame.models import name_instance_picture
+from functools import partial
 from django.db import migrations, models
 import django.db.models.deletion
 
@@ -18,7 +20,7 @@ class Migration(migrations.Migration):
             name='BundlePicture',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image_file', models.ImageField(upload_to=advideogame.models.name_occurrence_picture)),
+                ('image_file', models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.bundle))),
                 ('bundle', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='advideogame.Bundle')),
             ],
         ),
@@ -26,7 +28,7 @@ class Migration(migrations.Migration):
             name='ReleasePicture',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image_file', models.ImageField(upload_to=advideogame.models.name_occurrence_picture)),
+                ('image_file', models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.release))),
                 ('release', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='advideogame.Release')),
             ],
         ),

@@ -3,8 +3,10 @@
 from __future__ import unicode_literals
 
 import advideogame.models
+from advideogame.models import name_instance_picture
 from django.db import migrations, models
 
+from functools import partial
 
 class Migration(migrations.Migration):
 
@@ -16,7 +18,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='occurrencepicture',
             name='image_file',
-            field=models.ImageField(default=0, upload_to=advideogame.models.name_occurrence_picture),
+            #field=models.ImageField(default=0, upload_to=advideogame.models.name_occurrence_picture),
+            field=models.ImageField(default=0, upload_to=partial(name_instance_picture, base_model_access=lambda x: x.occurrence)),
             preserve_default=False,
         ),
     ]
