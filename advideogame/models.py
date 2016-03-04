@@ -157,10 +157,15 @@ class Release(ReleaseBase):
         
 
 class Occurrence(OccurrenceBase):
-    collecster_material_fields = ("blister",)
+    collecster_properties = {
+        "forbidden_on_non_material": ("blister", ),
+        "forbidden_on_embedded_immaterial": ("purchase_price", "origin", ),
+        "required_on_material": ("origin", ),
+    }
 
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    origin = models.CharField(max_length=OccurrenceOrigin.choices_maxlength(), choices=OccurrenceOrigin.get_choices())
+    origin = models.CharField(max_length=OccurrenceOrigin.choices_maxlength(), choices=OccurrenceOrigin.get_choices(),
+                              blank = True)
     #tag = models.ImageField(upload_to=name_tag, blank=True) #TODO
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
@@ -169,7 +174,13 @@ class Occurrence(OccurrenceBase):
     unique_number = models.CharField(max_length=32, blank=True,
                 help_text="An identifier uniquely attached to this occurrence (eg. collector numbered edition).")
 
-    tag_url = models.URLField(null=True)
+    tag_url = models.URLField(null=True) # Handled internally (never editable in the form)
+
+    def embedded_immaterial_is_known(self):
+        return hasattr(self, "release")
+
+    def is_embedded_immaterial(self):
+        return self.release.is_embedded_immaterial()
 
     def admin_post_save(self):
         if self.is_material():
