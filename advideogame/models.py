@@ -517,7 +517,7 @@ class BaseSystem(models.Model):
     destination = models.CharField(max_length=1, choices=((ARCADE, "Arcade"), (HOME, "Home entertainment")))
     upgrade_for = models.ForeignKey("self", blank=True, null=True) # TODO: should prevent an instance from referencing itself
 
-    abbreviated_name = models.CharField(max_length=5, unique=True, help_text="Abbreviated name for the system, independently of any interface.")
+    abbreviated_name = models.CharField(max_length=8, unique=True, help_text="Abbreviated name for the system, independently of any interface.")
 
     def __str__(self):
         return "{} {}".format(self.brand, self.name)
@@ -527,7 +527,7 @@ class SystemMediaPair(models.Model):
         unique_together = ("system", "media")
 
     system = models.ForeignKey(BaseSystem) 
-    media  = models.CharField(max_length=10)
+    media  = models.CharField(max_length=20)
     wireless = models.BooleanField(default=False)
 
     abbreviated_name = models.CharField(max_length=10, unique=True)
@@ -536,28 +536,44 @@ class SystemMediaPair(models.Model):
         return "{}--{} ({})".format(self.system, self.media, self.abbreviated_name)
 
 
-class SystemInterfaceDescription(models.Model):
-    class Meta:
-        unique_together = ("reference_system", "internal_name")
+class InterfaceDetailBase(models.Model):
+    provides = models.ManyToManyField(SystemMediaPair, through="ProvidedInterface", through_fields=("interface_detail_base", "interface"),
+                                      related_name="provided_to_set")
+    requires = models.ManyToManyField(SystemMediaPair, through="RequiredInterface", through_fields=("interface_detail_base", "interface"),
+                                      related_name="required_by_set")
 
-    # Useful for console on chip for example
-    reference_system = models.ForeignKey(BaseSystem)
-    internal_name = models.CharField(max_length=60)
-    provides = models.ManyToManyField(SystemMediaPair, through="ProvidedInterface", related_name="provided_to_set")
-    requires = models.ManyToManyField(SystemMediaPair, through="RequiredInterface", related_name="required_by_set")
+
+class CommonInterfaceDetail(InterfaceDetailBase):
+    """ Listing interfaces that are shared by all the systems advertised by the current specification """
+    interfaces_specification = models.OneToOneField("InterfacesSpecification")
+    def __str__(self):
+        return "Common interfaces in \"{}\"".format(self.interfaces_specification.internal_name)
+
+
+class SystemInterfaceDetail(InterfaceDetailBase):
+    """ Listing interfaces for a specific system advertised by the current specification """
+    class Meta:
+        unique_together = (("interfaces_specification", "advertised_system"), )
+
+    interfaces_specification = models.ForeignKey("InterfacesSpecification")
+
+    advertised_system = models.ForeignKey(BaseSystem)
 
     def __str__(self):
-        return "{}: {}".format(self.reference_system, self.internal_name)
+        return "detail for \"{}\" advertised in \"{}\"".format(self.advertised_system, self.interfaces_specification.internal_name)
+
 
 # Need to separate as two tables, because Django would not be able to know if it is a provided or required otherwise
 class BaseSpecificationInterface(models.Model):
     class Meta:
         abstract = True
 
-    specification = models.ForeignKey(SystemInterfaceDescription)
-    interface = models.ForeignKey(SystemMediaPair)
-    cardinality = models.PositiveSmallIntegerField(default=1)
+    interface_detail_base = models.ForeignKey(InterfaceDetailBase)
+    interface       = models.ForeignKey(SystemMediaPair)
+    cardinality     = models.PositiveSmallIntegerField(default=1)
+    on_tag          = models.BooleanField(default=False, help_text="Display this interface on the tag, in place of the corresponding advertised system.")
     regional_lockout_override = models.ManyToManyField(LockoutRegion, blank=True)
+    reused_interface = models.ForeignKey(SystemMediaPair, blank=True, null=True, related_name="+")
 
 class ProvidedInterface(BaseSpecificationInterface):
     pass
@@ -565,14 +581,25 @@ class ProvidedInterface(BaseSpecificationInterface):
 class RequiredInterface(BaseSpecificationInterface):
     pass
 
+
+class InterfacesSpecification(models.Model):
+    """ A SystemSpecification defers detailing of the different advertised systems, and their associated interfaces, """
+    """ to this model. It has a one to many relationship with SystemInterfaceDetail. """
+    internal_name = models.CharField(max_length=60, unique=True)
+
+    def __str__(self):
+        return "{}".format(self.internal_name)
+
+
 class SystemSpecification(models.Model):
+    """ The top level model for technical specification. Release will directly reference an instance of this model """
     # TODO M2M not allowed in unique_together clause, how to enforce ?
     #class Meta:
     #    unique_together = ("regional_lockout", "bios_version", "interface")
 
     regional_lockout     = models.ManyToManyField(LockoutRegion)
     bios_version         = models.CharField(max_length=10, blank=True)
-    interface_description = models.ForeignKey(SystemInterfaceDescription)
+    interfaces_specification = models.ForeignKey(InterfacesSpecification)
 
     def __str__(self):
         display = "{}".format(self.interface_description)

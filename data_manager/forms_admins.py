@@ -15,6 +15,7 @@ import wdb
 ##########
 ## Forms
 ##########
+
 class SaveInitialDataModelForm(forms.ModelForm):
     """ Changes the meaning of the "initial" member to mean "default": values saved even in the absence of any user-initiated change to the form """
     """ Details : when a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
@@ -30,6 +31,12 @@ class SaveInitialDataModelForm(forms.ModelForm):
             if data_value and not issubclass(field.__class__, forms.models.InlineForeignKeyField):
                 return True
         return False
+
+class SaveEmptyDataModelForm(forms.ModelForm):
+    """ Usefull if it is required to save an all the forms in an inline formset, even if they are not changed """
+    """ Eg. CommonInterfaceDetailInline in advideogame configuration. """
+    def has_changed(self):
+        return True
 
 
 class PropertyAwareModelForm(forms.ModelForm):

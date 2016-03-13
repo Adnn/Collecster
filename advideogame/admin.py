@@ -8,7 +8,9 @@ with open("data_manager/admin.py") as f:
 
 from .models import *
 from . import config_utils
+from .forms_admins import SaveEmptyDataModelForm
 
+from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.utils.html import format_html
 
@@ -197,17 +199,66 @@ class BundlePictureInline(admin.TabularInline):
 class AnyBundleAdmin(admin.ModelAdmin):
     inlines = (BundleCompositionInline, BundlePictureInline,)
 
+
+## System specifications ##
 class ProvidedInterfaceInline(admin.TabularInline):
    model = ProvidedInterface
-   extra = 3
+   extra = 1
 
 class RequiredInterfaceInline(admin.TabularInline):
    model = RequiredInterface
-   extra = 3
+   extra = 1
 
-class SystemInterfaceDescriptionAdmin(admin.ModelAdmin):
+
+class EditLinkToInlineObject(object):
+    """ Since we would like to have nested inlines (InterfacesSpecification with inline System|CommonInterfaceDetails, """
+    """ with inline Required|ProvidedInterface), use an alternative solution which is to display the link to edit """
+    """ the System|CommonInterface details object from a readonly_field in its inline. """
+    """ see: http://stackoverflow.com/a/22113967/1027706 """
+    def edit_link(self, instance):
+        if instance.pk:
+            url = reverse('admin:{}_{}_change'.format(instance._meta.app_label,  instance._meta.model_name),
+                          args=[instance.pk])
+            return format_html('<a href="{url}" target=_blank>edit interfaces</a>', url=url)
+        else:
+            return "-"
+
+class SystemInterfaceDetailAdmin(admin.ModelAdmin):
     inlines = (ProvidedInterfaceInline, RequiredInterfaceInline,)
+    readonly_fields = ("interfaces_specification", "advertised_system",) 
 
+class SystemInterfaceDetailFormset(forms.BaseInlineFormSet):
+    def clean(self):
+        super(SystemInterfaceDetailFormset, self).clean()
+        systems_set = set()
+
+        for form in self:
+            advertised_system = form.cleaned_data.get("advertised_system")
+            if advertised_system in systems_set:
+                form.add_error("advertised_system", forms.ValidationError("This advertised system is already present, and does not allow duplicates.",
+                                                                          code="invalid"))
+            else:
+                systems_set.add(advertised_system)
+
+class SystemInterfaceDetailInline(EditLinkToInlineObject, admin.TabularInline):
+    model = SystemInterfaceDetail
+    extra = 2
+    readonly_fields = ("edit_link",)
+    formset = SystemInterfaceDetailFormset
+
+class CommonInterfaceDetailAdmin(admin.ModelAdmin):
+    inlines = (ProvidedInterfaceInline, RequiredInterfaceInline,)
+    readonly_fields = ("interfaces_specification",) 
+
+class CommonInterfaceDetailInline(EditLinkToInlineObject, admin.TabularInline):
+    model = CommonInterfaceDetail
+    readonly_fields = ("edit_link",)
+    form = SaveEmptyDataModelForm
+
+
+class InterfacesSpecificationAdmin(admin.ModelAdmin):
+    inlines = (SystemInterfaceDetailInline, CommonInterfaceDetailInline,)
+ 
 
 class SystemSpecificationForm(forms.ModelForm):
     def clean(self):
@@ -255,7 +306,11 @@ admin.site.register(PurchaseContext)
 admin.site.register(LockoutRegion)
 admin.site.register(BaseSystem)
 admin.site.register(SystemMediaPair)
-admin.site.register(SystemInterfaceDescription, SystemInterfaceDescriptionAdmin)
+
+admin.site.register(CommonInterfaceDetail, CommonInterfaceDetailAdmin)
+admin.site.register(SystemInterfaceDetail, SystemInterfaceDetailAdmin)
+admin.site.register(InterfacesSpecification, InterfacesSpecificationAdmin)
+#admin.site.register(SystemInterfaceDetail, SystemInterfaceDetailAdmin)
 admin.site.register(SystemSpecification, SystemSpecificationAdmin)
 
 ## Debug
