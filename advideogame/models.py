@@ -438,6 +438,19 @@ class PictureDetail():
 def name_instance_picture(instance, filename, base_model_access = lambda instance: instance):
     return os.path.join(utils_path.instance_media_dir(base_model_access(instance), False), "pictures", filename)
 
+# Intended to use a lambda directly in the models field constructor parameter list, but Django cannot make migrations with lambdas
+# Tries with this and partial, but then the migration failed to apply...
+def access(instance, fieldname):
+    return getattr(instance, fieldname)
+
+def access_occurrence(instance):
+    return instance.occurrence
+
+def access_bundle(instance):
+    return instance.bundle
+
+def access_release(instance):
+    return instance.release
 
 class OccurrencePicture(models.Model):
     occurrence  = models.ForeignKey("Occurrence")
@@ -449,16 +462,15 @@ class OccurrencePicture(models.Model):
     attribute_object = GenericForeignKey("attribute_type", "attribute_id")
 
     detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
-    image_file      = models.ImageField(upload_to=partial(name_instance_picture,
-                                                          base_model_access=lambda x: x.occurrence))
+    image_file      = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_occurrence))
 
 class BundlePicture(models.Model):
     bundle      = models.ForeignKey("Bundle")
-    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.bundle))
+    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_bundle))
 
 class ReleasePicture(models.Model):
     release     = models.ForeignKey("Release")
-    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=lambda x: x.release))
+    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_release))
 
 #
 # Platform
