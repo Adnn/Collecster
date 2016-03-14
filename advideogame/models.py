@@ -148,11 +148,25 @@ class Release(ReleaseBase):
         return list(collections.OrderedDict.fromkeys([region.tag_region for region in self.release_regions.all()]))
         
     def compatible_systems(self):
-        keys = []
+        on_tag = []
         if self.system_specification:
-            keys = [pair.system.abbreviated_name
-                    for pair in self.system_specification.interface_description.requires.all()]
-        return list(collections.OrderedDict.fromkeys(keys))
+            interfaces_specification = self.system_specification.interfaces_specification
+            #for system_interface_detail in SystemInterfaceDetail.objects.filter(interfaces_specification=interfaces_specification):
+            for system_interface_detail in interfaces_specification.systeminterfacedetail_set.all():
+                advertised_system_tag_override = []
+                # By default, we would display the system_interface_detail advertised system on the tag 
+                # Yet it is possible that one of the provided/required interface overrides this value with its own abbreviated name
+                # The following loop checks if the "on_tag" flag is set for any of those interfaces
+                for through_instance in [through for ThroughModel in (ProvidedInterface, RequiredInterface,)
+                                                    for through in ThroughModel.objects.filter(interface_detail_base = system_interface_detail)]:
+                    if through_instance.on_tag:
+                        advertised_system_tag_override.append(through_instance.interface.abbreviated_name)
+
+                if advertised_system_tag_override:
+                    on_tag.extend(advertised_system_tag_override)
+                else:
+                    on_tag.append(system_interface_detail.advertised_system.abbreviated_name)
+        return on_tag
             
         
 
@@ -614,7 +628,7 @@ class SystemSpecification(models.Model):
     interfaces_specification = models.ForeignKey(InterfacesSpecification)
 
     def __str__(self):
-        display = "{}".format(self.interface_description)
+        display = "{}".format(self.interfaces_specification)
         if self.regional_lockout.count():
            display = "{} [{}]".format(display,
                                       ", ".join(["{}".format(lockout) for lockout in self.regional_lockout.all()]))
