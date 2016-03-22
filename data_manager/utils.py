@@ -109,7 +109,6 @@ def get_concept_nature_set(request, obj):
 
     if not nature_set and concept:
         nature_set = list(concept.all_nature_tuple)
-        print ("Natures from OBJ: {}".format(nature_set))
 
     return nature_set
 
