@@ -25,6 +25,8 @@ class ConceptAdminForm(forms.models.ModelForm):
         """ If two concepts have the same "distinctive name" and the same "year" """
         """ their name need to have different "scopes" """
         data = self.cleaned_data
+        if "distinctive_name" not in data:
+            return
         existing_same_name = (Concept.objects.filter(distinctive_name=data["distinctive_name"]) 
                                              .exclude(pk=self.instance.pk))
         for other_concept in existing_same_name:
