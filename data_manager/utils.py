@@ -9,7 +9,7 @@ from .forms_admins import PropertyAwareSaveInitialDataModelForm
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
-from django.forms.models import BaseInlineFormSet
+from django.forms.models import BaseInlineFormSet, modelformset_factory
 
 ## TODEL
 #import wdb
@@ -49,8 +49,6 @@ def admininline_factory(Model, Inline):
     return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet,
                                        "min_num": 1, "max_num": 1, "can_delete": False})
     #tp = type(classname, (Inline,), {"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model, formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)})
-    #wdb.set_trace() 
-    #return tp
 
 
 def get_concept_id(request, release=None, occurrence=None):
@@ -78,15 +76,47 @@ def get_release_id(request, occurrence=None):
         return utils_payload.get_request_payload(request, "release_id", 0)
 
 
-def get_concept_specific_inlines(concept_id, specifics_retriever):
-    nature_set = Concept.objects.get(pk=concept_id).all_nature_tuple
-
+def get_natures_specific_inlines(nature_set, specifics_retriever):
     AdminInlines = []
     for SpecificModel in specifics_retriever(nature_set):
         AdminInlines.append(admininline_factory(SpecificModel, SpecificStackedInline))
 
     return AdminInlines
 
+def get_concept_specific_inlines(concept_id, specifics_retriever):
+    nature_set = Concept.objects.get(pk=concept_id).all_nature_tuple
+    return get_natures_specific_inlines(nature_set, specifics_retriever)
+
+def get_concept_nature_set(request, obj):
+    """ Retrieves the list of natures for a concept. """
+    """ It is intended for the Concept form, and uniformizes the different sources for this list of natures """
+    """ 1. Tries to retrieve it from the collecster payload in the request (populated by the ajax view, for live changes to the nature values) """
+    """ 2. Tries to retrieve it from the POST data (usefull when there are errors in the Concept form, and it is re-presented to the user) """
+    """ 3. Tries to retrieve it from the concept object (usefull when the form is used to change an existing Concept) """
+    ConceptNatureFormSet = modelformset_factory(ConceptNature, fields="__all__")
+    concept = obj if obj else utils_payload.get_request_payload(request, "concept")
+
+    nature_set = utils_payload.get_request_payload(request, "nature_set", [])
+
+    if not nature_set and request.method == "POST":
+        formset = ConceptNatureFormSet(request.POST, prefix="additional_nature_set")
+        formset.is_valid() # populate the cleaned_data member of each form
+        for form in formset:
+            if form.cleaned_data.get("nature"):
+                nature_set.append(form.cleaned_data.get("nature"))
+        if nature_set and concept and concept.primary_nature:
+            nature_set.insert(0, concept.primary_nature)
+
+    if not nature_set and concept:
+        nature_set = list(concept.all_nature_tuple)
+        print ("Natures from OBJ: {}".format(nature_set))
+
+    return nature_set
+
+
+def concept_specific_inlines(request, obj):
+    nature_set = get_concept_nature_set(request, obj)
+    return get_natures_specific_inlines(nature_set, ConfigNature.get_concept_specifics) if nature_set else []
 
 def release_specific_inlines(request, obj):
     concept_id = get_concept_id(request, release=obj)

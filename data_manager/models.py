@@ -100,8 +100,8 @@ class ConceptBase(AbstractRecordOwnership):
 
     @property
     def all_nature_tuple(self):
-        return (self.primary_nature,) \
-             + (self.additional_nature_set.all().values_list("nature")[0] if self.additional_nature_set.all() else ())
+        return ((self.primary_nature,) if self.primary_nature else ()) \
+             + tuple([value_dict["nature"] for value_dict in self.additional_nature_set.all().values()])
     
 
 ############

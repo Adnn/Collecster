@@ -68,7 +68,11 @@ class ConfigNature:
             for specific in getattr(cls.DATA[nature], "{}_category".format(model_name)):
                 unique_specific_set[specific] = None
         return unique_specific_set.keys()    
-        
+
+    @classmethod
+    def get_concept_specifics(cls, nature_set):
+        return cls._get_specifics(nature_set, "concept")
+       
     @classmethod
     def get_release_specifics(cls, nature_set):
         return cls._get_specifics(nature_set, "release")

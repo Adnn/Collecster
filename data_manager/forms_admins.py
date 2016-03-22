@@ -1,5 +1,5 @@
 from . import utils_path
-from .models import AbstractRecordOwnership, Occurrence, Release, check_property_consistency
+from .models import AbstractRecordOwnership, Concept, Occurrence, Release, check_property_consistency
 
 from data_manager import utils_payload
 from supervisor.models import UserExtension
@@ -206,6 +206,8 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
             utils_payload.set_request_payload(request, "release_id", obj.release.id)
         elif type(obj) is Release and hasattr(obj, "concept"):
             utils_payload.set_request_payload(request, "concept_id", obj.concept.id)
+        elif type(obj) is Concept:
+            utils_payload.set_request_payload(request, "concept", obj)
 
 
     def _create_formsets(self, request, obj, change):

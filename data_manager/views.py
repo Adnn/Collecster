@@ -1,4 +1,4 @@
-from .admin import ReleaseAdmin, OccurrenceAdmin
+from .admin import ConceptAdmin, ReleaseAdmin, OccurrenceAdmin
 from .models import *
 from . import utils_path
 
@@ -33,6 +33,18 @@ def render_admin_formsets(admin_formsets):
 ##
 ## Views
 ##
+def ajax_concept_admin_formsets(request):
+    concept_adm = ConceptAdmin(Concept, admin.site)
+
+    utils_payload.set_request_payload(request, "nature_set",        request.GET.getlist("nature"))
+    utils_payload.set_request_payload(request, "inlines_groups",    ("specific",))
+
+    rendered_formsets = render_admin_formsets(get_admin_formsets(concept_adm, request))
+    specifics_div = "<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets))
+
+    return HttpResponse("{}".format(specifics_div))
+
+
 def ajax_release_admin_formsets(request, concept_id):
     release_adm = ReleaseAdmin(Release, admin.site)
 

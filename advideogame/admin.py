@@ -54,7 +54,7 @@ class ConceptUrlInline(admin.TabularInline):
     extra = 1
     model = ConceptUrl
 
-ConceptAdmin.inlines = ConceptAdmin.inlines + (ConceptUrlInline,)
+ConceptAdmin.collecster_dynamic_inline_classes["urls"] = (ConceptUrlInline,)
 
 ## Occurrence pictures relation to any attribute ##
 def populate_occurrence_picture_attributes_choices(formset, request, obj):

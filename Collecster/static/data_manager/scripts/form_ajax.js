@@ -92,6 +92,51 @@ function main_function()
             $.ajax("/" + window.collecster_app_name +  "/ajax/concept/" + id  + "/admin_formsets/html/",
                    { success: div_replacer})
         })
+
+
+    /*
+     * Event callbacks on live nature changes on the Concept form
+     */
+    // This function retrieves the values for all the nature select elements, and send the ajax request
+    function request_concept_specifics(natures_selector)
+    {
+        var natures = []
+        natures_selector.each(function(index, element)
+            {
+                if (element.value)
+                {
+                    natures.push(element.value)
+                }
+            })
+        $.ajax("/" + window.collecster_app_name + "/ajax/concept_admin_formsets/html",
+               {
+                    data: $.param({ nature: natures }, true),
+                    success: div_replacer
+               })
+    }
+
+    // This function retrieves all the nature select elements in the current page state, and assign them a change callback
+    function get_natures_selector()
+    { 
+        var natures_selector = $("#additional_nature_set-group").find("select").add("#id_primary_nature") 
+        natures_selector.off("change") // removes the existing change callbacks, as they would otherwise accumulate
+        natures_selector.change({"natures_selector": natures_selector} , // dictionary forwarded into event.data
+                                function(event){ request_concept_specifics(event.data.natures_selector) } )
+        return natures_selector
+    }
+
+    get_natures_selector(); // on document ready, there is already the primary nature select element,
+                            // registers the change callback on it.
+
+    // Observe changes in the div containing additional natures select elements
+    var natures_count_observer = new MutationObserver(function(mutations, observer)
+        {
+            natures_selector = get_natures_selector()
+            request_concept_specifics(natures_selector) // when the div content changes, we request the specifics each time
+                // in case the change was the removal of a non-empty additional nature
+                // (we could actually conditionally check for this situation analyzing "mutations", but let's not bother now).
+        })
+    natures_count_observer.observe($("#additional_nature_set-group")[0], {childList: true, subtree: true})
 }
 
 $(document).ready(main_function)

@@ -29,10 +29,12 @@ class ConceptNatureInline(admin.TabularInline):
     can_delete = False
 
 
-class ConceptAdmin(CustomSaveModelAdmin):
+class ConceptAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
-    inlines = (ConceptNatureInline,)
-
+    collecster_dynamic_inline_classes = OrderedDict((
+        ("additional_natures",  (ConceptNatureInline,)),
+        ("specific",            utils.concept_specific_inlines),
+    ))
 
 ##########
 ## Release
