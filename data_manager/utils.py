@@ -127,7 +127,7 @@ def release_specific_inlines(request, obj):
     return get_concept_specific_inlines(concept_id, ConfigNature.get_release_specifics) if concept_id != 0 else []
 
 def occurrence_specific_inlines(request, obj):
-    concept_id = get_concept_id(request, release=obj)
+    concept_id = get_concept_id(request, occurrence=obj)
     return get_concept_specific_inlines(concept_id, ConfigNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
