@@ -202,10 +202,10 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
 
     def _collecster_fixup_request(self, request, obj, change):
         """ Implementation detail, allows to forward some data from 'obj' into the request """
-        if type(obj) is Occurrence and hasattr(obj, "release"):
-            utils_payload.set_request_payload(request, "release_id", obj.release.id)
-        elif type(obj) is Release and hasattr(obj, "concept"):
-            utils_payload.set_request_payload(request, "concept_id", obj.concept.id)
+        if type(obj) is Occurrence:
+            utils_payload.set_request_payload(request, "occurrence", obj)
+        elif type(obj) is Release:
+            utils_payload.set_request_payload(request, "release", obj)
         elif type(obj) is Concept:
             utils_payload.set_request_payload(request, "concept", obj)
 
