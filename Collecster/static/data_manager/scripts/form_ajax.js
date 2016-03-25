@@ -125,18 +125,21 @@ function main_function()
         return natures_selector
     }
 
-    get_natures_selector(); // on document ready, there is already the primary nature select element,
-                            // registers the change callback on it.
+    if ($("#additional_nature_set-group").length) // considers that we are on the Concept form only if this is present
+    {
+        get_natures_selector(); // on document ready, there is already the primary nature select element,
+                                // registers the change callback on it.
 
-    // Observe changes in the div containing additional natures select elements
-    var natures_count_observer = new MutationObserver(function(mutations, observer)
-        {
-            natures_selector = get_natures_selector()
-            request_concept_specifics(natures_selector) // when the div content changes, we request the specifics each time
-                // in case the change was the removal of a non-empty additional nature
-                // (we could actually conditionally check for this situation analyzing "mutations", but let's not bother now).
-        })
-    natures_count_observer.observe($("#additional_nature_set-group")[0], {childList: true, subtree: true})
+        // Observe changes in the div containing additional natures select elements
+        var natures_count_observer = new MutationObserver(function(mutations, observer)
+            {
+                natures_selector = get_natures_selector()
+                request_concept_specifics(natures_selector) // when the div content changes, we request the specifics each time
+                    // in case the change was the removal of a non-empty additional nature
+                    // (we could actually conditionally check for this situation analyzing "mutations", but let's not bother now).
+            })
+        natures_count_observer.observe($("#additional_nature_set-group")[0], {childList: true, subtree: true})
+    }
 }
 
 $(document).ready(main_function)
