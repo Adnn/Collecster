@@ -236,7 +236,7 @@ class SystemInterfaceDetailFormset(forms.BaseInlineFormSet):
 
         for form in self:
             advertised_system = form.cleaned_data.get("advertised_system")
-            if advertised_system in systems_set:
+            if advertised_system and (advertised_system in systems_set):
                 form.add_error("advertised_system", forms.ValidationError("This advertised system is already present, and does not allow duplicates.",
                                                                           code="invalid"))
             else:
