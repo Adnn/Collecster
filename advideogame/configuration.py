@@ -1,5 +1,6 @@
 from .config_utils import *
 
+from data_manager import utils_id 
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -103,6 +104,16 @@ class ReleaseSpecific(object):
         capacity    = models.PositiveIntegerField()
         unit        = models.ForeignKey("StorageUnit") # DEB, but the capacity is not, and it is tighlty coupled to it.
 
+    class Variant(AbstractBase):
+        system_variant = models.ForeignKey("SystemVariant")
+
+        def form_callback(form, request, obj):
+            concept_id = utils_id.get_concept_id(request, release=obj)
+            from .models import SystemVariant
+            form.fields["system_variant"].queryset = SystemVariant.objects.filter(system_concept=concept_id)
+            no_variant_qs = SystemVariant.objects.filter(system_concept=concept_id).filter(no_variant=True)
+            if no_variant_qs.count():
+                form.fields["system_variant"].initial = no_variant_qs[0]
 
 RelSp = ReleaseSpecific
 
@@ -113,6 +124,7 @@ class ReleaseCategory:
     SOFTWARE    = (RelSp.Software,)
     HARDWARE    = (RelSp.Hardware,)
     CONSOLE     = (RelSp.Hardware,)
+    CONSOLE_VAR = compose(CONSOLE,  (RelSp.Variant,))
     DEMO        = compose(SOFTWARE,     (RelSp.Demo,))
     MEDIA       = compose(SOFTWARE,     (RelSp.Media,))
     MEMORY      = compose(HARDWARE,     (RelSp.Memory,))
@@ -240,7 +252,7 @@ class ConfigNature(ConfigNature):
     DATA = collections.OrderedDict((
         (COMBO,             DataTuple(COMBO,               UIGroup._HIDDEN,    "grey",     ConceptCategory.EMPTY,       ReleaseCategory.COMBO,     OccurrenceCategory.EMPTY,         (),            )),
 
-        (CONSOLE,           DataTuple("Console",           UIGroup._TOPLEVEL,  "red",      ConceptCategory.EMPTY,       ReleaseCategory.CONSOLE,    OccurrenceCategory.CONSOLE,      automatic_self )),
+        (CONSOLE,           DataTuple("Console",           UIGroup._TOPLEVEL,  "red",      ConceptCategory.EMPTY,       ReleaseCategory.CONSOLE_VAR,OccurrenceCategory.CONSOLE,      automatic_self )),
         (CONSOLE_CHIP,      DataTuple("Console-on-chip",   UIGroup._TOPLEVEL,  "red",      ConceptCategory.EMPTY,       ReleaseCategory.CONSOLE,    OccurrenceCategory.CONSOLE,      automatic_self )),
         (HANDHELD_CONSOLE,  DataTuple("Handheld Console",  UIGroup._TOPLEVEL,  "red",      ConceptCategory.HANDHELD,     ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,      automatic_self )),
 
@@ -292,3 +304,10 @@ class ConfigNature(ConfigNature):
         (STEREOGLASSES,     DataTuple("Stereo glasses",    UIGroup.ACCESSORY,  "blue",     ConceptCategory.REMOTE,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (TRANSIT_CONTAINER, DataTuple("Transit container", UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.EMPTY,        automatic_self )),
     ))
+
+    @classmethod
+    def system_with_variants(cls):
+        """ Method that is specific to the advideogame application. """
+        """ It returns all natures whose release specific tuple contains Variant """
+        return [nature for nature, data_tuple in cls.DATA.items()
+                       if RelSp.Variant in data_tuple.release_category]

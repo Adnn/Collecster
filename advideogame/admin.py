@@ -317,6 +317,8 @@ admin.site.register(InterfacesSpecification, InterfacesSpecificationAdmin)
 #admin.site.register(SystemInterfaceDetail, SystemInterfaceDetailAdmin)
 admin.site.register(SystemSpecification, SystemSpecificationAdmin)
 
+admin.site.register(SystemVariant)
+
 ## Debug
 admin.site.register(TagToOccurrence)
 

@@ -4,7 +4,7 @@ with open("data_manager/models.py") as f:
         code = compile(f.read(), "data_manager/models.py", 'exec')
         exec(code)
 
-from .configuration import OccurrenceSpecific
+from .configuration import OccurrenceSpecific, ConfigNature
 from . import tag
 from . import utils_path
 
@@ -13,6 +13,7 @@ from data_manager.enumerations import Country
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 
 from functools import partial
 import collections, os
@@ -651,6 +652,42 @@ class SystemSpecification(models.Model):
         return display 
 
 
+#
+# System variants
+#
+class SystemVariant(models.Model):
+    system_concept = models.ForeignKey("Concept",
+                                       limit_choices_to=Q(primary_nature__in=ConfigNature.system_with_variants())
+                                                      | Q(additional_nature_set__nature__in=ConfigNature.system_with_variants()))
+    no_variant = models.BooleanField(default=False, help_text="Set to true indicated that the corresponding concept has no variants.")
+    variant_name = models.CharField(max_length=20, blank=True, unique=True)
+
+    def __str__(self):
+        return (("{system} has no variant" if self.no_variant else "{variant} [{system}]")
+                    .format(variant=self.variant_name, system=self.system_concept))
+
+    def clean(self):
+        if self.system_concept:
+            variant_qs = SystemVariant.objects.filter(system_concept=self.system_concept)
+            if self.pk:
+                variant_qs = variant_qs.exclude(pk=self.pk)
+
+            if self.no_variant:
+                if variant_qs.count():
+                    raise ValidationError({"no_variant": ValidationError("The corresponding concept already has variant(s).", code="invalid")})
+                if self.variant_name:
+                    raise ValidationError({"variant_name": ValidationError("This field is has to be blank when there are no variants.", code="forbidden")})
+
+            else:
+                if not self.variant_name:
+                    raise ValidationError({"variant_name": ValidationError("This field is required if there are variants.", code="required")})
+
+                no_variant_qs = variant_qs.filter(no_variant=True)
+                if no_variant_qs.count():
+                    raise ValidationError("The corresponding concept is already marked to have no variant (see SystemVariant #%(no_variant_entry)s).",
+                                          params={"no_variant_entry": no_variant_qs[0].pk}, code="invalid")
+
+        return super(SystemVariant, self).clean()
 #
 # Misc
 #
