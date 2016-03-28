@@ -68,7 +68,10 @@ def ajax_release_admin_formsets(request, concept_id):
 def ajax_occurrence_admin_formsets(request, release_id):
     occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
 
-    request.collecster_payload = { "release_id": int(release_id) }
+    request.collecster_payload = {
+        "release_id": int(release_id),
+        "concept_id": Release.objects.get(pk=release_id).concept.pk,
+    }
 
     ## The specifics
     utils_payload.set_request_payload(request, "inlines_groups", ("specific",))

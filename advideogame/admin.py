@@ -10,6 +10,8 @@ from .models import *
 from . import config_utils
 from .forms_admins import SaveEmptyDataModelForm
 
+from data_manager import utils_id
+
 from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.utils.html import format_html
@@ -60,7 +62,7 @@ ConceptAdmin.collecster_dynamic_inline_classes["urls"] = (ConceptUrlInline,)
 def populate_occurrence_picture_attributes_choices(formset, request, obj):
     """ Populates the any_attribute ChoiceField of OccurrencePictureForm with all attributes (incl. CustomReleaseAttributes) """
     """ available on the Release of the related occurrence. Also populates its initial data for edition form. """
-    release_id = utils.get_release_id(request, obj)
+    release_id = utils_id.get_release_id(request, obj)
     
     choices = [("", "----")]
 

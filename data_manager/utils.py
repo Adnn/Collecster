@@ -1,6 +1,7 @@
 # TODO sort out enumeration
 from data_manager import enumerations as enum
 from data_manager import utils_payload
+from data_manager import utils_id
 
 from .models import *
 from .configuration import ConfigNature
@@ -51,34 +52,7 @@ def admininline_factory(Model, Inline):
     #tp = type(classname, (Inline,), {"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model, formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)})
 
 
-def get_concept_id(request, release=None, occurrence=None):
-    # Even if the forwarded object is not None, it could not have its related field not populated:
-    # Eg. On creation of the empty form for a Release, a default constructed Release instance is forwarded to formsets
-    # see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1480
 
-    # See forms_admins.py _collecster_fixup_request()
-    release = release if release else utils_payload.get_request_payload(request, "release")
-    occurrence = occurrence if occurrence else utils_payload.get_request_payload(request, "occurrence")
-
-    if release and hasattr(release, "concept"):
-        return release.concept.pk
-    elif occurrence and hasattr(occurrence, "release"):
-        return occurrence.release.concept.pk
-    else:
-        concept_id = utils_payload.get_request_payload(request, "concept_id", 0)
-        if not concept_id:
-            release_id = utils_payload.get_request_payload(request, "release_id", 0)
-            if release_id:
-                concept_id = Release.objects.get(pk=release_id).concept.pk
-        return concept_id
-
-
-def get_release_id(request, occurrence=None):
-    # Even if the forwarded object is not None, it could not have its related field not populated
-    if occurrence is not None and hasattr(occurrence, "release"):
-        return occurrence.release.pk
-    else:
-        return utils_payload.get_request_payload(request, "release_id", 0)
 
 
 def get_natures_specific_inlines(nature_set, specifics_retriever):
@@ -123,16 +97,16 @@ def concept_specific_inlines(request, obj):
     return get_natures_specific_inlines(nature_set, ConfigNature.get_concept_specifics) if nature_set else []
 
 def release_specific_inlines(request, obj):
-    concept_id = get_concept_id(request, release=obj)
+    concept_id = utils_id.get_concept_id(request, release=obj)
     return get_concept_specific_inlines(concept_id, ConfigNature.get_release_specifics) if concept_id != 0 else []
 
 def occurrence_specific_inlines(request, obj):
-    concept_id = get_concept_id(request, occurrence=obj)
+    concept_id = utils_id.get_concept_id(request, occurrence=obj)
     return get_concept_specific_inlines(concept_id, ConfigNature.get_occurrence_specifics) if concept_id != 0 else []
 
 
 def release_automatic_attributes(formset, request, obj):
-    concept_id = get_concept_id(request, release=obj)
+    concept_id = utils_id.get_concept_id(request, release=obj)
 
     if not obj.pk: # test if the object is already in the DB, in which case the automatic attributes are not added
         formset.initial = [{"attribute": attribute} for attribute in retrieve_automatic_attributes(concept_id)]
@@ -141,7 +115,7 @@ def release_automatic_attributes(formset, request, obj):
 
     
 def populate_occurrence_attributes(formset, request, obj, retrieve_function):
-    release_id = get_release_id(request, obj)
+    release_id = utils_id.get_release_id(request, obj)
     
     attributes = retrieve_function(release_id)
     force_formset_size(formset, len(attributes))
@@ -155,7 +129,7 @@ def populate_occurrence_attributes(formset, request, obj, retrieve_function):
 
 
 def occurrence_composition_queryset(formset, request, obj):
-    release_id = get_release_id(request, obj)
+    release_id = utils_id.get_release_id(request, obj)
 
     if release_id == 0:
         force_formset_size(formset, 0)
