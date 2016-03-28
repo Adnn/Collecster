@@ -12,6 +12,8 @@ from django.contrib import admin
 from django.db.models import Q
 from django.forms.models import BaseInlineFormSet, modelformset_factory
 
+import functools
+
 ## TODEL
 #import wdb
 
@@ -45,15 +47,21 @@ class SpecificStackedInline(admin.StackedInline):
     template = "collecster/admin_edit_inline_wrapper.html"
     form = SpecificForm
 
+def specific_instance_callback(formset, request, obj, Model):
+    Model.form_callback(formset[0], request, obj)
+
 def admininline_factory(Model, Inline):
     classname = "{}{}".format(Model.__name__, "AdminInline")
-    return type(classname, (Inline,), {"model": Model, "formset": OneFormFormSet,
-                                       "min_num": 1, "max_num": 1, "can_delete": False})
-    #tp = type(classname, (Inline,), {"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model, formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)})
+    class_attributes = {"model": Model, "formset": OneFormFormSet, "min_num": 1, "max_num": 1, "can_delete": False}
+    #{"model": Model, "extra": 2, "max_num": 1, "formset": inlineformset_factory(Release, Model,
+    #  formset=DebugBaseInlineFormSet, fields="__all__", max_num=1, validate_max=True)}
 
+    if hasattr(Model, "form_callback"):
+        SpecificFormSet = type("{}SpecificFormSet".format(Model.__name__), (OneFormFormSet,),
+                               {"collecster_instance_callback": functools.partialmethod(specific_instance_callback, Model=Model)})
+        class_attributes["formset"] = SpecificFormSet
 
-
-
+    return type(classname, (Inline,), class_attributes)
 
 def get_natures_specific_inlines(nature_set, specifics_retriever):
     AdminInlines = []
