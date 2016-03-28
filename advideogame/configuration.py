@@ -20,7 +20,7 @@ class ConceptSpecific(object):
     class AbstractBase(models.Model):
         class Meta:
             abstract = True
-        concept = models.ForeignKey('Concept')
+        concept = models.OneToOneField('Concept')
 
         def get_parent_instance(self):
             return self.concept
@@ -63,7 +63,7 @@ class ReleaseSpecific(object):
     class AbstractBase(models.Model):
         class Meta:
             abstract = True
-        release = models.ForeignKey('Release')
+        release = models.OneToOneField('Release')
 
         def get_parent_instance(self):
             return self.release
@@ -124,7 +124,7 @@ class OccurrenceSpecific(object):
     class AbstractBase(models.Model):
         class Meta:
             abstract = True
-        occurrence = models.ForeignKey('Occurrence')
+        occurrence = models.OneToOneField('Occurrence')
 
         def get_parent_instance():
             return self.occurrence
