@@ -2,7 +2,7 @@ from . import utils
 from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
 
 from .models import *
-from supervisor.models import Person
+from supervisor.models import Person, Deployment, UserCollection, UserExtension
 
 from data_manager import widgets 
 from data_manager import enumerations as enums
@@ -225,7 +225,6 @@ class OccurrenceCustomAttributeInline(admin.TabularInline):
 class OccurrenceCompositionFormset(forms.BaseInlineFormSet):
     collecster_instance_callback = utils.occurrence_composition_queryset
 
-
 class OccurrenceCompositionInline(admin.TabularInline):
     #model = Occurrence.nested_occurrences.through # Allowd to get the model when it is automatically created by Django
     model = OccurrenceComposition
@@ -240,6 +239,29 @@ class OccurrenceCompositionInline(admin.TabularInline):
     can_delete = False #Remove the delete checkbox on each composition form (on edit page)
 
 
+class OccurrenceAdminForm(PropertyAwareModelForm):
+    def clean(self):
+        self.clean_tag_to_occurrence()
+    
+    def clean_tag_to_occurrence(self):
+        """ Ensures that the proper configuration is in place in Supervisor : """
+        """ * That there is a Deployment for the current application """
+        """ * That this Deployment is associated to a UserCollection for the logged-in user """
+        try:
+            deployment = Deployment.objects.get(configuration=utils_path.get_app_name())
+        except Deployment.DoesNotExist:
+            self.add_error(None, ValidationError("The current application '%(app_name)s' does not have a corresponding Deployment in Supervisor.",
+                                            params={"app_name": utils_path.get_app_name()}, code="invalid"))
+            return
+
+        try:
+            UserCollection.objects.get(user=self.collecster_user_extension, deployment=deployment)
+        except UserCollection.DoesNotExist:
+            self.add_error(None, ValidationError("The logged-in user '%(user)s' does not have a UserCollection for '%(deployment)s' in Supervisor.",
+                                                 params={"user": self.collecster_user_extension.user,
+                                                         "deployment": deployment},
+                                                 code="invalid"))
+
 class OccurrenceAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
     collecster_dynamic_inline_classes = OrderedDict((
@@ -251,11 +273,12 @@ class OccurrenceAdmin(CollecsterModelAdmin):
     collecster_refresh_inline_classes = ["attributes", "custom_attributes", "composition",] ## Each determined by the release
 
     collecster_readonly_edit = ("release",)
-    form = PropertyAwareModelForm
-
+    form = OccurrenceAdminForm
 
     def post_save_model(self, request, obj, form, change):
         if not change:
+            # TODO The user_occurrence_id could be made more compact, by taking the next id available
+            # for the corresponding creator, not the local occurrence id.
             TagToOccurrence(user_creator=obj.created_by, user_occurrence_id=obj.pk, occurrence=obj).save()
 
     def get_changeform_initial_data(self, request):

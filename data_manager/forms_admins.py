@@ -115,10 +115,22 @@ class CustomSaveModelAdmin(admin.ModelAdmin):
     """ Also introduces a post_model_save() hook, called after saving the model, but before saving the related models """
     """ Plus attempt to call an "admin_post_save" method on the model instance, after itself and its related instances were saved """
 
+    def get_form(self, request, obj=None, **kwargs):
+        """ Overrides the ModelAdmin method to forwards the request user into the form """
+        form = super(CustomSaveModelAdmin, self).get_form(request, obj, **kwargs)
+        form.collecster_user_extension = self.user_from_request(request)
+        return form
+
+    @staticmethod
+    def user_from_request(request):
+        """ This static method intention is to factorize the assignment of form's collecster_user_extension"""
+        """ and object's created_by attributes behind a common method. """
+        return UserExtension.objects.get(user=request.user)
+
     def save_model(self, request, obj, form, change):
         # If obj has a "created_by" field provided by AbstractRecordOwnership, and this is adding a new object (not editing one)
         if issubclass(obj.__class__, AbstractRecordOwnership) and not change:
-            obj.created_by = UserExtension.objects.get(user=request.user)
+            obj.created_by = self.user_from_request(request)
         super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)
         self.post_save_model(request, obj, form, change)
 
