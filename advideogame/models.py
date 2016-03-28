@@ -633,15 +633,19 @@ class SystemSpecification(models.Model):
     #class Meta:
     #    unique_together = ("regional_lockout", "bios_version", "interface")
 
-    regional_lockout     = models.ManyToManyField(LockoutRegion)
+    regional_lockout     = models.ManyToManyField(LockoutRegion, blank=True)
     bios_version         = models.CharField(max_length=10, blank=True)
     interfaces_specification = models.ForeignKey(InterfacesSpecification)
 
     def __str__(self):
         display = "{}".format(self.interfaces_specification)
+
         if self.regional_lockout.count():
-           display = "{} [{}]".format(display,
-                                      ", ".join(["{}".format(lockout) for lockout in self.regional_lockout.all()]))
+            regions = ", ".join(["{}".format(lockout) for lockout in self.regional_lockout.all()])
+        else:
+            regions = "REGION FREE"
+        display = "{} [{}]".format(display, regions)
+
         if self.bios_version:
            display = "{} (bios: {})".format(display, self.bios_version)
         return display 
