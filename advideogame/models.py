@@ -457,6 +457,16 @@ def name_instance_picture(instance, filename, base_model_access = lambda instanc
 def access(instance, fieldname):
     return getattr(instance, fieldname)
 
+def name_occurrence_picture(instance, filename):
+    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.occurrence)
+
+def name_release_picture(instance, filename):
+    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.release)
+
+def name_bundle_picture(instance, filename):
+    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.bundle)
+
+# TODO delete those 3 functions, only required for migrations that should disappear...
 def access_occurrence(instance):
     return instance.occurrence
 
@@ -476,15 +486,15 @@ class OccurrencePicture(models.Model):
     attribute_object = GenericForeignKey("attribute_type", "attribute_id")
 
     detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
-    image_file      = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_occurrence))
+    image_file      = models.ImageField(upload_to=name_occurrence_picture)
 
 class BundlePicture(models.Model):
     bundle      = models.ForeignKey("Bundle")
-    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_bundle))
+    image_file  = models.ImageField(upload_to=name_bundle_picture)
 
 class ReleasePicture(models.Model):
     release     = models.ForeignKey("Release")
-    image_file  = models.ImageField(upload_to=partial(name_instance_picture, base_model_access=access_release))
+    image_file  = models.ImageField(upload_to=name_release_picture)
 
 #
 # Platform
