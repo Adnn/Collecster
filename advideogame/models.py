@@ -139,6 +139,8 @@ class Release(ReleaseBase):
 
     system_specification = models.ForeignKey("SystemSpecification", blank=True, null=True) # immaterials do not specify it
 
+    unsure_content = models.BooleanField(default=False, help_text="Check if the release exact attributes and composition is not known.")
+
     def is_embedded_immaterial(self):
         return not self.is_material() and not self.digitally_distributed
 
@@ -679,6 +681,31 @@ class SystemVariant(models.Model):
                                           params={"no_variant_entry": no_variant_qs[0].pk}, code="invalid")
 
         return super(SystemVariant, self).clean()
+#
+# Concept relations
+#
+class Relation(object):
+    DERIVED_FROM = "DRV"
+    MOD_ADDON = "MAO"
+    REQUIRES = "REQ"
+
+    @classmethod
+    def get_choices(cls):
+        return (
+            (cls.DERIVED_FROM, "derives from"),
+            (cls.MOD_ADDON, "mod/add-on for"),
+            (cls.REQUIRES, "requires"),
+        )
+
+    @classmethod
+    def choices_maxlength(cls):
+        return 3
+
+class ConceptRelation(models.Model):
+    concept = models.ForeignKey("Concept", related_name="relates_to_set")
+    relation = models.CharField(choices=Relation.get_choices(), max_length=Relation.choices_maxlength())
+    related_concept = models.ForeignKey("Concept", related_name="related_by_set")
+
 #
 # Misc
 #

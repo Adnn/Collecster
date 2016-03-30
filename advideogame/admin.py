@@ -51,12 +51,17 @@ class ConceptAdminForm(forms.models.ModelForm):
 
 ConceptAdmin.form = ConceptAdminForm
 
-
 class ConceptUrlInline(admin.TabularInline):
     extra = 1
     model = ConceptUrl
 
+class ConceptRelationInline(admin.TabularInline):
+    extra = 0
+    model = ConceptRelation
+    fk_name = "concept"
+
 ConceptAdmin.collecster_dynamic_inline_classes["urls"] = (ConceptUrlInline,)
+ConceptAdmin.collecster_dynamic_inline_classes["relations"] = (ConceptRelationInline,)
 
 ## Occurrence pictures relation to any attribute ##
 def populate_occurrence_picture_attributes_choices(formset, request, obj):
