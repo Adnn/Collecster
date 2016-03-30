@@ -467,15 +467,6 @@ def name_release_picture(instance, filename):
 def name_bundle_picture(instance, filename):
     name_instance_picture(instance, filename, base_model_access=lambda instance: instance.bundle)
 
-# TODO delete those 3 functions, only required for migrations that should disappear...
-def access_occurrence(instance):
-    return instance.occurrence
-
-def access_bundle(instance):
-    return instance.bundle
-
-def access_release(instance):
-    return instance.release
 
 class OccurrencePicture(models.Model):
     occurrence  = models.ForeignKey("Occurrence")

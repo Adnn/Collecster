@@ -157,7 +157,7 @@ class ReleasePictureInline(admin.TabularInline):
 ReleaseAdmin.collecster_dynamic_inline_classes["pictures"] = (ReleasePictureInline,)
 
 ## Release attributes ##
-ReleaseAttributeForm._forbidden_on_immaterial.append(config_utils.get_attribute("content", "self"))
+ReleaseAttributeForm._forbidden_on_immaterial.append(models.Q(category__name="content", name="self"))
 
 ## Release urls ##
 class ReleaseUrlInline(admin.TabularInline):

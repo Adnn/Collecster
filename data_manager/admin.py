@@ -89,10 +89,11 @@ class ReleaseDistinctionInline(admin.TabularInline):
 
 # Must derive from SaveInitialDataModelFrom, or unchanged automatic attributes would not be saved
 class ReleaseAttributeForm(SaveInitialDataModelForm):
-    _forbidden_on_immaterial = [] # Ad-hoc solution, so an app could extend this to provent specific attributes on immaterials.
+    _forbidden_on_immaterial = [] # Ad-hoc solution, so an app could extend this to prevent specific attributes on immaterials.
 
     def extra_clean_for_immaterial(self):
-        if self.instance.attribute in self._forbidden_on_immaterial:
+        forbidden_attributes = [Attribute.objects.get(q_obj) for q_obj in self._forbidden_on_immaterial]
+        if self.instance.attribute in forbidden_attributes:
             self.add_error("attribute", forms.ValidationError("This attribute is not allowed on immaterial releases.",
                                                               code="invalid"))
  
