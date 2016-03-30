@@ -13,6 +13,7 @@ Thumbs.db
 # Django #
 *.sqlite3
 media/
+staticfiles/
 venv
 
 #*/local_settings.py ## Not private anymore: the secret key is read from environment variable.
