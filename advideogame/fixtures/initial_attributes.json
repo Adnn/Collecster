@@ -280,5 +280,15 @@
     },
     "model": "advideogame.attribute",
     "pk": 26
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "RTN",
+        "name": "pedals",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 27
 }
 ]

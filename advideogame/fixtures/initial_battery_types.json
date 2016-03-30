@@ -38,19 +38,33 @@
         "model": "advideogame.BatteryType",
         "pk": 6,
         "fields": {
-            "code": "9V"
+            "code": "CR2032"
         }
     },
     {
         "model": "advideogame.BatteryType",
         "pk": 7,
         "fields": {
-            "code": "Proprietary (removable)"
+            "code": "LR44"
         }
     },
     {
         "model": "advideogame.BatteryType",
         "pk": 8,
+        "fields": {
+            "code": "9V"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 9,
+        "fields": {
+            "code": "Proprietary (removable)"
+        }
+    },
+    {
+        "model": "advideogame.BatteryType",
+        "pk": 10,
         "fields": {
             "code": "Proprietary (builtin)"
         }
