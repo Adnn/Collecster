@@ -720,7 +720,7 @@ class Color(models.Model):
 
 
 class BatteryType(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=32, unique=True)
 
     def __str__(self):
         return self.code
