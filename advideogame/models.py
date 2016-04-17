@@ -68,6 +68,7 @@ class ReleaseDistinction(ReleaseDistinctionBase):
     pass
 
 class ReleaseAttributeCodeExtension(models.Model):
+    """ Allows to attach an optional value to an attribute of a release (eg. the catalog number of a part) """
     class Meta:
         abstract = True
     code = models.CharField(max_length=64, blank=True)
@@ -109,7 +110,8 @@ class Concept(ConceptBase):
     """ Specialization of the Concept model, to give it deployment-specific fields without introducing """
     """ an additional DB table. """  
 
-    developer = models.ForeignKey('Company', null=True) # Allows null but not blank, for the _COMBO concept special case
+    developer = models.ForeignKey('Company', blank=True, null=True) # Allows null for the _COMBO concept special case
+                                                                    # Also allows blank, for noname/unknown
 
     name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True)
     year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True)
@@ -121,21 +123,30 @@ class Release(ReleaseBase):
 
     collecster_properties = {
         "forbidden_on_material":                ("digitally_distributed", ),
-        "forbidden_on_non_material":            ("loose", "barcode", ),
-        "forbidden_on_embedded_immaterial":     ("system_specification", "release_regions", "partial_date", ),
-        "required_on_non_embedded_immaterial":  ("release_regions", "system_specification", ),
+        "forbidden_on_non_material":            ("special_case_release", "barcode", ),
+        "forbidden_on_special_case":            ("barcode", "partial_date", ),
+        "forbidden_on_loose":                   ("unsure_content", ),
+        "forbidden_on_embedded_immaterial":     ("system_specification", "release_regions", "unsure_region", "partial_date", ),
+        "required_on_system_spec_mandatory":    ("system_specification", ),
+        "required_on_region_mandatory":         ("release_regions", ),
     }
 
-    immaterial              = models.BooleanField(default=False) 
+    immaterial             = models.BooleanField(default=False) 
     digitally_distributed  = models.BooleanField(default=False) 
 
-    loose   = models.BooleanField() 
+    special_case_release = models.CharField(max_length=1, blank=True, choices=(
+            ("L", "loose"),
+            ("C", "naked composition"),
+        ), help_text="""'loose' if the absence of the object's packaging makes it impossible to indentify the exact release."""
+                     """<br/>'naked composition' for releases that are exclusively used for composing others, without a discrete packaging. (eg. Controller within a console.)""")
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     ## neither will immaterials
     barcode = models.CharField(max_length=20, blank=True)
+    version = models.CharField(max_length=20, blank=True, help_text="Version or model.") 
+
     release_regions  = models.ManyToManyField("ReleaseRegion", blank=True)
-    version = models.CharField(max_length=20, blank=True) 
+    unsure_region  = models.BooleanField(default=False, help_text="Check if the release region is uncertain.")
 
     system_specification = models.ForeignKey("SystemSpecification", blank=True, null=True) # immaterials do not specify it
 
@@ -146,6 +157,24 @@ class Release(ReleaseBase):
 
     def is_digital_immaterial(self):
         return not self.is_material() and self.digitally_distributed
+
+    def is_region_mandatory(self):
+        return not (self.is_embedded_immaterial() or self.is_special_case())
+
+    def is_system_spec_mandatory(self):
+        return not (self.is_embedded_immaterial() or self.is_combo())
+
+    def is_special_case(self):
+        return bool(self.special_case_release)
+
+    def is_loose(self):
+        return self.special_case_release == "L"
+
+    def is_combo(self):
+        try:
+            return self.concept == Concept.objects.get(distinctive_name="_COMBO")
+        except Concept.DoesNotExist:
+            return False # arbitrarily return false when the concept is not yet assigned
 
     def tag_regions(self):
         return list(collections.OrderedDict.fromkeys([region.tag_region for region in self.release_regions.all()]))
@@ -557,7 +586,7 @@ class SystemMediaPair(models.Model):
         unique_together = ("system", "media")
 
     system = models.ForeignKey(BaseSystem) 
-    media  = models.CharField(max_length=20)
+    media  = models.CharField(max_length=32)
     wireless = models.BooleanField(default=False)
 
     abbreviated_name = models.CharField(max_length=10, unique=True)
@@ -616,6 +645,8 @@ class InterfacesSpecification(models.Model):
     """ A SystemSpecification defers detailing of the different advertised systems, and their associated interfaces, """
     """ to this model. It has a one to many relationship with SystemInterfaceDetail. """
     internal_name = models.CharField(max_length=60, unique=True)
+    implicit_system = models.BooleanField(default=False, help_text=("Indicate that this interface specification was not released as a separate system, but implicitly exists"
+                                                                    " as soon as all required interfaces are united (eg. Sega Mega-CD 32X)."))
 
     def __str__(self):
         return "{}".format(self.internal_name)
@@ -644,6 +675,13 @@ class SystemSpecification(models.Model):
            display = "{} (bios: {})".format(display, self.bios_version)
         return display 
 
+    def clean(self):
+        try:
+            if self.interfaces_specification.implicit_system:
+                raise ValidationError({"interfaces_specification": ValidationError("Cannot correspond to an implicit system.", code="invalid")})
+        except InterfacesSpecification.DoesNotExist:
+            pass
+            
 
 #
 # System variants
@@ -749,6 +787,8 @@ class StorageUnit(models.Model):
 
     #prorietary = models.BooleanField()
     brand = models.ForeignKey(Company, blank=True, null=True)
+    byte_equivalence = models.PositiveIntegerField(null=True,
+                                                   help_text="The number of (8-bits) bytes one unit is equivalent to.")
 
     #def clean(self):
     #    if self.prorietary and not self.brand:
@@ -771,4 +811,15 @@ class StorageUnit(models.Model):
         else:
             return self.name
         
+
+class CollectionLabel(models.Model):
+    class Meta:
+        unique_together = ("name", "company",)
+
+    name = models.CharField(max_length=128)
+    company = models.ForeignKey("Company", blank=True, null=True)
+
+    def __str__(self):
+        return "{}{}".format(self.name, " ({})".format(self.company) if self.company else "")
+
 # Create your models here.

@@ -74,7 +74,7 @@ class ReleaseSpecific(object):
         brand = models.ForeignKey('Company', blank=True, null=True)
 
     class Hardware(AbstractBase): # Almost any physical occurrence is hardware (even bags and cases)
-        color = models.ManyToManyField("Color")
+        colors = models.ManyToManyField("Color", help_text="Principal color(s).")
         manufacturer = models.ForeignKey('Company', blank=True, null=True) # DEB (in cases of accessories, not consoles)
         #model = models.CharField(max_length=20, blank=True)  ## Probably useless, since there is already 'version'
 
@@ -84,7 +84,7 @@ class ReleaseSpecific(object):
     class Software(AbstractBase):
         publisher   = models.ForeignKey("Company", blank=True, null=True, related_name="published_software_set")
         porter      = models.ForeignKey("Company", blank=True, null=True, related_name="ported_software_set", verbose_name="Company realizing the port")
-        collection_label = models.CharField(max_length=120, blank=True, verbose_name="Released in collection")
+        collection_label = models.ForeignKey("CollectionLabel", blank=True, null=True, verbose_name="Released in collection")
 
     class Demo(AbstractBase):
         issue_number    = models.PositiveIntegerField(blank=True, null=True)
@@ -100,9 +100,19 @@ class ReleaseSpecific(object):
     class Media(AbstractBase):
         media_types = models.ManyToManyField("MediaType") # DEB, but kept here in case some release of media do not have the same content
 
-    class Memory(AbstractBase):
+    class AbstractMemory(AbstractBase):
+        class Meta:
+            abstract = True
+
         capacity    = models.PositiveIntegerField()
         unit        = models.ForeignKey("StorageUnit") # DEB, but the capacity is not, and it is tighlty coupled to it.
+
+    # We need to make two separate models, so an accessory that is both a ram pack and a memory card can fill one model
+    # for each separate nature.
+    class BackupMemory(AbstractMemory):
+        pass
+    class RamMemory(AbstractMemory):
+        pass
 
     class Variant(AbstractBase):
         system_variant = models.ForeignKey("SystemVariant")
@@ -127,7 +137,8 @@ class ReleaseCategory:
     CONSOLE_VAR = compose(CONSOLE,  (RelSp.Variant,))
     DEMO        = compose(SOFTWARE,     (RelSp.Demo,))
     MEDIA       = compose(SOFTWARE,     (RelSp.Media,))
-    MEMORY      = compose(HARDWARE,     (RelSp.Memory,))
+    BKP_MEMORY  = compose(HARDWARE,     (RelSp.BackupMemory,))
+    RAM_MEMORY  = compose(HARDWARE,     (RelSp.RamMemory,))
 
 
 class OccurrenceSpecific(object):
@@ -286,7 +297,7 @@ class ConfigNature(ConfigNature):
         (KEYBOARD,          DataTuple("Keyboard",          UIGroup.ACCESSORY,  "blue",     ConceptCategory.CONTROLLER,  ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (LINK_CABLE,        DataTuple("Link cable",        UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (MAGNIFIER,         DataTuple("Magnifier",         UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
-        (MEMORYCARD,        DataTuple("Memorycard",        UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.MEMORY,     OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (MEMORYCARD,        DataTuple("Memorycard",        UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.BKP_MEMORY, OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (MICROPHONE,        DataTuple("Microphone",        UIGroup.ACCESSORY,  "blue",     ConceptCategory.REMOTE,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (MODEM,             DataTuple("Modem",             UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (MOTION_SENSING,    DataTuple("Motion sensing",    UIGroup.ACCESSORY,  "blue",     ConceptCategory.CONTROLLER,  ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
@@ -294,7 +305,7 @@ class ConfigNature(ConfigNature):
         (MULTITAP,          DataTuple("Multitap",          UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (PRINTER,           DataTuple("Printer",           UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (PROTECTIVE_CASE,   DataTuple("Protective case",   UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.EMPTY,        automatic_self )),
-        (RAM_PACK,          DataTuple("Ram pack",          UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.MEMORY,     OccurrenceCategory.OPERATIONAL,  automatic_self )),
+        (RAM_PACK,          DataTuple("Ram pack",          UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.RAM_MEMORY, OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (REGION_UNLOCK,     DataTuple("Region unlock",     UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (RUMBLE_PACK,       DataTuple("Rumble pack",       UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),
         (SCANNER,           DataTuple("Scanner",           UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,       ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL,  automatic_self )),

@@ -165,7 +165,7 @@
     "fields": {
         "category": 3,
         "value_type": "RTN",
-        "name": "insert : jewel box",
+        "name": "insert: jewel box",
         "description": ""
     },
     "model": "advideogame.attribute",
@@ -283,6 +283,16 @@
 },
 {
     "fields": {
+        "category": 3,
+        "value_type": "RTN",
+        "name": "manual: jewel box",
+        "description": ""
+    },
+    "model": "advideogame.attribute",
+    "pk": 27
+},
+{
+    "fields": {
         "category": 1,
         "value_type": "RTN",
         "name": "pedals",
@@ -290,5 +300,15 @@
     },
     "model": "advideogame.attribute",
     "pk": 27
+},
+{
+    "fields": {
+        "category": 1,
+        "value_type": "RTN",
+        "name": "receiver interface",
+        "description": "An external module connecting to the main system, that receives one or several, wired or wireless, peripherals. (eg. Singstar microphone-usb interface)."
+    },
+    "model": "advideogame.attribute",
+    "pk": 28
 }
 ]

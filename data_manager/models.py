@@ -260,7 +260,7 @@ class ReleaseAttributeBase(models.Model):
         unique_together = ("release", "attribute", "note") # Seems to be a bug: when ADDing the parent object, it is possible to save instances violating this constraint
                                                     # TODO: report to the Django project
 
-    release     = models.ForeignKey("Release") # No release are attached for implicit attributes (that are determined by the Release nature), disabled
+    release     = models.ForeignKey("Release", related_name="attributes") # No release are attached for implicit attributes (that are determined by the Release nature), disabled
     attribute   = models.ForeignKey("Attribute")
     note       = models.CharField(max_length=60, blank=True, help_text="Distinctive remark if the attribute is repeated.")
 
@@ -278,7 +278,7 @@ class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of Ab
         # Note that AttributeBase is not the parent, but it defines the right unique_together clause that we need to extend
         unique_together = AttributeBase.Meta.unique_together + ("release", "note") # Same bug than with ReleaseAttribute
 
-    release     = models.ForeignKey("Release")
+    release     = models.ForeignKey("Release", related_name="custom_attributes")
     note       = models.CharField(max_length=60, blank=True, null=True, help_text="Distinctive remark if the attribute is repeated.")
 
     @property
