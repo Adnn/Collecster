@@ -1,5 +1,5 @@
 from . import utils_path
-from .models import AbstractRecordOwnership, Concept, Occurrence, Release, check_property_consistency
+from .models import AbstractRecordOwnership, Concept, Occurrence, Release, CollecsterPropertiesHelper
 
 from data_manager import utils_payload
 from supervisor.models import UserExtension
@@ -63,45 +63,16 @@ class PropertyAwareModelForm(forms.ModelForm):
 
         return cleaned
 
-    @staticmethod
-    def _split_property(property_name):
-        """ Splites the property name found on the collecster_properties dictionary, """
-        """ between the sign (False if "non_" prefix, True otherwise) and the positive property name """
-        splits = property_name.split("_", maxsplit=1) 
-        if (len(splits) == 2) and (splits[0] =="non"):
-            return False, splits[1]
-        else:
-            return True, "_".join(splits)
-
     def get_base_instance(self):
         """ To be overriden, notably by Specific models, which are presented in inline formsets of the base model """
         return self.instance
 
-    def is_property_known(self, property_name):
-        """ Checks whether the base model defines a "{property}_is_known" member, and calls it if available. """
-        sign_DISCARDED, positive_property = PropertyAwareModelForm._split_property(property_name)
-        availability_check = "{}_is_known".format(positive_property)
-        if hasattr(self.get_base_instance(), availability_check):
-            return getattr(self.get_base_instance(), availability_check)()
-        else:
-            return True
-
-    def get_property_value(self, property_name):
-        sign, positive_property = PropertyAwareModelForm._split_property(property_name)
-        return sign == getattr(self.get_base_instance(), "is_{}".format(positive_property))()
-
     def _post_clean(self):
         super(PropertyAwareModelForm, self)._post_clean()
-        # Enforces IMMATERIAL::2.a) IMMATERIAL::2.b) IMMATERIAL::3.a) IMMATERIAL::3.b)
-        if hasattr(self.instance, "collecster_properties"):
-            for key, fields in self.instance.collecster_properties.items():
-                instruction, DISCARDED, property_name = key.split("_", maxsplit=2)
-                if self.is_property_known(property_name):
-                    errors = check_property_consistency(self.instance, self.get_property_value(property_name),
-                                                        property_name, self.get_form_cleaned_data,
-                                                        **{instruction: fields})
-                    for field_name, error in errors.items():
-                        self.add_error(field_name, error)
+        errors = CollecsterPropertiesHelper.validate(self.instance, self.get_base_instance(), self.get_form_cleaned_data)
+        for field_name, error in errors.items():
+            self.add_error(field_name, error)
+
 
 class PropertyAwareSaveInitialDataModelForm(PropertyAwareModelForm, SaveInitialDataModelForm):
     """ Provides the functionnality of bot PropertyAware and SaveInitialData model forms """

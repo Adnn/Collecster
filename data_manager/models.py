@@ -47,6 +47,46 @@ def check_property_consistency(model_instance, property_value, property_name, da
 
     return errors_dict
 
+class CollecsterPropertiesHelper(object):
+    @staticmethod
+    def _split_property(property_name):
+        """ Splites the property name found on the collecster_properties dictionary, """
+        """ between the sign (False if "non_" prefix, True otherwise) and the positive property name """
+        splits = property_name.split("_", maxsplit=1) 
+        if (len(splits) == 2) and (splits[0] =="non"):
+            return False, splits[1]
+        else:
+            return True, "_".join(splits)
+
+    @staticmethod
+    def is_property_known(base_instance, property_name):
+        """ Checks whether the base model defines a "{property}_is_known" member, and calls it if available. """
+        sign_DISCARDED, positive_property = CollecsterPropertiesHelper._split_property(property_name)
+        availability_check = "{}_is_known".format(positive_property)
+        if hasattr(base_instance, availability_check):
+            return getattr(base_instance, availability_check)()
+        else:
+            return True
+
+    @staticmethod
+    def get_property_value(base_instance, property_name):
+        sign, positive_property = CollecsterPropertiesHelper._split_property(property_name)
+        return sign == getattr(base_instance, "is_{}".format(positive_property))()
+
+    @classmethod
+    def validate(cls, instance, base_instance, data_getter):
+        errors = {}
+        if hasattr(instance, "collecster_properties"):
+            for key, fields in instance.collecster_properties.items():
+                instruction, DISCARDED, property_name = key.split("_", maxsplit=2)
+                if CollecsterPropertiesHelper.is_property_known(base_instance, property_name):
+                    errors.update(check_property_consistency(instance,
+                                                             cls.get_property_value(base_instance, property_name),
+                                                             property_name, data_getter, 
+                                                             **{instruction: fields}))
+        return errors
+
+
 class TagToOccurrenceBase(models.Model):
     """ This model makes the link between user occurrence IDs """
     """ (which are immutable identifiers assigned to each occurrence, only unique per user) """
