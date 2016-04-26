@@ -12,9 +12,8 @@ from .forms_admins import SaveEmptyDataModelForm
 
 from data_manager import utils_id
 
-from django.core.urlresolvers import reverse
-from django.contrib import admin
 from django.utils.html import format_html
+from django.contrib import admin
 
 ##
 ## Edit the data_manager admin
@@ -218,20 +217,6 @@ class RequiredInterfaceInline(admin.TabularInline):
    model = RequiredInterface
    extra = 1
 
-
-class EditLinkToInlineObject(object):
-    """ Since we would like to have nested inlines (InterfacesSpecification with inline System|CommonInterfaceDetails, """
-    """ with inline Required|ProvidedInterface), use an alternative solution which is to display the link to edit """
-    """ the System|CommonInterface details object from a readonly_field in its inline. """
-    """ see: http://stackoverflow.com/a/22113967/1027706 """
-    def edit_link(self, instance):
-        if instance.pk:
-            url = reverse('admin:{}_{}_change'.format(instance._meta.app_label,  instance._meta.model_name),
-                          args=[instance.pk])
-            return format_html('<a href="{url}" target=_blank>edit interfaces</a>', url=url)
-        else:
-            return "-"
-
 class SystemInterfaceDetailAdmin(admin.ModelAdmin):
     inlines = (ProvidedInterfaceInline, RequiredInterfaceInline,)
     readonly_fields = ("interfaces_specification", "advertised_system",) 
@@ -253,6 +238,7 @@ class SystemInterfaceDetailInline(EditLinkToInlineObject, admin.TabularInline):
     model = SystemInterfaceDetail
     extra = 2
     readonly_fields = ("edit_link",)
+    link_text = "edit interfaces"
     formset = SystemInterfaceDetailFormset
 
 class CommonInterfaceDetailAdmin(admin.ModelAdmin):
@@ -262,6 +248,7 @@ class CommonInterfaceDetailAdmin(admin.ModelAdmin):
 class CommonInterfaceDetailInline(EditLinkToInlineObject, admin.TabularInline):
     model = CommonInterfaceDetail
     readonly_fields = ("edit_link",)
+    link_text = "edit interfaces"
     form = SaveEmptyDataModelForm
 
 

@@ -1,5 +1,5 @@
 from . import utils
-from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CustomSaveModelAdmin, CollecsterModelAdmin
+from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CustomSaveModelAdmin, CollecsterModelAdmin, EditLinkToInlineObject
 
 from .models import *
 from supervisor.models import Person, Deployment, UserCollection, UserExtension
@@ -204,24 +204,43 @@ def AnyAttributeFormset_factory(classname, retr_func):
                                                          retrieve_function = retr_func)})
 
 
+class OccurrenceAnyAttributeInline(EditLinkToInlineObject, admin.TabularInline):
+    can_delete = False
+    readonly_fields = ("edit_link",)
+    link_text = "edit defects"
 
-class OccurrenceAttributeInline(admin.TabularInline):
+class OccurrenceAttributeInline(OccurrenceAnyAttributeInline):
     model = OccurrenceAttribute
     formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", utils.all_release_attributes)
     #form = OccurrenceAttributeForm
     form = modelform_factory(OccurrenceAttribute, fields=("release_corresponding_entry", "value"),
                              widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)})
-    can_delete = False
 
 
-class OccurrenceCustomAttributeInline(admin.TabularInline):
+class OccurrenceCustomAttributeInline(OccurrenceAnyAttributeInline):
     model = OccurrenceCustomAttribute
     formset = AnyAttributeFormset_factory("OccurrenceCustomAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseCustomAttribute))
     #form = OccurrenceAttributeForm
     form = modelform_factory(OccurrenceCustomAttribute, fields=("release_corresponding_entry", "value"),
                              widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseCustomAttribute)})
-    can_delete = False
 
+
+class OccurrenceAttributeDefectInline(admin.TabularInline):
+    model = OccurrenceAttributeDefect
+    extra = 2
+
+class OccurrenceCustomAttributeDefectInline(admin.TabularInline):
+    model = OccurrenceCustomAttributeDefect
+    extra = 2
+
+class OccurrenceAnyAttributeAdminBase(admin.ModelAdmin):
+    readonly_fields = ("occurrence", "release_corresponding_entry", ) 
+
+class OccurrenceAttributeAdmin(OccurrenceAnyAttributeAdminBase):
+    inlines = (OccurrenceAttributeDefectInline, )
+
+class OccurrenceCustomAttributeAdmin(OccurrenceAnyAttributeAdminBase):
+    inlines = (OccurrenceCustomAttributeDefectInline, )
 
 class OccurrenceCompositionFormset(forms.BaseInlineFormSet):
     collecster_instance_callback = utils.occurrence_composition_queryset
@@ -304,6 +323,10 @@ def base_register(site):
     site.register(AttributeCategory)
 
     site.register(Distinction)
+
+    site.register(OccurrenceAttribute, OccurrenceAttributeAdmin)
+    site.register(OccurrenceCustomAttribute, OccurrenceCustomAttributeAdmin)
+
 
 # For readonly debug
 #admin.site.register(ConceptNature)

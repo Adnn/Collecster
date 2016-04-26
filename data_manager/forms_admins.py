@@ -4,6 +4,8 @@ from .models import AbstractRecordOwnership, Concept, Occurrence, Release, Colle
 from data_manager import utils_payload
 from supervisor.models import UserExtension
 
+from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 from django.contrib import admin
 from django.db.models import QuerySet
 from django import forms
@@ -15,6 +17,21 @@ from django import forms
 ##########
 ## Forms
 ##########
+
+class EditLinkToInlineObject(object):
+    """ Since we would like to have nested inlines (eg. InterfacesSpecification with inline System|CommonInterfaceDetails, """
+    """ with inline Required|ProvidedInterface), use an alternative solution which is to display the link to edit """
+    """ instances of the intermediary model from a readonly_field in the inlines of the top-level model. """
+    """ see: http://stackoverflow.com/a/22113967/1027706 """
+    link_text = "edit" # to be customized on the inherithing models
+
+    def edit_link(self, instance):
+        if instance.pk:
+            url = reverse('admin:{}_{}_change'.format(instance._meta.app_label,  instance._meta.model_name),
+                          args=[instance.pk])
+            return format_html('<a href="{url}" target=_blank>{link_text}</a>', url=url, link_text=self.link_text)
+        else:
+            return "-"
 
 class SaveInitialDataModelForm(forms.ModelForm):
     """ Changes the meaning of the "initial" member to mean "default": values saved even in the absence of any user-initiated change to the form """

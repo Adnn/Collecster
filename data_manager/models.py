@@ -436,6 +436,16 @@ class OccurrenceCustomAttributeBase(OccurrenceAnyAttributeBase):
         
     release_corresponding_entry = models.ForeignKey("ReleaseCustomAttribute")
 
+class OccurrenceAnyAttributeDefectBase(models.Model):
+    class Meta:
+        abstract = True
+    defect_description = models.CharField(max_length=256)
+
+class OccurrenceAttributeDefect(OccurrenceAnyAttributeDefectBase):
+    attribute = models.ForeignKey("OccurrenceAttribute")
+
+class OccurrenceCustomAttributeDefect(OccurrenceAnyAttributeDefectBase):
+    attribute = models.ForeignKey("OccurrenceCustomAttribute")
 
 class OccurrenceCompositionBase(models.Model):
     class Meta:
