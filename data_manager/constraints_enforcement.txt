@@ -21,6 +21,7 @@ This project is very dynamic in the formsets its presenting on the admin pages. 
 1.a) There must be one formset for each Specific corresponding to the nature(s) of the instance (the instance being a Release or an Occurrence).
 1.b) There must be ONLY one form in each of such formset
     This is enforced by min_num = max_num = 1 and validate_min + validate_max, which are set on each Specific's formset instance.
+    Model-level: this is enforced by a OneToOneField from the Specific to the corresponding instance.
 1.c) There must not be any formset for a Specific that is not corresponding to the nature(s).
     This is naturally enforced by the dynamic generation of FormSet_set in the server code: this code create all the required formset, and only those formsets.
     Forged-forms: In particular for c), even if data was posted for other formsets, it would not be assigned to anything.
@@ -31,8 +32,8 @@ Data model consistency
 = ATTRIBUTES =
 == Constraints on Release attributes ==
 1) When the same Attribute is repeated for a given Release, each must have a distinct note. (Nb: empty being distinct from any non-empty) It applies to both Attribute and CustomAttribute
-    Model-level: this is enforced by a unique_together constraint. No need for offline
-    Interface-level: not a clean error, is it ?
+    Model-level: this is enforced by a unique_together constraint. No need for offline.
+    Interface-level: a ValidationError is raised.
     Other introduction path: None
 
 == Enforcing the Attributes assigned to Occurrences==
@@ -42,6 +43,7 @@ Data model consistency
 2.c) There must not be an OccurrenceAttribute without the associated ReleaseAttribute on the corresponding Release.
     Model-level: enforced in OccurrenceAnyAttributeBase::clean(), TODO there is a problem when the Occurrence is first added.
     Other introduction path: Changing the Release[Custom]Attribute associated Release
+2.d) The order of the Occurrence[Custom]Attribute must match the order of their corresponding Release[Custom]Attribute.
 
 3) The value assigned to the OccurrenceAttribute must be a value authorized by the corresponding Release[Custom]Attribute.
     Model-level: enforced in OccurrenceAnyAttributeBase::clean()
@@ -75,17 +77,15 @@ Data model consistency
     Other introduction path: None
 
 
+= COLLECSTER_PROPERTIES =
+1) For a Release/Occurrence instance, all the "required_on_{category}" (resp required_on_non_{category}) fields must have non-empty values if the method "is_{category}" returns True (resp. False) for said instance.
+2) For a Release/Occurrence instance, all the "forbidden_on_{category}" (resp forbidden_on_non_{category}) fields must have empty values if the method "is_{category}" returns True (resp. False) for said instance.
+
 = IMMATERIAL =
 == Immaterial restrictions ==
 1) Prevent an immaterial release from having nested releases.
-2.a) For an immaterial release, the material fields must be left blank (eg. "loose", "barcode").
-2.b) For an Occurrence instantiating an immaterial release, the material fields must be left blank (eg. "blister").
-3.a) For a material release, the required_on_material fields must have a non-empty value. (eg. "release_regions")
-3.b) For an Occurrence instantiating a material release, the required_on_material fields must have a non-empty value.
-4) An occurrence that instantiate an immaterial release must be nested under antother occurrence (that cannot instantiate an immaterial Release, because of 1).
-5) immaterial Releases cannot have nested Releases.
-6) immaterial Releases cannot have attributes attached. [to be removed]
-    6) immaterial Releases should not have a [content]self attribute.
+2) An occurrence that instantiate an immaterial release must be nested under another occurrence (that cannot instantiate an immaterial Release, because of 1).
+3) immaterial Releases should not have a [content]self attribute.
 
 
 = PARTIAL DATE =

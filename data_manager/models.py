@@ -389,6 +389,10 @@ class OccurrenceBase(AbstractRecordOwnership):
     def is_material(self):
         return self.release.is_material()
 
+    @property
+    def concept(self):
+        return self.release.concept
+
     #def clean(self):
     #    super(OccurrenceBase, self).clean()
     #    # Enforces IMMATERIAL::2.b), now enforced at the form level
@@ -409,6 +413,11 @@ class OccurrenceAnyAttributeBase(models.Model):
         # release_corresponding_entry should be added by all derived concrete models.
         return "{}: {}".format(self.release_corresponding_entry, self.value)
 
+    @staticmethod
+    def is_clean_value(value, release_corresponding_entry):
+        form_field = enum.Attribute.Type.to_form_field[release_corresponding_entry.attribute.value_type]
+        return value in [first for first, second in form_field.choices]
+
     def clean(self):
         # Enforces ATTRIBUTES::2.c)
         try:
@@ -419,8 +428,7 @@ class OccurrenceAnyAttributeBase(models.Model):
                  # see: http://stackoverflow.com/q/33854812/1027706
 
         # Enforces ATTRIBUTES::3)
-        form_field = enum.Attribute.Type.to_form_field[self.release_corresponding_entry.attribute.value_type]
-        if self.value not in [first for first, second in form_field.choices]:
+        if not self.is_clean_value(self.value, self.release_corresponding_entry):
             raise ValidationError("The assigned value is not allowed by the Attribute value type.", code='invalid')
 
 
