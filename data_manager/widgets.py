@@ -1,10 +1,10 @@
 from django import forms, utils
 
 
-class LabelWidget(forms.widgets.Select):
+class LabelWidget(forms.widgets.TextInput):
     """ Custom widget class, implementing a label instead of a user input """
     def __init__(self, attrs=None, choices=()):
-        super(LabelWidget, self).__init__(attrs, choices)
+        super(LabelWidget, self).__init__(attrs)
         self.can_add_related = False
 
 
