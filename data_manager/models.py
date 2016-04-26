@@ -471,3 +471,6 @@ class OccurrenceCompositionBase(models.Model):
                  # see: http://stackoverflow.com/q/33854812/1027706
         if (self.to_occurrence) and (self.release_composition.to_release != self.to_occurrence.release):
             raise ValidationError("The nested-occurrence corresponding release does not match the nested-release in the ReleaseComposition.", code='invalid')
+
+    def __str__(self):
+        return "{}. Matched to {}".format(self.release_composition, self.to_occurrence)

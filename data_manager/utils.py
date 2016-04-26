@@ -12,7 +12,7 @@ from django.contrib import admin
 from django.db.models import Q
 from django.forms.models import BaseInlineFormSet, modelformset_factory
 
-import functools
+import functools, collections
 
 ## TODEL
 #import wdb
@@ -121,14 +121,45 @@ def release_automatic_attributes(formset, request, obj):
     else:
         formset.extra = 1
 
+
+def get_or_initial_release_corresponding_entry(form, release_corresponding_list, release_corresponding_field):
+    """ This function is a helper to be used when initial_data should be assigned to forms """
+    """ if they are not corresponding to an instance saved in the DB """
+    """ see populate_occurrence_attributes() comments for a rationale """
+    # Nota: the following code assumes that all forms with an instance whose release_corresponding_entry is assigned
+    # will come before the forms where it is not.
+    try:
+        # The forms are not bound, but their 'instance' field is assigned by the FormSet's _construct_form()
+        # see: https://github.com/django/django/blob/1.9/django/forms/models.py#L592-L593 
+        corresponding = getattr(form.instance, release_corresponding_field)
+    # Since this field is required, a DoesNotExist exception indicates that the instance is not in the DB
+    except release_corresponding_list[0].__class__.DoesNotExist:
+        corresponding = release_corresponding_list[0]
+        form.initial = {release_corresponding_field: corresponding}
+
+    release_corresponding_list.remove(corresponding)
+    return corresponding
+
     
 def populate_occurrence_attributes(formset, request, obj, retrieve_function):
     release_id = utils_id.get_release_id(request, obj)
     
     attributes = retrieve_function(release_id)
     force_formset_size(formset, len(attributes))
-    formset.initial = [{"release_corresponding_entry": attrib} for attrib in attributes]
-    for form, rel_attrib in zip(formset, attributes):
+
+    # We had to move away from always assigning the initial value for release_corresponding_entry:
+    # When "changing" and existing occurrence, if the Occurrence***Attribute are not saved in the same order as the Release***Attribute of the matching Release
+    # (side note: this situation is treated as an error by formset clean)
+    # the value assigned to initial would override the release_corresponding_entry saved in the DB,
+    # but the associated attribute value would still be the one from the DB, causing a mismatch.
+    #formset.initial = [{"release_corresponding_entry": attrib} for attrib in attributes]
+
+    # Instead, we create a list of all Release***Attribute assigned to the correponding release, and remove from this list
+    # the Release***Attribute which already have a matchin Occurrence***Attribute saved to the DB.
+    attribute_list = list(attributes)
+
+    for form in formset:
+        rel_attrib = get_or_initial_release_corresponding_entry(form, attribute_list, "release_corresponding_entry")
         # This is very important: by default, forms in formsets have empty_permitted set to True
         # Then, a form with no other value than the initial(s) would skip fields validation, not populating cleaned_data     
         # see: https://github.com/django/django/blob/1.8.3/django/forms/forms.py#L389
@@ -147,18 +178,23 @@ def occurrence_composition_queryset(formset, request, obj):
             ## Does not help with saving the emtpy forms (only with their initial values)...
         #formset.validate_min = True
         #formset.validate_max = True
-        formset.initial = [{"release_composition": compo} for compo in release_compositions]
 
-        for compo, form in zip(release_compositions, formset):
-            release = compo.to_release
+        # Would not be a safe approach, see comment in populate_occurrence_attributes()
+        #formset.initial = [{"release_composition": compo} for compo in release_compositions]
+
+        release_compositions = list(release_compositions)
+
+        for form in formset:
+            release_compo = get_or_initial_release_corresponding_entry(form, release_compositions, "release_composition")
+
+            release = release_compo.to_release
             #form.empty_permitted=False ## Does not help with empty forms either
             form.fields["to_occurrence"].queryset = (
                 Occurrence.objects.filter(release=release)  # only propose occurrences of the right release
                                   .filter(Q(occurrence_composition__isnull=True) # not already nested in another occurrence
                                           | Q(occurrence_composition__from_occurrence=formset.instance)) # except if nested in this occurrence (for edit)
             )
-            print(form.fields["to_occurrence"].queryset)
-            form.fields["to_occurrence"].label     = "Nested {} occurrence".format(release.name)
+            form.fields["to_occurrence"].label = "Nested {} occurrence".format(release.name)
 
 
 ##
