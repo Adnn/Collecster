@@ -149,7 +149,7 @@ class OccurrenceSpecific(object):
             abstract = True
         occurrence = models.OneToOneField('Occurrence')
 
-        def get_parent_instance():
+        def get_parent_instance(self):
             return self.occurrence
 
 
