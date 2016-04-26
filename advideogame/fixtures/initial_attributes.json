@@ -204,7 +204,7 @@
 {
     "fields": {
         "category": 2,
-        "value_type": "RTN",
+        "value_type": "PRS",
         "name": "disposable connector protection",
         "description": "A connector protection that is not integral to what it protects."
     },
@@ -224,7 +224,7 @@
 {
     "fields": {
         "category": 1,
-        "value_type": "PRS",
+        "value_type": "RTN",
         "name": "intrinsic connector cap",
         "description": "Essential plastic caps to protect connectors, designed to be put in place after use."
     },
