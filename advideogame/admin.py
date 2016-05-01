@@ -204,7 +204,8 @@ class BundlePictureInline(admin.TabularInline):
    model = BundlePicture
    extra = 1
 
-class AnyBundleAdmin(admin.ModelAdmin):
+class AnyBundleAdmin(CollecsterModelAdmin):
+    exclude = ("created_by",)
     inlines = (BundleCompositionInline, BundlePictureInline,)
 
 

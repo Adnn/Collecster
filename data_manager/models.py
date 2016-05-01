@@ -217,7 +217,7 @@ class ReleaseBase(AbstractRecordOwnership):
 
 
     def display_name(self):
-        return self.name if self.name else self.concept
+        return self.name if self.name else str(self.concept)
 
     def name_color(self):
         """ Returns the color associated to this release, which is based on its nature """

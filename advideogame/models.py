@@ -212,7 +212,6 @@ class Occurrence(OccurrenceBase):
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     origin = models.CharField(max_length=OccurrenceOrigin.choices_maxlength(), choices=OccurrenceOrigin.get_choices(),
                               blank = True)
-    #tag = models.ImageField(upload_to=name_tag, blank=True) #TODO
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
 
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
@@ -293,13 +292,16 @@ class Company(models.Model):
 #
 # Bundles
 #
-class Bundle(models.Model):
+class Bundle(AbstractRecordOwnership):
     arrival_date = models.DateField()
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
 
-#class BundlePicture(models.Model):
-#    bundle = models.ForeignKey(Bundle)
-#    image = models.ImageField(upload_to=name_bundlepicture)
+    def get_content(self):
+        return Occurrence.objects.filter(bundlecomposition__bundle=self)
+
+    def get_content_string(self):
+        return ", ".join(map(lambda x: x.release.display_name(), self.get_content()))
+
 
 class BundleComposition(models.Model):
     bundle     = models.ForeignKey(Bundle)
@@ -323,7 +325,7 @@ class Location(models.Model):
     post_code = models.CharField(max_length=8,  blank=True)
 
     def __str__(self):
-        return '['+self.country+'] ' + self.city + ("("+self.post_code+")") if self.post_code else ""
+        return '['+self.country+'] ' + self.city + ("("+self.post_code+")" if self.post_code else "")
  
 
 class PurchaseContextCategory:
@@ -365,6 +367,9 @@ def clean_complement(instance, errors):
 
 
 class PurchaseContext(models.Model):
+    class Meta:
+        unique_together = ("category", "name", "location")
+
     category = models.CharField(max_length=PurchaseContextCategory.choices_maxlength(),
                                 choices=PurchaseContextCategory.get_choices())
     name = models.CharField(max_length=60)
@@ -374,21 +379,37 @@ class PurchaseContext(models.Model):
 
     url = models.URLField(blank=True)
 
+    def _get_unique_checks(self, exclude=None):
+        unique_checks, date_checks = super(PurchaseContext, self)._get_unique_checks(exclude)
+        if not self.location:
+            for index, (cls, fields) in enumerate(unique_checks):
+                if cls == self.__class__ and "location" in fields:
+                    mut_fields = list(fields)
+                    mut_fields.remove("location")
+                    unique_checks[index] = (cls, tuple(mut_fields),)
+        
+        return unique_checks, date_checks
+
+
     def clean(self):
         """ Online contexts cannot specify a location nor address complement """
         """ Only contexts with a location can provide an address complement """
         errors = {} 
         if PurchaseContextCategory.is_online(self.category):
+            # Enforces PurchaseContext::1.a)
             if not self.url:
                 errors["url"] = ValidationError("This field is mandatory for online contexts.",
                                                  code="mandatory")
+            # Enforces PurchaseContext::1.b)
             if self.location:
                 errors["location"] = ValidationError("Field not available for online contexts.",
                                                      code="invalid")
+            # Enforces PurchaseContext::1.b)
             if self.address_complement:
                 errors["address_complement"] = ValidationError("Field not available for online contexts.",
                                                                code="invalid")
         else:
+            # Enforces PurchaseContext::2) and Purchase::1)
             clean_complement(self, errors)
 
         if errors:
@@ -406,13 +427,14 @@ class PurchaseContext(models.Model):
 
 class Purchase(Bundle):
     price   = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    shipping_cost = models.DecimalField(max_digits=6,  decimal_places=2, blank=True, null=True)
     context = models.ForeignKey(PurchaseContext)
 
-    shipping_cost = models.DecimalField(max_digits=6,  decimal_places=2, blank=True, null=True)
-
     PICKUP = "P"
-    MAIL = "M"
-    retrieval          = models.CharField(max_length=1, choices=((PICKUP, "Local pickup"),(MAIL, "Shipped")), blank=True)
+    FRIEND = "F"
+    SHIPPED = "S"
+    retrieval          = models.CharField(max_length=1, choices=((PICKUP, "Local pickup"), (FRIEND, "Friend pickup"), (SHIPPED, "Shipped")))
+    pickup_person      = models.ForeignKey("supervisor.Person", blank=True, null=True)
     location           = models.ForeignKey(Location, blank=True, null=True, help_text="The location the object shipped from, or the pickup location.")
     address_complement = models.CharField(max_length=60, blank=True)
 
@@ -423,32 +445,48 @@ class Purchase(Bundle):
         except PurchaseContext.DoesNotExist:
             return
 
+        def forbidden_field(field_name, availability_clause):
+            if getattr(self, field_name) not in Purchase._meta.get_field(field_name).empty_values:
+                errors[field_name] = ValidationError("Field only available for {}.".format(availability_clause),
+                                                     code="invalid")
+
         errors = {}
         if self.context.category != PurchaseContextCategory.INTERNET_ADS:
-            def forbidden_field(field_name):
-                if getattr(self, field_name):
-                    errors[field_name] = ValidationError("Field only available for internet advertisements context.", code="invalid")
-
             #map(forbidden_field, ("retrieval", "location", "address_complement")) # TODO why does not that work ???
-            for field in ("retrieval", "location", "address_complement"):
-                forbidden_field(field)
+            # Enforces Purchase::2)
+            for field in ("location", "address_complement"):
+                forbidden_field(field, "internet advertisements context")
         else:
-            if not self.retrieval:
-                errors["retrieval"] = ValidationError("This field is mandatory for internet advertisements context.",
-                                                     code="mandatory")
+            # Enforces Purchase::1)
             clean_complement(self, errors)
+
+        if self.retrieval == Purchase.FRIEND:
+            # Enforces Purchase::3.a)
+            if not self.pickup_person:
+                errors["pickup_person"] = ValidationError("This field is mandatory for friend pickups.",
+                                                          code="mandatory")
+        else:
+            # Enforces Purchase::3.b)
+            forbidden_field("pickup_person", "friend pickups")
+
+        if self.retrieval != Purchase.SHIPPED:
+            # Enforces Purchase::4)
+            forbidden_field("shipping_cost", "shipped purchases")
 
         if errors:
             raise ValidationError(errors)
 
 
     def __str__(self):
-        #return "{} {} {}".format(self.acquisition_date, self.context, BundleComposition.get_content_string(self))
-        return "{} {} {}".format(self.arrival_date, self.context, "TODO content")
+        return "{} {}: ({})".format(self.arrival_date, self.context, self.get_content_string()) 
 
 
 class Donation(Bundle):
     donator = models.ForeignKey("supervisor.Person")
+
+    def __str__(self):
+        return "{} donated by {}: {}".format(self.arrival_date, self.donator, self.get_content_string())
+
 
 #
 # Pictures
@@ -719,6 +757,7 @@ class SystemVariant(models.Model):
                                           params={"no_variant_entry": no_variant_qs[0].pk}, code="invalid")
 
         return super(SystemVariant, self).clean()
+
 #
 # Concept relations
 #

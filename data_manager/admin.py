@@ -1,5 +1,5 @@
 from . import utils
-from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CustomSaveModelAdmin, CollecsterModelAdmin, EditLinkToInlineObject
+from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, CollecsterModelAdmin, EditLinkToInlineObject
 
 from .models import *
 from supervisor.models import Person, Deployment, UserCollection, UserExtension

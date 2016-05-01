@@ -121,6 +121,21 @@ of the related Occurrence.
 1) It is not allowed to specify at the same time a release region and any of its nested regions, as the parent regions implies all the regions it contains.
 
 
+== PurchaseContext ==
+1.a) Online purchase context categories require an URL
+1.b) Online purchase context categories cannot have location or address complement
+2) Non-online purchase context categories can have an address complement only if they have a location
+3) category, name and location must be unique. If location is not specified, then category and name must be unique.
+    (implying that if an instance specifies the 3, it is not possible to make another instance leaving location empty)
+
+== Purchase ==
+1) Purchase can have an address complement only if they have a location
+2) The fields location and address_complement are allowed only if the PurchaseContext is internet advertisement, as 
+    otherwise the location of the purchase is always the same location as the context itself.
+3.a) The field pickup_person is mandatory when retrieval is friend pickup.
+3.b) The field pickup_person is forbidden when retrieval is not friend pickup.
+4) The field shipping_cost is forbidden when retrieval is not 'shipped'
+
 = Tweaking the Admin interface to fit the application =
 
 * Removing the '+' sign on formsets (allowing to add more forms)
