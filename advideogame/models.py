@@ -229,7 +229,7 @@ class Occurrence(OccurrenceBase):
         return self.release.is_embedded_immaterial()
 
     def admin_post_save(self):
-        if self.is_material():
+        if self.is_material() and not self.tag_url:
             self.tag_url = tag.generate_tag(self)
             self.save()
 
