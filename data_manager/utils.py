@@ -17,6 +17,7 @@ import functools, collections
 ## TODEL
 #import wdb
 
+
 class OneFormFormSet(BaseInlineFormSet):
     """ We just need to have validate_min and _max set to True on the FormSet class used by the Admin """
     """ It seems impossible to forward them: https://groups.google.com/d/msg/django-users/xu2Ef7y4DPQ/u3z30vl_BwAJ """
@@ -124,7 +125,7 @@ def release_automatic_attributes(formset, request, obj):
 
 def get_or_initial_release_corresponding_entry(form, release_corresponding_list, release_corresponding_field):
     """ This function is a helper to be used when initial_data should be assigned to forms """
-    """ if they are not corresponding to an instance saved in the DB """
+    """ but only if they are not corresponding to an instance saved in the DB. """
     """ see populate_occurrence_attributes() comments for a rationale """
     # Nota: the following code assumes that all forms with an instance whose release_corresponding_entry is assigned
     # will come before the forms where it is not.
@@ -132,19 +133,24 @@ def get_or_initial_release_corresponding_entry(form, release_corresponding_list,
         # The forms are not bound, but their 'instance' field is assigned by the FormSet's _construct_form()
         # see: https://github.com/django/django/blob/1.9/django/forms/models.py#L592-L593 
         corresponding = getattr(form.instance, release_corresponding_field)
-    # Since this field is required, a DoesNotExist exception indicates that the instance is not in the DB
-    except release_corresponding_list[0].__class__.DoesNotExist:
+        in_db = True
+    # Since release_corresponding_field is required, a DoesNotExist exception indicates that the instance is not in the DB
+    # It seems that DoesNotExist derives from AttributeError, as we can catch that type here
+    # thus uniformizing with OccurrenceAnyAttribute::release_corresponding_entry that raise AttributeError
+    #except release_corresponding_list[0].__class__.DoesNotExist:
+    except AttributeError:
         corresponding = release_corresponding_list[0]
-        form.initial = {release_corresponding_field: corresponding}
+        form.initial[release_corresponding_field] = corresponding
+        in_db = False
 
     release_corresponding_list.remove(corresponding)
-    return corresponding
+    return corresponding, in_db
 
     
-def populate_occurrence_attributes(formset, request, obj, retrieve_function):
+def populate_occurrence_attributes(formset, request, obj):
     release_id = utils_id.get_release_id(request, obj)
     
-    attributes = retrieve_function(release_id)
+    attributes = retrieve_noncustom_custom_release_attributes(release_id)
     force_formset_size(formset, len(attributes))
 
     # We had to move away from always assigning the initial value for release_corresponding_entry:
@@ -159,12 +165,18 @@ def populate_occurrence_attributes(formset, request, obj, retrieve_function):
     attribute_list = list(attributes)
 
     for form in formset:
-        rel_attrib = get_or_initial_release_corresponding_entry(form, attribute_list, "release_corresponding_entry")
+        rel_attrib, in_db = get_or_initial_release_corresponding_entry(form, attribute_list, "release_corresponding_entry")
+
         # This is very important: by default, forms in formsets have empty_permitted set to True
         # Then, a form with no other value than the initial(s) would skip fields validation, not populating cleaned_data     
         # see: https://github.com/django/django/blob/1.8.3/django/forms/forms.py#L389
         form.empty_permitted=False 
-        form.fields['value'] = enum.Attribute.Type.to_form_field[rel_attrib.attribute.value_type]
+        form.fields["value"] = enum.Attribute.Type.to_form_field[rel_attrib.attribute.value_type]
+        if not in_db:
+            form.initial.update({
+                "attribute_type": ContentType.objects.get_for_model(rel_attrib.__class__),
+                "attribute_id": rel_attrib.pk,
+            })
 
 
 def occurrence_composition_queryset(formset, request, obj):
@@ -185,7 +197,7 @@ def occurrence_composition_queryset(formset, request, obj):
         release_compositions = list(release_compositions)
 
         for form in formset:
-            release_compo = get_or_initial_release_corresponding_entry(form, release_compositions, "release_composition")
+            release_compo, in_db = get_or_initial_release_corresponding_entry(form, release_compositions, "release_composition")
 
             release = release_compo.to_release
             #form.empty_permitted=False ## Does not help with empty forms either
@@ -217,7 +229,7 @@ def retrieve_release_composition(release_id):
 def retrieve_automatic_attributes(concept_id):
     return ConfigNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
 
-def all_release_attributes(release_id):
+def shared_release_attributes(release_id):
     """ Returns non-custom attributes for a Release """
     """ Is a layer of abstraction in case we later introduce implicit attributes (not stored in the DB for each release, but logically present) """
     if not release_id:
@@ -235,3 +247,6 @@ def all_release_attributes(release_id):
     # then the explicit (non-custom) attributes
     attributes.extend(retrieve_any_attributes(ReleaseAttribute, release))
     return attributes
+
+def retrieve_noncustom_custom_release_attributes(release_id):
+    return shared_release_attributes(release_id) + list(retrieve_any_attributes(ReleaseCustomAttribute, release_id))

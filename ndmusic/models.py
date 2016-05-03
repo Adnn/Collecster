@@ -45,10 +45,7 @@ class ReleaseCustomAttribute(ReleaseCustomAttributeBase):
 class ReleaseComposition(ReleaseCompositionBase):
     pass
 
-class OccurrenceAttribute(OccurrenceAttributeBase):
-    pass
-
-class OccurrenceCustomAttribute(OccurrenceCustomAttributeBase):
+class OccurrenceAnyAttribute(OccurrenceAnyAttributeBase):
     pass
 
 class OccurrenceComposition(OccurrenceCompositionBase):

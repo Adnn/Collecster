@@ -11,8 +11,6 @@ from . import utils_path
 # TODO sort out the enumeration
 from data_manager.enumerations import Country
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from functools import partial
@@ -87,10 +85,7 @@ class ReleaseCustomAttribute(ReleaseCustomAttributeBase, ReleaseAttributeCodeExt
 class ReleaseComposition(ReleaseCompositionBase):
     pass
 
-class OccurrenceAttribute(OccurrenceAttributeBase):
-    pass
-
-class OccurrenceCustomAttribute(OccurrenceCustomAttributeBase):
+class OccurrenceAnyAttribute(OccurrenceAnyAttributeBase):
     pass
 
 class OccurrenceComposition(OccurrenceCompositionBase):
@@ -537,14 +532,9 @@ def name_bundle_picture(instance, filename):
     return name_instance_picture(instance, filename, base_model_access=lambda instance: instance.bundle)
 
 
-class OccurrencePicture(models.Model):
-    occurrence  = models.ForeignKey("Occurrence")
-    # The 3 following fields implement a "generic relation"
-    #(see: https://docs.djangoproject.com/en/1.9/ref/contrib/contenttypes/#generic-relations)
+class OccurrencePicture(AbstractReleaseAttributeRelatedOptional):
     # Note that the generic relation is not mandatory: for group pictures, no attribute should be specified
-    attribute_type  = models.ForeignKey(ContentType, null=True)
-    attribute_id    = models.PositiveIntegerField(null=True)
-    attribute_object = GenericForeignKey("attribute_type", "attribute_id")
+    occurrence  = models.ForeignKey("Occurrence")
 
     detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
     image_file      = models.ImageField(upload_to=name_occurrence_picture)

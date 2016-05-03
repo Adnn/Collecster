@@ -3,7 +3,7 @@ from django import forms, utils
 
 class LabelWidget(forms.widgets.TextInput):
     """ Custom widget class, implementing a label instead of a user input """
-    def __init__(self, attrs=None, choices=()):
+    def __init__(self, attrs=None):
         super(LabelWidget, self).__init__(attrs)
         self.can_add_related = False
 
@@ -23,6 +23,15 @@ class LabelWidget(forms.widgets.TextInput):
 def labelwidget_factory(Model):
     classname = "{}{}".format(Model.__name__, "LabelWidget")
     return type(classname, (LabelWidget,), {"model": Model})
+
+
+class SimpleLabelWidget(forms.widgets.TextInput):
+    def render(self, name, value, attrs):
+        if value is None:
+            html = u"LABEL WIDGET RENDER: EMPTY ERROR"
+        else:
+            html = value
+        return utils.safestring.SafeText(html)
 
 
 ##

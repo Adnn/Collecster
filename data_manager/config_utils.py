@@ -99,7 +99,7 @@ class ConfigNature:
     ## but are then attributes attached to each Occurence instantiated from the Release.
     ## Implicit attributes are is disabled for the moment.
     ## To re-enable, it requires to allow ReleaseAttribute.release to be nullable
-    ## and to make utils.all_release_attributes() to call this function.
+    ## and to make utils.shared_release_attributes() to call this function.
     ##
     #@classmethod
     #def get_release_implicit_attributes(cls, release):

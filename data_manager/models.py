@@ -5,6 +5,8 @@ from data_manager import fields
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 # TODEL
 #import wdb
@@ -400,18 +402,46 @@ class OccurrenceBase(AbstractRecordOwnership):
     #        check_material_consistency(self, self.release.is_material())
 
 
-class OccurrenceAnyAttributeBase(models.Model):
+class AbstractReleaseAttributeRelated(models.Model):
     class Meta:
         abstract = True
-        unique_together = ("occurrence", "release_corresponding_entry") # Enforces ATTRIBUTES::2.b)
+    # The 3 following fields implement a "generic relation"
+    #(see: https://docs.djangoproject.com/en/1.9/ref/contrib/contenttypes/#generic-relations)
+    attribute_type  = models.ForeignKey(ContentType, related_name="+")
+    attribute_id    = models.PositiveIntegerField()
+    attribute_object = GenericForeignKey("attribute_type", "attribute_id")
+
+
+class AbstractReleaseAttributeRelatedOptional(models.Model):
+    class Meta:
+        abstract = True
+    attribute_type  = models.ForeignKey(ContentType, null=True)
+    attribute_id    = models.PositiveIntegerField(null=True)
+    attribute_object = GenericForeignKey("attribute_type", "attribute_id")
+
+
+class OccurrenceAnyAttributeBase(AbstractReleaseAttributeRelated):
+    class Meta:
+        abstract = True
+        unique_together = ("occurrence", "attribute_type", "attribute_id") # Enforces ATTRIBUTES::2.b)
 
     occurrence          = models.ForeignKey("Occurrence")
      # The choices limitation is assigned dynamically, depending on the attribute's value type
     value               = models.CharField(max_length=enum.Attribute.Value.choices_maxlength())
 
     def __str__(self):
-        # release_corresponding_entry should be added by all derived concrete models.
         return "{}: {}".format(self.release_corresponding_entry, self.value)
+
+    @property 
+    def release_corresponding_entry(self):
+        #return self.attribute_object # Actually works, but returns None when the value are not set, which makes it
+                                      # differ from other "relation fields", that raise DoesNotExist exceptions.
+        try:
+            return self.attribute_type.get_object_for_this_type(pk=self.attribute_id)
+        except ContentType.DoesNotExist:
+            # the exact type of the "corresponding entry" is not know, as it could be any release attribute model
+            # so we raise a generic AttributeError
+            raise AttributeError()
 
     @staticmethod
     def is_clean_value(value, release_corresponding_entry):
@@ -432,28 +462,10 @@ class OccurrenceAnyAttributeBase(models.Model):
             raise ValidationError("The assigned value is not allowed by the Attribute value type.", code='invalid')
 
 
-class OccurrenceAttributeBase(OccurrenceAnyAttributeBase):
-    class Meta:
-        abstract = True
-        
-    release_corresponding_entry = models.ForeignKey("ReleaseAttribute")
-
-class OccurrenceCustomAttributeBase(OccurrenceAnyAttributeBase):
-    class Meta:
-        abstract = True
-        
-    release_corresponding_entry = models.ForeignKey("ReleaseCustomAttribute")
-
-class OccurrenceAnyAttributeDefectBase(models.Model):
-    class Meta:
-        abstract = True
+class OccurrenceAnyAttributeDefect(models.Model):
+    occurrence_any_attribute = models.ForeignKey("OccurrenceAnyAttribute")
     defect_description = models.CharField(max_length=256)
 
-class OccurrenceAttributeDefect(OccurrenceAnyAttributeDefectBase):
-    attribute = models.ForeignKey("OccurrenceAttribute")
-
-class OccurrenceCustomAttributeDefect(OccurrenceAnyAttributeDefectBase):
-    attribute = models.ForeignKey("OccurrenceCustomAttribute")
 
 class OccurrenceCompositionBase(models.Model):
     class Meta:

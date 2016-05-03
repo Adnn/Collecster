@@ -4,7 +4,7 @@ from .forms_admins import SaveInitialDataModelForm, PropertyAwareModelForm, Coll
 from .models import *
 from supervisor.models import Person, Deployment, UserCollection, UserExtension
 
-from data_manager import widgets 
+from data_manager import widgets
 from data_manager import enumerations as enums
 
 from django import forms
@@ -170,14 +170,12 @@ class ReleaseAdmin(CollecsterModelAdmin):
 ## Occurrence
 #############
 
-#class OccurrenceAttributeForm(forms.ModelForm):
-#    class Meta:
-#        widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)}
+class OccurrenceAnyAttributeFormset(forms.BaseInlineFormSet):
+    collecster_instance_callback = utils.populate_occurrence_attributes
 
-class BaseAttributeFormset(forms.BaseInlineFormSet):
     def clean(self):
         if hasattr(self.instance, "release"):
-            release_attributes = self.retrieve_function(self.instance.release)
+            release_attributes = utils.retrieve_noncustom_custom_release_attributes(self.instance.release)
 
             forms_count = len(self)
             if forms_count != len(release_attributes):
@@ -187,7 +185,7 @@ class BaseAttributeFormset(forms.BaseInlineFormSet):
 
             errors = []
             for id, (form, release_attr) in enumerate( zip(self, release_attributes) ):
-                if form.cleaned_data["release_corresponding_entry"] != release_attr:
+                if form.cleaned_data["attribute_type"].get_object_for_this_type(pk=form.cleaned_data["attribute_id"]) != release_attr:
                     # \todo Internationalize (see: https://docs.djangoproject.com/en/1.8/ref/forms/validation/#using-validation-in-practice)
                     errors.append(forms.ValidationError("Instanciated release expects %(expected_attr)s attribute at index %(index)s.",
                                                         params={'expected_attr': release_attr, 'index': id},
@@ -197,11 +195,28 @@ class BaseAttributeFormset(forms.BaseInlineFormSet):
                 raise forms.ValidationError(errors)
 
 
-def AnyAttributeFormset_factory(classname, retr_func):
-    return type(classname, (BaseAttributeFormset,),
-                {"retrieve_function": staticmethod(retr_func), #the retr_func should be called without implicit self
-                 "collecster_instance_callback": partialmethod(utils.populate_occurrence_attributes,
-                                                         retrieve_function = retr_func)})
+class OccurrenceAnyAttributeForm(forms.ModelForm):
+    class Meta:
+        model = OccurrenceAnyAttribute
+        fields = ("release_corresponding_entry", "attribute_type", "attribute_id", "value")
+        widgets = {
+            "attribute_type": forms.widgets.HiddenInput,
+            "attribute_id": forms.widgets.HiddenInput,
+        }
+
+    # on the model, release_corresponding_entry is a property, which does not map nicely to ModelForm fields.
+    # we have to handle this field manually (see __init__)
+    release_corresponding_entry = forms.CharField(label="Attribute", required=False, widget=widgets.SimpleLabelWidget)
+
+    def __init__(self, *args, **kwargs):
+        super(OccurrenceAnyAttributeForm, self).__init__(*args, **kwargs)
+        try:
+            # The BaseModelForm calls model_to_dict to populate a dictionary from self.instance
+            # then assigns it to BaseModel.initial, so we update this same dictionary.
+            # see: https://github.com/django/django/blob/1.9/django/forms/models.py#L282
+            self.initial["release_corresponding_entry"] = self.instance.release_corresponding_entry
+        except AttributeError:
+            pass
 
 
 class OccurrenceAnyAttributeInline(EditLinkToInlineObject, admin.TabularInline):
@@ -209,51 +224,32 @@ class OccurrenceAnyAttributeInline(EditLinkToInlineObject, admin.TabularInline):
     readonly_fields = ("edit_link",)
     link_text = "edit defects"
 
-class OccurrenceAttributeInline(OccurrenceAnyAttributeInline):
-    model = OccurrenceAttribute
-    formset = AnyAttributeFormset_factory("OccurrenceAttributeFormset", utils.all_release_attributes)
-    #form = OccurrenceAttributeForm
-    form = modelform_factory(OccurrenceAttribute, fields=("release_corresponding_entry", "value"),
-                             widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseAttribute)})
+    model = OccurrenceAnyAttribute
+    formset = OccurrenceAnyAttributeFormset
+    form = OccurrenceAnyAttributeForm
 
 
-class OccurrenceCustomAttributeInline(OccurrenceAnyAttributeInline):
-    model = OccurrenceCustomAttribute
-    formset = AnyAttributeFormset_factory("OccurrenceCustomAttributeFormset", partial(utils.retrieve_any_attributes, ReleaseCustomAttribute))
-    #form = OccurrenceAttributeForm
-    form = modelform_factory(OccurrenceCustomAttribute, fields=("release_corresponding_entry", "value"),
-                             widgets={"release_corresponding_entry": widgets.labelwidget_factory(ReleaseCustomAttribute)})
-
-
-class OccurrenceAttributeDefectInline(admin.TabularInline):
-    model = OccurrenceAttributeDefect
+class OccurrenceAnyAttributeDefectInline(admin.TabularInline):
+    model = OccurrenceAnyAttributeDefect
     extra = 2
 
-class OccurrenceCustomAttributeDefectInline(admin.TabularInline):
-    model = OccurrenceCustomAttributeDefect
-    extra = 2
 
-class OccurrenceAnyAttributeAdminBase(admin.ModelAdmin):
-    readonly_fields = ("occurrence", "release_corresponding_entry", ) 
+class OccurrenceAnyAttributeAdmin(admin.ModelAdmin):
+    readonly_fields = ("occurrence",) 
+    inlines = (OccurrenceAnyAttributeDefectInline, )
+    form = OccurrenceAnyAttributeForm
 
-class OccurrenceAttributeAdmin(OccurrenceAnyAttributeAdminBase):
-    inlines = (OccurrenceAttributeDefectInline, )
-
-class OccurrenceCustomAttributeAdmin(OccurrenceAnyAttributeAdminBase):
-    inlines = (OccurrenceCustomAttributeDefectInline, )
 
 class OccurrenceCompositionFormset(forms.BaseInlineFormSet):
     collecster_instance_callback = utils.occurrence_composition_queryset
 
 class OccurrenceCompositionInline(admin.TabularInline):
-    #model = Occurrence.nested_occurrences.through # Allowd to get the model when it is automatically created by Django
     model = OccurrenceComposition
-    #verbose_name = verbose_name_plural = "Occurrence composition" # The default name is machine-friendly
     fk_name = 'from_occurrence' # This seems to be the hardcoded name automatically given by Django 
     extra   = 0 # on first load, none shown
     max_num = 0 # and no "+" button
     formset = OccurrenceCompositionFormset # required to specify the "form population" callback
-    ## required to specify the lable widget on release_composition and to force saving empty compositions
+    ## required to specify the label widget on release_composition and to force saving empty compositions
     form = modelform_factory(OccurrenceComposition, form=SaveInitialDataModelForm, fields="__all__",
                              widgets={"release_composition": widgets.labelwidget_factory(ReleaseComposition)})
     can_delete = False #Remove the delete checkbox on each composition form (on edit page)
@@ -286,8 +282,7 @@ class OccurrenceAdmin(CollecsterModelAdmin):
     exclude = ("created_by",)
     collecster_dynamic_inline_classes = OrderedDict((
         ("specific",             (utils.occurrence_specific_inlines)),
-        ("attributes",           (OccurrenceAttributeInline,)),
-        ("custom_attributes",    (OccurrenceCustomAttributeInline,)),
+        ("attributes",           (OccurrenceAnyAttributeInline,)),
         ("composition",          (OccurrenceCompositionInline,)),
     ))
     collecster_refresh_inline_classes = ["attributes", "custom_attributes", "composition",] ## Each determined by the release
@@ -324,8 +319,7 @@ def base_register(site):
 
     site.register(Distinction)
 
-    site.register(OccurrenceAttribute, OccurrenceAttributeAdmin)
-    site.register(OccurrenceCustomAttribute, OccurrenceCustomAttributeAdmin)
+    site.register(OccurrenceAnyAttribute, OccurrenceAnyAttributeAdmin)
 
 
 # For readonly debug

@@ -70,15 +70,10 @@ def populate_occurrence_picture_attributes_choices(formset, request, obj):
     
     choices = [("", "----")]
 
-    attributes = utils.all_release_attributes(release_id)
-    attribute_contenttype = ContentType.objects.get_for_model(ReleaseAttribute)
-    choices.extend([ ("{}_{}".format(attribute_contenttype.pk, attribute.pk), "{}".format(attribute))
+    attributes = utils.retrieve_noncustom_custom_release_attributes(release_id)
+    choices.extend([ ("{}_{}".format(ContentType.objects.get_for_model(attribute.__class__).pk, attribute.pk),
+                      "{}".format(attribute),)
                      for attribute in attributes])
-
-    custom_attributes = utils.retrieve_any_attributes(ReleaseCustomAttribute, release_id)
-    custom_attribute_contenttype = ContentType.objects.get_for_model(ReleaseCustomAttribute)
-    choices.extend([ ("{}_{}".format(custom_attribute_contenttype.pk, attribute.pk), "{} (custom)".format(attribute))
-                     for attribute in custom_attributes])
 
     for form in formset:
         form.fields["any_attribute"].choices = choices
