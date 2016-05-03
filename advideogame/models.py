@@ -528,13 +528,13 @@ def access(instance, fieldname):
     return getattr(instance, fieldname)
 
 def name_occurrence_picture(instance, filename):
-    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.occurrence)
+    return name_instance_picture(instance, filename, base_model_access=lambda instance: instance.occurrence)
 
 def name_release_picture(instance, filename):
-    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.release)
+    return name_instance_picture(instance, filename, base_model_access=lambda instance: instance.release)
 
 def name_bundle_picture(instance, filename):
-    name_instance_picture(instance, filename, base_model_access=lambda instance: instance.bundle)
+    return name_instance_picture(instance, filename, base_model_access=lambda instance: instance.bundle)
 
 
 class OccurrencePicture(models.Model):
