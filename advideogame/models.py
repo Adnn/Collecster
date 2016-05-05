@@ -262,6 +262,14 @@ class ReleaseRegion(models.Model):
             display = "{}/{}".format(self.parent_region, display)
         return display
 
+
+class OccurrenceAnyAttributeDefect(models.Model):
+    occurrence_any_attribute = models.ForeignKey("OccurrenceAnyAttribute")
+    defect_description = models.CharField(max_length=256)
+
+    def __str__(self):
+        return "{} '{}'".format(type(self).__name__, self.defect_description)
+
 #
 # Company
 #

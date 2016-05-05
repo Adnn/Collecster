@@ -425,7 +425,7 @@ class OccurrenceAnyAttributeBase(AbstractReleaseAttributeRelated):
         abstract = True
         unique_together = ("occurrence", "attribute_type", "attribute_id") # Enforces ATTRIBUTES::2.b)
 
-    occurrence          = models.ForeignKey("Occurrence")
+    occurrence          = models.ForeignKey("Occurrence", related_name="attributes")
      # The choices limitation is assigned dynamically, depending on the attribute's value type
     value               = models.CharField(max_length=enum.Attribute.Value.choices_maxlength())
 
@@ -460,11 +460,6 @@ class OccurrenceAnyAttributeBase(AbstractReleaseAttributeRelated):
         # Enforces ATTRIBUTES::3)
         if not self.is_clean_value(self.value, self.release_corresponding_entry):
             raise ValidationError("The assigned value is not allowed by the Attribute value type.", code='invalid')
-
-
-class OccurrenceAnyAttributeDefect(models.Model):
-    occurrence_any_attribute = models.ForeignKey("OccurrenceAnyAttribute")
-    defect_description = models.CharField(max_length=256)
 
 
 class OccurrenceCompositionBase(models.Model):

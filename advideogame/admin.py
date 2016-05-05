@@ -134,6 +134,23 @@ class OccurrencePictureInline(admin.TabularInline):
 OccurrenceAdmin.collecster_dynamic_inline_classes["pictures"] = (OccurrencePictureInline,)
 OccurrenceAdmin.collecster_refresh_inline_classes.extend( ("pictures",) )
 
+
+class OccurrenceAnyAttributeInline_advg(EditLinkToInlineObject, OccurrenceAnyAttributeInline):
+    readonly_fields = ("edit_link",)
+    link_text = "edit defects"
+
+class OccurrenceAnyAttributeDefectInline(admin.TabularInline):
+    model = OccurrenceAnyAttributeDefect
+    extra = 2
+
+class OccurrenceAnyAttributeAdmin(admin.ModelAdmin):
+    readonly_fields = ("occurrence",) 
+    inlines = (OccurrenceAnyAttributeDefectInline, )
+    form = OccurrenceAnyAttributeForm
+
+OccurrenceAdmin.collecster_dynamic_inline_classes["attributes"] = (OccurrenceAnyAttributeInline_advg,)
+
+
 ## Display the tag link as a clickable read-only url, only when editing ##
 def tag_link(self, instance):
     """ By default, an UrlField does not display as a clickable link when it is read-only """
@@ -186,6 +203,8 @@ class ReleaseFormRegions(ReleaseForm):
 ReleaseAdmin.form = ReleaseFormRegions
 
 base_register(admin.site)
+
+admin.site.register(OccurrenceAnyAttribute, OccurrenceAnyAttributeAdmin)
 
 
 ##

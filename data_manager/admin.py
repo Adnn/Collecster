@@ -219,24 +219,10 @@ class OccurrenceAnyAttributeForm(forms.ModelForm):
             pass
 
 
-class OccurrenceAnyAttributeInline(EditLinkToInlineObject, admin.TabularInline):
+class OccurrenceAnyAttributeInline(admin.TabularInline):
     can_delete = False
-    readonly_fields = ("edit_link",)
-    link_text = "edit defects"
-
     model = OccurrenceAnyAttribute
     formset = OccurrenceAnyAttributeFormset
-    form = OccurrenceAnyAttributeForm
-
-
-class OccurrenceAnyAttributeDefectInline(admin.TabularInline):
-    model = OccurrenceAnyAttributeDefect
-    extra = 2
-
-
-class OccurrenceAnyAttributeAdmin(admin.ModelAdmin):
-    readonly_fields = ("occurrence",) 
-    inlines = (OccurrenceAnyAttributeDefectInline, )
     form = OccurrenceAnyAttributeForm
 
 
@@ -318,8 +304,6 @@ def base_register(site):
     site.register(AttributeCategory)
 
     site.register(Distinction)
-
-    site.register(OccurrenceAnyAttribute, OccurrenceAnyAttributeAdmin)
 
 
 # For readonly debug
