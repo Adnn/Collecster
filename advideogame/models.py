@@ -128,6 +128,7 @@ class Release(ReleaseBase):
 
     immaterial             = models.BooleanField(default=False) 
     digitally_distributed  = models.BooleanField(default=False) 
+    alternative_distribution = models.BooleanField(default=False, help_text="If the release was not officially sold in shops, but distributed otherwise (eg. Internet)") 
 
     special_case_release = models.CharField(max_length=1, blank=True, choices=(
             ("L", "loose"),
@@ -154,7 +155,7 @@ class Release(ReleaseBase):
         return not self.is_material() and self.digitally_distributed
 
     def is_region_mandatory(self):
-        return not (self.is_embedded_immaterial() or self.is_special_case())
+        return not (self.is_embedded_immaterial() or self.is_special_case() or self.alternative_distribution)
 
     def is_system_spec_mandatory(self):
         return not (self.is_embedded_immaterial() or self.is_combo())
@@ -542,7 +543,7 @@ def name_bundle_picture(instance, filename):
 
 class OccurrencePicture(AbstractReleaseAttributeRelatedOptional):
     # Note that the generic relation is not mandatory: for group pictures, no attribute should be specified
-    occurrence  = models.ForeignKey("Occurrence")
+    occurrence  = models.ForeignKey("Occurrence", related_name="pictures")
 
     detail          = models.CharField(max_length=PictureDetail.choices_maxlength(), choices=PictureDetail.get_choices(), blank=False, default=PictureDetail.GROUP)
     image_file      = models.ImageField(upload_to=name_occurrence_picture)
