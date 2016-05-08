@@ -9,6 +9,7 @@ This project is very dynamic in the formsets its presenting on the admin pages. 
     Model-level: unique_together on ConceptNature
 1.b) Its primary nature cannot be the same as any of its secondary nature.
     Model-level: TODO Could be done in ConceptNature::clean(), but it would not work for ConceptNature inline on a Concept form.
+    Offline: done
 
 == Uniqueness ==
 2.a) The "distinctive_name" and "year" pair must be unique.
@@ -88,7 +89,7 @@ Data model consistency
 3) immaterial Releases should not have a [content]self attribute.
 
 
-= PARTIAL DATE =
+= PARTIAL_DATE =
 1) If not date is specified, the precision should be blank.
     Model-level: the clean method set the precision value to blank in this case.
     Interface: The blank option is not proposed to the user. TODO disable the precision with JS when there is not date specified
@@ -98,20 +99,26 @@ Data model consistency
 2.b) When a date is partial, the "unspecified" parts (i.e., the information beyond the specified precision) should be set to the lowest available value. (eg. If the precision is month, the unspecified part is the day. The lowest day value is "1".)
     Model-level: Enforced in the clean method.
 
-= Special Concepts =
-1) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name.
-2) Only one Concept instance can be assigned those special nature.
+= SPECIAL_CONCEPTS =
+1.a) Special concepts distinctive_name are prefixed with an underscore.
+1.b) only special concepts distinctive_name can start with an underscore.
+2.a) The special Concepts ("combo" at the moment) are assigned a primary nature of the same name.
+2.b) The special Concepts cannot have additional natures
+2.c) The primary nature of the same name can only be assigned to the corresponding special concept
 
 
 = USER =
 1) The created_by field should not be allowed to change
-2.a) There should be a TagToOccurrence instance for each Occurrence
-2.b) and only one
+
+= TAGTOOCCURRENCE =
+1.a) There should be a TagToOccurrence instance for each Occurrence
+1.b) and only one
     Model-level: naturally enforced by the occurrence OneToOneField.
-3) The TAG occurrence id are unique per user.
+2) The TAG occurrence id are unique per user.
     Model-level: unique_together on TagToOccurrence
 
 = ADVIDEOGAME =
+== OccurrencePicture==
 1.a) OccurrencePicture should have a generic relation to a ReleaseAttribute or a CustomReleaseAttribute associated with the Release
 of the related Occurrence.
 1.b) This relation should be left blank for the GROUP detail.

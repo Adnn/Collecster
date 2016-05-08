@@ -95,13 +95,13 @@ class TagToOccurrenceBase(models.Model):
     """ And the actual application Occurrences kept in the database. """
     class Meta:
         abstract = True
-        unique_together = ("user_creator", "user_occurrence_id") # Enforces USER::3)
+        unique_together = ("user_creator", "user_occurrence_id") # Enforces TAGTOOCCURRENCE::2)
 
     # This is *NOT* the Occurrence.owner. It is the user that created the occurrence instance.
     # It is thus the same value as Occurrence.created_by.
     user_creator       = models.ForeignKey("supervisor.UserExtension", related_name="%(app_label)s_%(class)s_set")
     user_occurrence_id = fields.id_field()
-    occurrence = models.OneToOneField("Occurrence") # Enforces USER::2.b)
+    occurrence = models.OneToOneField("Occurrence") # Enforces TAGTOOCCURRENCE::1.b)
 
     def __str__(self):
         return "{}/{} -> {}".format(self.user_creator.user, self.user_occurrence_id, self.occurrence)
@@ -249,15 +249,15 @@ class ReleaseBase(AbstractRecordOwnership):
 
 
     def _clean_partial_date(self):
-        # Implements PARTIAL DATE::1)
+        # Enforces PARTIAL_DATE::1)
         if not self.partial_date:
             self.partial_date_precision = ""
             return
-        # Enforces PARTIAL DATE:2a)
+        # Enforces PARTIAL_DATE:2a)
         elif not self.partial_date_precision:
             raise ValidationError({"partial_date_precision": ValidationError("The precision must be specified.", code="invalid")})
 
-        # Enforces PARTIAL DATE::2b)
+        # Enforces PARTIAL_DATE::2b)
         errors = {"partial_date": []} 
         if ((self.partial_date_precision == enum.PartialDate.YEAR or self.partial_date_precision == enum.PartialDate.MONTH)
             and self.partial_date.day != 1):
@@ -402,7 +402,23 @@ class OccurrenceBase(AbstractRecordOwnership):
     #        check_material_consistency(self, self.release.is_material())
 
 
-class AbstractReleaseAttributeRelated(models.Model):
+class AbstractReleaseAttributeRelatedBase(models.Model):
+    class Meta:
+        abstract = True
+
+    @property 
+    def release_corresponding_entry(self):
+        #return self.attribute_object # Actually works, but returns None when the value are not set, which makes it
+                                      # differ from other "relation fields", that raise DoesNotExist exceptions.
+        try:
+            return self.attribute_type.get_object_for_this_type(pk=self.attribute_id)
+        except ContentType.DoesNotExist:
+            # the exact type of the "corresponding entry" is not know, as it could be any release attribute model
+            # so we raise a generic AttributeError
+            raise AttributeError()
+
+
+class AbstractReleaseAttributeRelated(AbstractReleaseAttributeRelatedBase):
     class Meta:
         abstract = True
     # The 3 following fields implement a "generic relation"
@@ -412,7 +428,7 @@ class AbstractReleaseAttributeRelated(models.Model):
     attribute_object = GenericForeignKey("attribute_type", "attribute_id")
 
 
-class AbstractReleaseAttributeRelatedOptional(models.Model):
+class AbstractReleaseAttributeRelatedOptional(AbstractReleaseAttributeRelatedBase):
     class Meta:
         abstract = True
     attribute_type  = models.ForeignKey(ContentType, null=True)
@@ -431,17 +447,6 @@ class OccurrenceAnyAttributeBase(AbstractReleaseAttributeRelated):
 
     def __str__(self):
         return "{}: {}".format(self.release_corresponding_entry, self.value)
-
-    @property 
-    def release_corresponding_entry(self):
-        #return self.attribute_object # Actually works, but returns None when the value are not set, which makes it
-                                      # differ from other "relation fields", that raise DoesNotExist exceptions.
-        try:
-            return self.attribute_type.get_object_for_this_type(pk=self.attribute_id)
-        except ContentType.DoesNotExist:
-            # the exact type of the "corresponding entry" is not know, as it could be any release attribute model
-            # so we raise a generic AttributeError
-            raise AttributeError()
 
     @staticmethod
     def is_clean_value(value, release_corresponding_entry):

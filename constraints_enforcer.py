@@ -70,7 +70,51 @@ def enforce_collecster_properties(instance, assigned_specific_classes):
             print ("Specific '{}' associated to '{}' has errors on 'collectser_properties': {}".format(specific, instance, errors))
 
 
+def instance_cleaner(instance):
+    try:
+        instance.full_clean()
+    except ValidationError as e:
+        print ("{classname} '{instance}' has validation errors: {errors}"
+                    .format(classname=model_class.__name__, instance=instance, errors=e))
+
+def model_cleaner(model_class):
+    for instance in model_class.objects.all():
+        instance_cleaner(instance)
+
+
+##
+## Concepts
+##
+for concept in Concept.objects.all():
+    # Enforces CONCEPT::1.b)
+    if concept.primary_nature in concept.additional_nature_set.values_list("nature", flat=True):
+        print("Concept '{con}' has it primary nature '{nat}' repeated in its additional natures."
+                .format(con=concept, nat=concept.primary_nature))
+
+    if concept.distinctive_name.startswith('_'):
+        # Enforces SPECIAL_CONCEPT::2.a)
+        if concept.primary_nature != concept.distinctive_name:
+            print("Special concept '{con}' has primary nature '{nat}', when it has to be '{exp}'."
+                    .format(con=concept, nat=concept.primary_nature, exp=concept.distinctive_name))
+        # Enforces SPECIAL_CONCEPT::2.b)
+        if concept.additional_nature_set.exists():
+            print("Special concept '{con}' is not allowed to have additional natures"
+                    .format(con=concept))
+    else:
+        # Enforces SPECIAL_CONCEPT::2.c)
+        special_natures = list(filter(lambda x: x.startswith('_'), concept.all_nature_tuple))
+        if special_natures: # in case there are nature(s) starting with '_'
+            print("Concept '{con}' is not special, thus it cannot have natures '{nats}'"
+                    .format(con=concept, nats=", ".join(special_natures)))
+
+
+##
+## Releases
+##
 for release in Release.objects.all():
+    # clean (partial dates)
+    instance_cleaner(release)
+
     # specific composition
     assigned_specific_classes = enforce_specific(release)
 
@@ -90,6 +134,9 @@ for release in Release.objects.all():
         print("{} on imaterial Release '{}'.".format(err, release))
 
 
+##
+## Occurrences
+##
 for occurrence in Occurrence.objects.all():
     #
     # SPECIFIC & COLLECSTER_PROPERTIES
@@ -100,8 +147,8 @@ for occurrence in Occurrence.objects.all():
     #
     # ATTRIBUTES
     #
-    generic_release_attributes = utils.all_release_attributes(occurrence.release.pk)
-    generic_occurrence_attributes = OccurrenceAttribute.objects.filter(occurrence=occurrence)
+    generic_release_attributes = utils.retrieve_noncustom_custom_release_attributes(occurrence.release.pk)
+    generic_occurrence_attributes = OccurrenceAnyAttribute.objects.filter(occurrence=occurrence)
     for index, (release_att, occurrence_att) \
     in enumerate(itertools.zip_longest(generic_release_attributes, generic_occurrence_attributes)):
         corresponding_att = occurrence_att.release_corresponding_entry if occurrence_att else None
@@ -133,7 +180,7 @@ for occurrence in Occurrence.objects.all():
     in enumerate(itertools.zip_longest(release_composition, occurrence_composition)):
         corresponding_compo = occurrence_compo.release_composition if occurrence_compo else None
 
-        # Enforces COMPOSITION::2.a)
+        # Enforces COMPOSITION::2.c)
         if corresponding_compo:
             if corresponding_compo.from_release != occurrence.release:
                 print("Occurrence '{occ}' has composition '{occ_compo}' in position {index} (zero indexed), whose source release {compo_rel} does not match this occurrence release."
@@ -153,6 +200,36 @@ for occurrence in Occurrence.objects.all():
                             .format(occ=occurrence, occ_compo=occurrence_compo_target.release_composition,
                                     rel=expected_target_release))
     #
+    # PICTURES
+    #
+    for picture in occurrence.pictures.all():
+        if picture.detail == PictureDetail.GROUP:
+            # Enforces ADVIDEOGAME::1.b)
+            try:
+                picture.release_corresponding_entry
+                print("Occurrence '{occ}' has picture '{pic}' detailing GROUP, which is not allowed to be assigned a release attribute."
+                        .format(occ=occurrence, pic=picture))
+            except AttributeError:
+                pass
+        else:
+            try:
+                # Enforces ADVIDEOGAME::1.a)
+                if picture.release_corresponding_entry.release != occurrence.release:
+                    print("Occurrence '{occ}' has picture '{pic}', attached to an attribute of a different release '{rel}'"
+                            .format(occ=occurrence, pic=picture, rel=picture.release_corresponding_entry.release))
+            except AttributeError:
+                # Enforces ADVIDEOGAME::1.c)
+                print("Occurrence '{occ}' has picture '{pic}' of detail '{det}', but it is not associated to an attribute release."
+                        .format(occ=occurrence, pic=picture, det=picture.detail))
+
+    #
+    # TAG TO OCCURRENCE
+    #
+    # Enforces TAGTOOCCURRENCE::1.a)
+    if not TagToOccurrence.objects.filter(occurrence=occurrence).exists():
+        print("Occurrence '{occ}' does not have a TagToOccurrence instance associated to it.".format(occ=occurrence))
+
+    #
     # IMMATERIAL special rules
     #
     # Enforces IMMATERIAL.2)
@@ -160,3 +237,10 @@ for occurrence in Occurrence.objects.all():
         if not OccurrenceComposition.objects.filter(to_occurrence=occurrence).exists():
             print("Occurrence '{occ}' is immaterial, but is not nested under another occurrence.".format(occ=occurrence))
 
+## More composition
+# Enforces COMPOSITION::1)
+model_cleaner(ReleaseComposition)
+
+## Bundles
+model_cleaner(PurchaseContext)
+model_cleaner(Purchase)
