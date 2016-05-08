@@ -9,6 +9,8 @@ from django.template    import loader
 from django.contrib     import admin
 from django.http        import HttpResponse
 
+import json
+
 
 ##
 ## Utilities
@@ -87,3 +89,15 @@ def ajax_occurrence_admin_formsets(request, release_id):
 
 def app_name_script(request):
     return HttpResponse("window.collecster_app_name = \"{}\"".format(utils_path.get_app_name()))
+
+def release_specific_classes(request):
+    nature_tuple = Concept.objects.get(Q(**request.GET.dict())).all_nature_tuple
+    return HttpResponse(
+       json.dumps([specific.__name__ for specific in ConfigNature.get_release_specifics(nature_tuple)])
+    )
+
+def occurrence_specific_classes(request):
+    nature_tuple = Concept.objects.get(Q(**request.GET.dict())).all_nature_tuple
+    return HttpResponse(
+       json.dumps([specific.__name__ for specific in ConfigNature.get_occurrence_specifics(nature_tuple)])
+    )
