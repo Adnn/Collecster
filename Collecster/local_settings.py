@@ -15,7 +15,7 @@ INSTALLED_APPS = (
     # Custom applications
     "supervisor",
     "advideogame.apps.AdvideogameConfig",
-    "ndmusic.apps.NdmusicConfig",
+    #"ndmusic.apps.NdmusicConfig",
 )
 
 # The secret key is now to be found in $DJANGO_SECRET_KEY env var. This file is no longer private !
