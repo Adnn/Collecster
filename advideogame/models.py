@@ -626,7 +626,7 @@ class SystemMediaPair(models.Model):
     media  = models.CharField(max_length=32)
     wireless = models.BooleanField(default=False)
 
-    abbreviated_name = models.CharField(max_length=10, unique=True)
+    abbreviated_name = models.CharField(max_length=12, unique=True)
 
     def __str__(self):
         return "{}--{} ({})".format(self.system, self.media, self.abbreviated_name)
@@ -728,7 +728,7 @@ class SystemVariant(models.Model):
                                        limit_choices_to=Q(primary_nature__in=ConfigNature.system_with_variants())
                                                       | Q(additional_nature_set__nature__in=ConfigNature.system_with_variants()))
     no_variant = models.BooleanField(default=False, help_text="Set to true indicated that the corresponding concept has no variants.")
-    variant_name = models.CharField(max_length=20, blank=True, unique=True)
+    variant_name = models.CharField(max_length=32, blank=True, unique=True)
 
     def __str__(self):
         return (("{system} has no variant" if self.no_variant else "{variant} [{system}]")
