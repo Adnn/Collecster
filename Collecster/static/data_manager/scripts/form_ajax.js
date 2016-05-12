@@ -108,7 +108,7 @@ function main_function()
                     natures.push(element.value)
                 }
             })
-        $.ajax("/" + window.collecster_app_name + "/ajax/concept_admin_formsets/html",
+        $.ajax("/" + window.collecster_app_name + "/ajax/concept_admin_formsets/html/",
                {
                     data: $.param({ nature: natures }, true),
                     success: div_replacer
