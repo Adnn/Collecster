@@ -1,8 +1,6 @@
-#from data_manager.models import * # Absolute path import, we do not execute this one because we can do without !
-## Actually, we hardly can do without: tie Concept base models are depending on ConfNature, defined per application.
-with open("data_manager/models.py") as f:
-        code = compile(f.read(), "data_manager/models.py", 'exec')
-        exec(code)
+from data_manager.collecster_exec import collecster_exec
+
+collecster_exec("data_manager/models.py")
 
 from .configuration import OccurrenceSpecific, ConfigNature
 from . import tag

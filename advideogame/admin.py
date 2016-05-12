@@ -1,6 +1,6 @@
-with open("data_manager/admin.py") as f:
-        code = compile(f.read(), "data_manager/admin.py", 'exec')
-        exec(code)
+from data_manager.collecster_exec import collecster_exec
+
+collecster_exec("data_manager/admin.py")
 
 ##
 ## Customization starts here

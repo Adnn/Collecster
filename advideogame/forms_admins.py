@@ -1,3 +1,3 @@
-with open("data_manager/forms_admins.py") as f:
-        code = compile(f.read(), "data_manager/forms_admins.py", 'exec')
-        exec(code)
+from data_manager.collecster_exec import collecster_exec
+
+collecster_exec("data_manager/forms_admins.py")

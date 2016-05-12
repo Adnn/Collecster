@@ -1,5 +1,3 @@
-with open("data_manager/views.py") as f:
-        code = compile(f.read(), "data_manager/views.py", 'exec')
-        exec(code)
+from data_manager.collecster_exec import collecster_exec
 
-# Create your views here.
+collecster_exec("data_manager/views.py")
