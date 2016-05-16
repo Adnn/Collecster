@@ -12,38 +12,26 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     # Custom applications
     "supervisor",
     "advideogame.apps.AdvideogameConfig",
     #"ndmusic.apps.NdmusicConfig",
+    #'OOModel_attributes',
+    #'OOModel_composition',
+    #'validate_min',
 )
 
-# The secret key is now to be found in $DJANGO_SECRET_KEY env var. This file is no longer private !
+# The secret key is found in $DJANGO_SECRET_KEY env var.
 import os
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 
 ##
-## From here: copied from https://devcenter.heroku.com/articles/getting-started-with-django#django-settings
+## From here: copied from https://devcenter.heroku.com/articles/django-app-configuration#database-configuration
 ##
-
-# Parse database configuration from $DATABASE_URL
+# Parse database configuration from $DATABASE_URL env var.
 import dj_database_url
-DATABASES = {} # Added, because the symbol is not defined otherwise
-DATABASES['default'] =  dj_database_url.config()
-
-# Honor the 'X-Forwarded-Proto' header for request.is_secure()
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Allow all host headers
-ALLOWED_HOSTS = ['*']
-
-# Static asset configuration
-import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = 'staticfiles'
-STATIC_URL = '/static/'
-
-STATICFILES_DIRS = (
-            os.path.join(BASE_DIR, 'static'),
-)
+if not 'DATABASES' in locals():
+    DATABASES = {}
+DATABASES['default'] = dj_database_url.config()

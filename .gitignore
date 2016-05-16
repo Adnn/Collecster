@@ -16,7 +16,7 @@ media/
 staticfiles/
 venv
 
-#*/local_settings.py ## Not private anymore: the secret key is read from environment variable.
+#*/local_settings.py 
 
 
     # from: https://github.com/github/gitignore/blob/master/Python.gitignore

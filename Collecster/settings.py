@@ -38,10 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Custom applications
-    'OOModel_attributes',
-    'OOModel_composition',
-    'validate_min',
+    # ADD CUSTOM APPLICATIONS IN local_settings.py
 )
 
 MIDDLEWARE_CLASSES = (
@@ -79,6 +76,7 @@ WSGI_APPLICATION = 'Collecster.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
+# Define it in local_settings.py
 #DATABASES = {
 #    'default': {
 #        'ENGINE': 'django.db.backends.',
@@ -109,7 +107,33 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = 'media'
 MEDIA_URL = '/media/'
 
-# Import local settings if they exist
+
+##
+## From here: copied from https://devcenter.heroku.com/articles/django-app-configuration#static-assets-and-file-serving://devcenter.heroku.com/articles/django-app-configuration#database-configuration
+##
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Static asset configuration
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_ROOT, 'static'),
+)
+
+
+##
+## From here: copied from https://devcenter.heroku.com/articles/django-app-configuration#whitenoise
+##
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+
+##
+## Import local settings if they exist
+##
 try:
     from .local_settings import *
 except ImportError:
