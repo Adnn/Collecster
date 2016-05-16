@@ -42,7 +42,7 @@ class Command(BaseCommand):
             user_ext = self.interactive_create_object(supervisor.models.UserExtension)
 
             user = self.UserModel(username=options["username"], is_staff=True)
-            user.password = self.get_password(user)
+            user.set_password(self.get_password(user))
 
             # The order in which we have to save the models and assign the related fields is quite strict
             # see: http://stackoverflow.com/a/13249363/1027706
