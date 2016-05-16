@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Must be first
 import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Collecster.settings")
 django.setup()
