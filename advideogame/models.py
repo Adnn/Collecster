@@ -299,7 +299,7 @@ class Bundle(AbstractRecordOwnership):
     note = models.CharField(max_length=256, blank=True) # Not sure if it should not be a TextField ?
 
     def get_content(self):
-        return Occurrence.objects.filter(bundlecomposition__bundle=self)
+        return Occurrence.objects.filter(bundlecomposition__bundle=self).order_by("bundlecomposition__pk")
 
     def get_content_string(self):
         return ", ".join(map(lambda x: x.release.display_name(), self.get_content()))

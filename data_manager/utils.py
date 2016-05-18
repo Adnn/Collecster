@@ -219,10 +219,10 @@ def force_formset_size(formset, size):
 
 ##
 def retrieve_any_attributes(AttributeModel, release_id):
-    return (AttributeModel.objects.filter(release=release_id)) if release_id else []
+    return (AttributeModel.objects.filter(release=release_id).order_by("pk")) if release_id else []
 
 def retrieve_release_composition(release_id):
-    return ReleaseComposition.objects.filter(from_release=release_id) ## on the "through" table
+    return ReleaseComposition.objects.filter(from_release=release_id).order_by("pk") ## on the "through" table
      ## Would return Release instances, NOT ReleaseComposition objects
     #return Release.objects.get(pk=release_id).nested_releases.all()
 
