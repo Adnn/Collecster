@@ -213,7 +213,10 @@ class Occurrence(OccurrenceBase):
     unique_number = models.CharField(max_length=32, blank=True,
                 help_text="An identifier uniquely attached to this occurrence (eg. collector numbered edition).")
 
-    tag_url = models.URLField(null=True) # Handled internally (never editable in the form)
+    def never_user_upload(instance, filename):
+        raise Exception("Attempt to upload '{}' as tag_file. This field cannot be edited by the user.".format(filename))
+
+    tag_file = models.FileField(null=True, upload_to=never_user_upload) # Handled internally (never editable in the form)
 
     def embedded_immaterial_is_known(self):
         return hasattr(self, "release")
@@ -222,8 +225,8 @@ class Occurrence(OccurrenceBase):
         return self.release.is_embedded_immaterial()
 
     def admin_post_save(self):
-        if self.is_material() and not self.tag_url:
-            self.tag_url = tag.generate_tag(self)
+        if self.is_material() and not self.tag_file:
+            self.tag_file = tag.generate_tag(self)
             self.save()
 
     def origin_color(self):

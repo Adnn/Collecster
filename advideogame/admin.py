@@ -161,9 +161,10 @@ def tag_link(self, instance):
     else:
         return "-" # What was displayed by default by the readonly UrlField when the tag was not set
 
-OccurrenceAdmin.tag_link = tag_link # Has to be a method on the model or the ModelAdmin
-OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_link",)
-OccurrenceAdmin.exclude = OccurrenceAdmin.exclude + ("tag_url",)
+## Not usefull anymore since tag_url UrlField is now tag_file FileField
+#OccurrenceAdmin.tag_link = tag_link # Has to be a method on the model or the ModelAdmin
+OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_file",)
+OccurrenceAdmin.exclude = OccurrenceAdmin.exclude + ("tag_file",)
 
 ## Release picture ##
 class ReleasePictureInline(admin.TabularInline):

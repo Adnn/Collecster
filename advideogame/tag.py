@@ -4,6 +4,7 @@ from . import utils_path
 
 from supervisor.models import * # for generate_qr_code 
 
+from django.conf import settings
 from django.template import loader
 
 import pyqrcode
@@ -54,7 +55,10 @@ def generate_tag(occurrence):
     qr = generate_qrcode(occurrence, tag_to_occurrence)
     qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
 
-    with open(os.path.join(directory, "v{}.html".format(tag_version)), "w") as f: #TODO some date and time ?
+    tag_filename = os.path.join(directory, "v{}.html".format(tag_version))
+    with open(tag_filename , "w") as f: #TODO some date and time ?
         f.write(template.render(context))
 
-    return "/{}".format(os.path.join(directory, template_file))
+    # Prune the media root, if any, from the returned filename.
+    result = tag_filename[len(settings.MEDIA_ROOT)+1:] if settings.MEDIA_ROOT else tag_filename # +1 for the '/'
+    return result 
