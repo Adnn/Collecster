@@ -1,0 +1,102 @@
+==== MDD ====
+##Concept:
+name
+complete name
+?brand/publisher
+*architecture (saturn/sms/psx...)  (I do not know if it fits)  NON ! un jeu peu sortir sur de nouvelles architectures (i.e c'est un attribut de la release). Un même concept de console peu supporter la retrocompatibilité seulement pour certaines releases (ex. ps3).
+(type && subtype) (i do not know) le problème est que cela répète le type dérivé de la release... mais c'est bien un attribut logique du concept
+subtype
+	(gun/pad/analogpad/guitar/drum/turntable/dancemat/joystick/steeringwheel/stereo-glasses/speakers/mouse/keyboard/memorycard/fishing_rod/modem/magnifier/cover/battery/pad_charger/headphones/camera/gesture_recognition?/multitap)
+
+##Release:
+<-concept
+?specificity (eg. jewel case)
+year
+attributes (box/jewel box/sheath///manuals/inlay/inbags/infoam/polystyr/connector protection///releases) + dont know
+
+##Instance:  to inherit with custom class
+<-release
+*photo
+add_date
+owner (as a foreignkey to User model)
+|box_rating
+|stuffing_rating
+|if terminal : object_rating   (a mieux définir) / tout est implémenté avec le système d'attribut
+--Parent
+?notes
+?indiv-price
+origin (original, buy collec, buy usage, buy back, gift)
+
+
+
+Buying:
+*Instance
+?Origin
+price
+date
+
+Donation
+*Instance
+donator
+date
+
+BuyingOrigin
+select(ebay/lbc/.../brocante)
+?location
+
+Console
+region
+color (black/white/grey/red/green/blue/yellow/orange/pink/brown/purple/  gold/silver  cream ?)
+brand
+*implemented_platforms (pour les console avec ex. 32x+md2) (sms_card/sms_cartridge/GameGear/megadrive/32X/megacd/saturn/dreamcast/namomi_1/naomi_2/nes/nes_floppy/GameBoy/GameBoy-Adv/DS/3DS/snes/n64/GameCube/wii/wii_U/ps_1/ps_2/ps_3/psp/ps_vita/neogeo_mvs/neogeo_aes)
+--specifics
+working
+region_modded
+copy_modded
+
+Game
+region
+platform
+publisher
+--
+working
+
+Accessory
+?region
+color
+*compatible_platforms
+wireless
+forcefeedback
+rumblefeedback
+screen :: plutot un attribut du concept
+--
+working
+
+PCB
+region
+bootleg
+--
+working
+
+TAG (a mettre sur le produit et sur le carton):
+barcode -> DB instance id
+origin as a colored spot
+nom intelligent
+work O/N/NA
+
+
+
+
+====TODO==== 
+C-récursivement composer une release avec d'autres releases -> passant par la table ReleaseComposition
+-limiter le Concept d'une nouvelle release au concept fourni à la page :: voir ModelAdmin.formfield_for_foreignkey(self, db_field, request, **kwargs)
+C-faire apparaitre la composition quand on ajoute une release :: voir InlineModelAdmin
+-widget de selection avec critère de recherche dans les foreign key (pour le concept d'une release, ...)
+-assigner un type aux Concepts, utiliser ce type dans les Release-spécialisées pour filtrer les concepts proposés.
+C-dans les objets, proposer de selectionner le contenu présent en ne proposant que le contenu de la release.
+C-dans les objets instanciant des release composées récursivement, proposer de les composer avec des objets (de la bonne release).
+C-save tag with instance's other images
+C-allow empty complete-name duplication (on concepts)
+C-What with les trucs en loose (à quelle Release les attacher) ?? --> Loose field added on Games, Consoles and Accessories. A single 'loose' release should be issued for indisctinguasable instances (eg. "manual" (or other content) could be added to this 'loose' release in case something without box comes with a manual nonetheless)
+-Take measures when a Release's attributes are edited (added in particular) for all its Instances.
+-Implement partial dates (atm : to store a year only, YYYY-01-01). See : http://stackoverflow.com/questions/2971198/how-to-deal-with-partial-dates-2010-00-00-from-mysql-in-django
