@@ -138,9 +138,20 @@ class Release(ReleaseBase):
 
     special_case_release = models.CharField(max_length=1, blank=True, choices=(
             ("L", "loose"),
-            ("C", "naked composition"),
+            ("C", "nested without discrete box"),
         ), help_text="""'loose' if the absence of the object's packaging makes it impossible to indentify the exact release."""
-                     """<br/>'naked composition' for releases that are exclusively used for composing others, without a discrete packaging. (eg. Controller within a console.)""")
+                     """<br/>'nested without discrete box' for releases that are exclusively used for composing others, without a discrete packaging. (eg. Controller within a console.)""")
+    """
+    The base case for releases does not need to specify any value here. But there are two different cases that can benefit here:
+
+    * **loose**: Is a special release that can be assigned to an :instance:`occurrence` that was acquired
+      without enought packaging to make it possible to indentify the actual release the object came from.
+      It should be reserved to cases where the actual release cannot be identified.
+    * **nested without discrete box**: Is a special release that must be assigned to :instance:`occurrence`\s that are distributed
+      within the packaging of another :instance:`occurrence`, **without their proper packaging**.
+      An example is the console controller that is sold with the console: it is usually found inside the
+      packaging of the console, directly in the same box.
+    """
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     ## neither will immaterials
