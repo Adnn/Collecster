@@ -30,8 +30,10 @@ def self_software(release):
 
 
 class ConfigNature:
-    """ Use should extend this class by deriving it from itself (http://stackoverflow.com/a/15526901/1027706) """
-    """ And define a DATA class member """
+    """ 
+    Use should extend this class by deriving it from itself (http://stackoverflow.com/a/15526901/1027706) 
+    And define a DATA class member 
+    """
 
     ##
     ## Generic methods (no need for customization)

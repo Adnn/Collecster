@@ -52,8 +52,10 @@ def check_property_consistency(model_instance, property_value, property_name, da
 class CollecsterPropertiesHelper(object):
     @staticmethod
     def _split_property(property_name):
-        """ Splites the property name found on the collecster_properties dictionary, """
-        """ between the sign (False if "non_" prefix, True otherwise) and the positive property name """
+        """ 
+        Splites the property name found on the collecster_properties dictionary, 
+        between the sign (False if "non_" prefix, True otherwise) and the positive property name 
+        """
         splits = property_name.split("_", maxsplit=1) 
         if (len(splits) == 2) and (splits[0] =="non"):
             return False, splits[1]
@@ -90,9 +92,11 @@ class CollecsterPropertiesHelper(object):
 
 
 class TagToOccurrenceBase(models.Model):
-    """ This model makes the link between user occurrence IDs """
-    """ (which are immutable identifiers assigned to each occurrence, only unique per user) """
-    """ And the actual application Occurrences kept in the database. """
+    """ 
+    This model makes the link between user occurrence IDs 
+    (which are immutable identifiers assigned to each occurrence, only unique per user) 
+    And the actual application Occurrences kept in the database. 
+    """
     class Meta:
         abstract = True
         unique_together = ("user_creator", "user_occurrence_id") # Enforces TAGTOOCCURRENCE::2)
@@ -208,10 +212,12 @@ class ReleaseBase(AbstractRecordOwnership):
 
 
     def is_material(self):
-        """ The notion of immaterial needs to be a core concept, because some core behaviour depends on it"""
-        """ eg. define application logic that an immterial cannot have nested elements """
-        """ Yet not to force having an immaterial field (for cases were there are no immaterials), """
-        """ it is abstracted through this function which implements a sensible default, but can be overriden. """
+        """ 
+        The notion of immaterial needs to be a core concept, because some core behaviour depends on it
+        eg. define application logic that an immterial cannot have nested elements 
+        Yet not to force having an immaterial field (for cases were there are no immaterials), 
+        it is abstracted through this function which implements a sensible default, but can be overriden. 
+        """
         if hasattr(self, "immaterial"):
             return not self.immaterial
         else:
@@ -222,8 +228,10 @@ class ReleaseBase(AbstractRecordOwnership):
         return self.name if self.name else str(self.concept)
 
     def name_color(self):
-        """ Returns the color associated to this release, which is based on its nature """
-        """ Nota that this color will be based on the primary nature only """
+        """ 
+        Returns the color associated to this release, which is based on its nature 
+        Nota that this color will be based on the primary nature only 
+        """
         return ConfigNature.DATA[self.concept.primary_nature].tag_color;
 
     def __str__(self):
@@ -294,8 +302,10 @@ class ReleaseDistinctionBase(models.Model):
 
 
 class ReleaseAttributeBase(models.Model):
-    """ Maps an Attribute to a Release, with an optional note. """
-    """ The note is manadatory if the same attribute is present multiple times on the same Release """
+    """ 
+    Maps an Attribute to a Release, with an optional note. 
+    The note is manadatory if the same attribute is present multiple times on the same Release 
+    """
 
     class Meta:
         abstract = True
@@ -311,9 +321,11 @@ class ReleaseAttributeBase(models.Model):
 
 
 class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of AbstractAttribute, direct composition
-    """ Inherits from AbstractAttribute: the attribute is custom to a single release """
-    """ Since it is not shared, there is no need for mapping to an external attribute: """
-    """ this is the attribute itself, mapped to a Release. """
+    """ 
+    Inherits from AbstractAttribute: the attribute is custom to a single release 
+    Since it is not shared, there is no need for mapping to an external attribute: 
+    this is the attribute itself, mapped to a Release. 
+    """
 
     class Meta:
         abstract = True

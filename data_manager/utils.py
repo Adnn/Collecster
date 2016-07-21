@@ -19,9 +19,11 @@ import functools, collections
 
 
 class OneFormFormSet(BaseInlineFormSet):
-    """ We just need to have validate_min and _max set to True on the FormSet class used by the Admin """
-    """ It seems impossible to forward them: https://groups.google.com/d/msg/django-users/xu2Ef7y4DPQ/u3z30vl_BwAJ """
-    """ So hardcode the two attributes in the constructor """
+    """ 
+    We just need to have validate_min and _max set to True on the FormSet class used by the Admin 
+    It seems impossible to forward them: https://groups.google.com/d/msg/django-users/xu2Ef7y4DPQ/u3z30vl_BwAJ 
+    So hardcode the two attributes in the constructor 
+    """
     def __init__(self, data=None, files=None, instance=None,
                  save_as_new=False, prefix=None, queryset=None, **kwargs):
         super(OneFormFormSet,self).__init__(data, files, instance, save_as_new, prefix, queryset, **kwargs)
@@ -38,12 +40,19 @@ class SpecificForm(PropertyAwareSaveInitialDataModelForm):
         return self.instance.get_parent_instance()
 
 class SpecificStackedInline(admin.StackedInline):
-    """ This derived inline allows to render the inline using admin_edit_inline_wrapper template. """
-    """ This template simply render the original template, but wrapped in an additional custom <div>. """
-    """ Those custom divs can then be identified by a JS script and be re-rooted under  """
-    """ the #collecster_specifics <div>, supposed to contain all specifics. """
-    """ """
-    """ It also allows to specify a custom form, to handle collecster properties """
+    """
+    This derived inline allows to render the inline using admin_edit_inline_wrapper.html template. 
+
+    This template simply renders the original template, but wrapped in an additional custom <div>, with a static class. 
+    Those custom divs can then be identified by a JS script to be re-rooted under  
+    the #collecster_specifics <div>, supposed to contain all specifics. 
+    This is notably usefull when submitting a form (with specifics) that generates errors: the form will be re-presented
+    to the user, but this time the specific formsets will have been generated synchornously, so they won't go through
+    the usual asyncrhounous JS mechanism that places them in #collecster_specifics <div>. Instead, the wrapped divs
+    will be moved there directly at page load.
+    
+    It also specifies a custom form, notably handling collecster properties. 
+    """
     collecster_wrapped_template = admin.StackedInline.template
     template = "collecster/admin_edit_inline_wrapper.html"
     form = SpecificForm
@@ -76,11 +85,13 @@ def get_concept_specific_inlines(concept_id, specifics_retriever):
     return get_natures_specific_inlines(nature_set, specifics_retriever)
 
 def get_concept_nature_set(request, obj):
-    """ Retrieves the list of natures for a concept. """
-    """ It is intended for the Concept form, and uniformizes the different sources for this list of natures """
-    """ 1. Tries to retrieve it from the collecster payload in the request (populated by the ajax view, for live changes to the nature values) """
-    """ 2. Tries to retrieve it from the POST data (usefull when there are errors in the Concept form, and it is re-presented to the user) """
-    """ 3. Tries to retrieve it from the concept object (usefull when the form is used to change an existing Concept) """
+    """ 
+    Retrieves the list of natures for a concept. 
+    It is intended for the Concept form, and uniformizes the different sources for this list of natures 
+    1. Tries to retrieve it from the collecster payload in the request (populated by the ajax view, for live changes to the nature values) 
+    2. Tries to retrieve it from the POST data (usefull when there are errors in the Concept form, and it is re-presented to the user) 
+    3. Tries to retrieve it from the concept object (usefull when the form is used to change an existing Concept) 
+    """
     ConceptNatureFormSet = modelformset_factory(ConceptNature, fields="__all__")
     concept = obj if obj else utils_payload.get_request_payload(request, "concept")
 
@@ -124,9 +135,11 @@ def release_automatic_attributes(formset, request, obj):
 
 
 def get_or_initial_release_corresponding_entry(form, release_corresponding_list, release_corresponding_field):
-    """ This function is a helper to be used when initial_data should be assigned to forms """
-    """ but only if they are not corresponding to an instance saved in the DB. """
-    """ see populate_occurrence_attributes() comments for a rationale """
+    """ 
+    This function is a helper to be used when initial_data should be assigned to forms 
+    but only if they are not corresponding to an instance saved in the DB. 
+    see populate_occurrence_attributes() comments for a rationale 
+    """
     # Nota: the following code assumes that all forms with an instance whose release_corresponding_entry is assigned
     # will come before the forms where it is not.
     try:
@@ -230,8 +243,10 @@ def retrieve_automatic_attributes(concept_id):
     return ConfigNature.get_concept_automatic_attributes(Concept.objects.get(pk=concept_id)) if concept_id else []
 
 def shared_release_attributes(release_id):
-    """ Returns non-custom attributes for a Release """
-    """ Is a layer of abstraction in case we later introduce implicit attributes (not stored in the DB for each release, but logically present) """
+    """ 
+    Returns non-custom attributes for a Release 
+    Is a layer of abstraction in case we later introduce implicit attributes (not stored in the DB for each release, but logically present) 
+    """
     if not release_id:
         return []
 

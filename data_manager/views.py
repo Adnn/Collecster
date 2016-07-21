@@ -16,6 +16,9 @@ import json
 ## Utilities
 ##
 def get_admin_formsets(admin, request):
+    """
+    Wrap calls to _create_formsets then get_inline_formsets on admin, to return the admin formsets.
+    """
     formsets, inline_instances = admin._create_formsets(request, admin.model(), change=False)
     admin_formsets = admin.get_inline_formsets(request, formsets, inline_instances)#, **{"release_id": release_id}) Alternative way to forward the id
     return admin_formsets

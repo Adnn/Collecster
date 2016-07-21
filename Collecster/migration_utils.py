@@ -36,7 +36,9 @@ def _load_initial_fixtures_impl(app_name, apps, schema_editor):
         call_command('loaddata', *list_initial_fixtures(app_name), app_label=app_name) 
 
 def load_initial_fixtures_func(app_name):
-    """ The public interface to those utilities """
-    """ This method should be invoked inside a migration "operations" list, with a syntax: """
-    """     migrations.RunPython(load_initial_fixtures_func("app_name_here")) """
+    """ 
+    The public interface to those utilities 
+    This method should be invoked inside a migration "operations" list, with a syntax: 
+        migrations.RunPython(load_initial_fixtures_func("app_name_here")) 
+    """
     return partial(_load_initial_fixtures_impl, app_name)

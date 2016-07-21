@@ -318,7 +318,9 @@ class ConfigNature(ConfigNature):
 
     @classmethod
     def system_with_variants(cls):
-        """ Method that is specific to the advideogame application. """
-        """ It returns all natures whose release specific tuple contains Variant """
+        """ 
+        Method that is specific to the advideogame application. 
+        It returns all natures whose release specific tuple contains Variant 
+        """
         return [nature for nature, data_tuple in cls.DATA.items()
                        if RelSp.Variant in data_tuple.release_category]

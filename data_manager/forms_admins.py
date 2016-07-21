@@ -19,10 +19,12 @@ from django import forms
 ##########
 
 class EditLinkToInlineObject(object):
-    """ Since we would like to have nested inlines (eg. InterfacesSpecification with inline System|CommonInterfaceDetails, """
-    """ with inline Required|ProvidedInterface), use an alternative solution which is to display the link to edit """
-    """ instances of the intermediary model from a readonly_field in the inlines of the top-level model. """
-    """ see: http://stackoverflow.com/a/22113967/1027706 """
+    """
+    Since we would like to have nested inlines (eg. InterfacesSpecification with inline System|CommonInterfaceDetails, 
+    with inline Required|ProvidedInterface), use an alternative solution which is to display the link to edit 
+    instances of the intermediary model from a readonly_field in the inlines of the top-level model. 
+    see: http://stackoverflow.com/a/22113967/1027706 
+    """
     link_text = "edit" # to be customized on the inherithing models
 
     def edit_link(self, instance):
@@ -34,10 +36,12 @@ class EditLinkToInlineObject(object):
             return "-"
 
 class SaveInitialDataModelForm(forms.ModelForm):
-    """ Changes the meaning of the "initial" member to mean "default": values saved even in the absence of any user-initiated change to the form """
-    """ Details : when a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, """
-    """ nor by setting validate_min and validate_max. What works is to have has_changed() always return True."""
-    """ Edit: it evolved to change the meaning of 'initial' to 'default', see: http://stackoverflow.com/a/33354303/1027706 """
+    """ 
+    Changes the meaning of the "initial" member to mean "default": values saved even in the absence of any user-initiated change to the form 
+    Details : when a form only has its initial values, I could not find a way to force it to be saved, even by setting empty_permitted = false, 
+    nor by setting validate_min and validate_max. What works is to have has_changed() always return True.
+    Edit: it evolved to change the meaning of 'initial' to 'default', see: http://stackoverflow.com/a/33354303/1027706 
+    """
     def has_changed(self):
         for name, field in self.fields.items():
             prefixed_name = self.add_prefix(name)
@@ -50,23 +54,27 @@ class SaveInitialDataModelForm(forms.ModelForm):
         return False
 
 class SaveEmptyDataModelForm(forms.ModelForm):
-    """ Usefull if it is required to save an all the forms in an inline formset, even if they are not changed """
-    """ Eg. CommonInterfaceDetailInline in advideogame configuration. """
+    """ 
+    Usefull if it is required to save an all the forms in an inline formset, even if they are not changed 
+    Eg. CommonInterfaceDetailInline in advideogame configuration. 
+    """
     def has_changed(self):
         return True
 
 
 class PropertyAwareModelForm(forms.ModelForm):
-    """ Completly handles the validation of models "collecster_properties" dictionnary, on the form side """
-    """ """
-    """ The models can define logical boolean properties, whose value should be queriable on their instance through """
-    """ a "is_{positive_property_name}" getter. In case the property value is not always known (eg. some determinant fiels has not be filled in) """
-    """ the model can also define a "{positive_property_name}_is_known" method, returning False when the property cannot be queried. """
-    """ """
-    """ This class can be used to controle fields on the base models (i.e., Release or Occurrence) directly, """
-    """ but it can also be used on inline forms of releated models (eg. Specific). In this case, the related model should """
-    """ derive this form for itself, overriding the "get_base_instance" method to return the instance of the base model """
-    """ it relates to."""
+    """ 
+    Completly handles the validation of models "collecster_properties" dictionnary, on the form side 
+    
+    The models can define logical boolean properties, whose value should be queriable on their instance through 
+    a "is_{positive_property_name}" getter. In case the property value is not always known (eg. some determinant fiels has not be filled in) 
+    the model can also define a "{positive_property_name}_is_known" method, returning False when the property cannot be queried. 
+    
+    This class can be used to controle fields on the base models (i.e., Release or Occurrence) directly, 
+    but it can also be used on inline forms of releated models (eg. Specific). In this case, the related model should 
+    derive this form for itself, overriding the "get_base_instance" method to return the instance of the base model 
+    it relates to.
+    """
     def get_form_cleaned_data(self, model_instance, field_name):
         try:
             cleaned = self.cleaned_data[field_name]
@@ -99,9 +107,11 @@ class PropertyAwareSaveInitialDataModelForm(PropertyAwareModelForm, SaveInitialD
 ## ModelAdmins
 ##########
 class CustomSaveModelAdmin(admin.ModelAdmin):
-    """ Saves the User that ADDed the instance if its model derives from AbstractRecordOwnership (-> it has a created_by field) """
-    """ Also introduces a post_model_save() hook, called after saving the model, but before saving the related models """
-    """ Plus attempt to call an "admin_post_save" method on the model instance, after itself and its related instances were saved """
+    """ 
+    Saves the User that ADDed the instance if its model derives from AbstractRecordOwnership (-> it has a created_by field) 
+    Also introduces a post_model_save() hook, called after saving the model, but before saving the related models 
+    Plus attempt to call an "admin_post_save" method on the model instance, after itself and its related instances were saved 
+    """
 
     def get_form(self, request, obj=None, **kwargs):
         """ Overrides the ModelAdmin method to forwards the request user into the form """
@@ -111,8 +121,10 @@ class CustomSaveModelAdmin(admin.ModelAdmin):
 
     @staticmethod
     def user_from_request(request):
-        """ This static method intention is to factorize the assignment of form's collecster_user_extension"""
-        """ and object's created_by attributes behind a common method. """
+        """ 
+        This static method intention is to factorize the assignment of form's collecster_user_extension
+        and object's created_by attributes behind a common method. 
+        """
         return UserExtension.objects.get(user=request.user)
 
     def save_model(self, request, obj, form, change):
@@ -139,11 +151,13 @@ class CustomSaveModelAdmin(admin.ModelAdmin):
 
 
 class CollecsterModelAdmin(CustomSaveModelAdmin):
-    """ A derived ModelAdmin that allows for custom behaviour needed by Collecster : """
-    """ * making fields read-only for edition, writtable for addition (fields listed in "collecster_readonly_edit" member) """
-    """ * dynamic (ajax based) inline formsets: """
-    """ ** editing an already present formset before presentation (calling formset's "collecster_instance_callback" method) """
-    """ ** generate new AdminInline instances, to add new formsets ("collecster_dynamic_inline_classes" member) """
+    """ 
+    A derived ModelAdmin that allows for custom behaviour needed by Collecster : 
+    * making fields read-only for edition, writtable for addition (fields listed in "collecster_readonly_edit" member) 
+    * dynamic (ajax based) inline formsets: 
+    ** editing an already present formset before presentation (calling formset's "collecster_instance_callback" method) 
+    ** generate new AdminInline instances, to add new formsets ("collecster_dynamic_inline_classes" member) 
+    """
 
     class Media:
         js = ("//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
@@ -211,15 +225,17 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
 
 
     def _create_formsets(self, request, obj, change):
-        """ Used to customize a static formset (number of forms, initial data, ...). """
-        """ Each formset will have its "collecster_instance_callback" method run on creation """
-        """ """
-        """ It would be best not to need to override this 'private' method, the rationale is obj propagation """
-        """ _create_formsets does not propagate the object to get_formsets_with_inlines() when ADDing it (even if it partially or totally exists) """
-        """ see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 """
-        """ Yet we need its value (at least the concept or release): """
-        """   * for 'collecster_instance_callback' callback """
-        """   * when invoking callable dynamic inline classes (see get_inline_instances) """
+        """ 
+        Used to customize a static formset (number of forms, initial data, ...). 
+        Each formset will have its "collecster_instance_callback" method run on creation 
+        
+        It would be best not to need to override this 'private' method, the rationale is obj propagation 
+        _create_formsets does not propagate the object to get_formsets_with_inlines() when ADDing it (even if it partially or totally exists) 
+        see: https://github.com/django/django/blob/1.8.3/django/contrib/admin/options.py#L1794-L1795 
+        Yet we need its value (at least the concept or release): 
+        * for 'collecster_instance_callback' callback 
+        * when invoking callable dynamic inline classes (see get_inline_instances) 
+        """
         self._collecster_fixup_request(request, obj, change)
         formsets, inlines = super(CollecsterModelAdmin, self)._create_formsets(request, obj, change)
         for formset in formsets:
@@ -229,13 +245,15 @@ class CollecsterModelAdmin(CustomSaveModelAdmin):
         
 
     def get_inline_instances(self, request, obj=None):
-        """ Override allowing to dynamically generate AdminInline instances. """
-        """ It is usefull to add formsets to a given admin form at runtime. """
-        """ """
-        """ The method expects "collecster_dynamic_inline_classes" member to be a dictionary mapping group names to either: """
-        """ * A callable that returns a collection of AdminInline classes (for the dynamic behaviour) """
-        """ * A static collection of AdminInline classes (similar behaviour to the default "inlines" attribute behaviour) """
-        """ All the AdminInlines for all groups are returned, except if the payload limits groups using its "collecster_inlines_group" entry """
+        """ 
+        Override allowing to dynamically generate AdminInline instances. 
+        It is usefull to add formsets to a given admin form at runtime. 
+        
+        The method expects "collecster_dynamic_inline_classes" member to be a dictionary mapping group names to either: 
+        * A callable that returns a collection of AdminInline classes (for the dynamic behaviour) 
+        * A static collection of AdminInline classes (similar behaviour to the default "inlines" attribute behaviour) 
+        All the AdminInlines for all groups are returned, except if the payload limits groups using its "collecster_inlines_group" entry 
+        """
         AdminClass = self.__class__
         added = []
         requested_inlines = utils_payload.get_request_payload(request, "inlines_groups")

@@ -22,9 +22,11 @@ from django.contrib import admin
 ## Concept name scoping ##
 class ConceptAdminForm(forms.models.ModelForm):
     def clean(self):
-        """ Enforces some uniqueness constraints : """
-        """ If two concepts have the same "distinctive name" and the same "year" """
-        """ their name need to have different "scopes" """
+        """
+        Enforces some uniqueness constraints : 
+        If two concepts have the same "distinctive name" and the same "year" 
+        their name need to have different "scopes"
+        """
         data = self.cleaned_data
         if "distinctive_name" not in data:
             return
@@ -64,8 +66,10 @@ ConceptAdmin.collecster_dynamic_inline_classes["relations"] = (ConceptRelationIn
 
 ## Occurrence pictures relation to any attribute ##
 def populate_occurrence_picture_attributes_choices(formset, request, obj):
-    """ Populates the any_attribute ChoiceField of OccurrencePictureForm with all attributes (incl. CustomReleaseAttributes) """
-    """ available on the Release of the related occurrence. Also populates its initial data for edition form. """
+    """
+    Populates the any_attribute ChoiceField of OccurrencePictureForm with all attributes (incl. CustomReleaseAttributes) 
+    available on the Release of the related occurrence. Also populates its initial data for edition form. 
+    """
     release_id = utils_id.get_release_id(request, obj)
     
     choices = [("", "----")]
@@ -153,9 +157,11 @@ OccurrenceAdmin.collecster_dynamic_inline_classes["attributes"] = (OccurrenceAny
 
 ## Display the tag link as a clickable read-only url, only when editing ##
 def tag_link(self, instance):
-    """ By default, an UrlField does not display as a clickable link when it is read-only """
-    """ so we rely on the ModelAdmin.readonly_fields ability to use a callable to output the link """
-    """ see: http://stackoverflow.com/q/35708814/1027706 """
+    """
+    By default, an UrlField does not display as a clickable link when it is read-only
+    so we rely on the ModelAdmin.readonly_fields ability to use a callable to output the link 
+    see: http://stackoverflow.com/q/35708814/1027706 
+    """
     if instance.tag_url:
         return format_html('<a href="{url}" target=_blank>{url}</a>', url=instance.tag_url)
     else:
@@ -187,9 +193,11 @@ ReleaseAdmin.collecster_dynamic_inline_classes.move_to_end("urls", last=False)
 
 ## Validates the selected regions ##
 class ReleaseFormRegions(ReleaseForm):
-    """ Inherit from ReleaseForm and assign it as the ReleaseAdmin form """
-    """ We could have defined a free function instead, and assigned it to ReleaseForm.clean, but it would override """
-    """ a potential clean member already present on ReleaseForm """
+    """ 
+    Inherit from ReleaseForm and assign it as the ReleaseAdmin form 
+    We could have defined a free function instead, and assigned it to ReleaseForm.clean, but it would override 
+    a potential clean member already present on ReleaseForm 
+    """
     def clean(self):
         super(ReleaseFormRegions, self).clean()
         regions = self.cleaned_data.get("release_regions")
@@ -274,9 +282,11 @@ class InterfacesSpecificationAdmin(admin.ModelAdmin):
 
 class SystemSpecificationForm(forms.ModelForm):
     def clean(self):
-        """ Makes sure the selected lockout regions are available to the reference system """
-        """ If the reference system has specific regions associeted to it, then only those regions are allowed """
-        """ Otherwise, only non-scoped regions are allowed """
+        """
+        Makes sure the selected lockout regions are available to the reference system 
+        If the reference system has specific regions associeted to it, then only those regions are allowed 
+        Otherwise, only non-scoped regions are allowed 
+        """
         super(SystemSpecificationForm, self).clean()
 
         if not "interface_description" in self.cleaned_data or not "regional_lockout" in self.cleaned_data:

@@ -49,8 +49,10 @@ class OccurrenceComposition(OccurrenceCompositionBase):
 ## Customization of the 3 base models
 ##
 class Concept(ConceptBase):
-    """ Concret Concetp, deriving from abstract ConceptBase, to give it deployment-specific fields """
-    """ without introducing an additional DB table. """  
+    """ 
+    Concret Concetp, deriving from abstract ConceptBase, to give it deployment-specific fields 
+    without introducing an additional DB table. 
+    """  
     pass
 
 

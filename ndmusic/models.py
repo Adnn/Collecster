@@ -59,8 +59,10 @@ class Concept(ConceptBase):
     class Meta:
         unique_together =  ("distinctive_name", "year")
 
-    """ Concret Concept, deriving from abstract ConceptBase, to give it deployment-specific fields """
-    """ without introducing an additional DB table. """  
+    """ 
+    Concret Concept, deriving from abstract ConceptBase, to give it deployment-specific fields 
+    without introducing an additional DB table. 
+    """  
     discogs_mrelease_code   = models.CharField(max_length= 60, blank=True)  
 
     # Must allow null for the special concepts (like _COMBO), but the user should not be allowed to leave them blank

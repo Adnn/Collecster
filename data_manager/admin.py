@@ -51,9 +51,11 @@ class OnlyOnMaterialFormSet(forms.BaseInlineFormSet):
 
 
 class ReleaseAnyAttributeFormset(forms.BaseInlineFormSet):
-    """ The unique_together constraint of any Attribute class includes the Release PK """
-    """ Creating the Release, it is not yet saved into the DB when the Attribute model validate_unique() method is called """
-    """ To avoid a DB exception ruining usability, we must validate this uniqueness at the formset level """
+    """ 
+    The unique_together constraint of any Attribute class includes the Release PK 
+    Creating the Release, it is not yet saved into the DB when the Attribute model validate_unique() method is called 
+    To avoid a DB exception ruining usability, we must validate this uniqueness at the formset level 
+    """
     def clean(self):
         super(ReleaseAnyAttributeFormset, self).clean()
         errors = []
@@ -246,9 +248,12 @@ class OccurrenceAdminForm(PropertyAwareModelForm):
         self.clean_tag_to_occurrence()
     
     def clean_tag_to_occurrence(self):
-        """ Ensures that the proper configuration is in place in Supervisor : """
-        """ * That there is a Deployment for the current application """
-        """ * That this Deployment is associated to a UserCollection for the logged-in user """
+        """ 
+        Ensures that the proper configuration is in place in Supervisor : 
+
+        * That there is a Deployment for the current application 
+        * That this Deployment is associated to a UserCollection for the logged-in user 
+        """
         try:
             deployment = Deployment.objects.get(configuration=utils_path.get_app_name())
         except Deployment.DoesNotExist:
@@ -283,8 +288,10 @@ class OccurrenceAdmin(CollecsterModelAdmin):
             TagToOccurrence(user_creator=obj.created_by, user_occurrence_id=obj.pk, occurrence=obj).save()
 
     def get_changeform_initial_data(self, request):
-        """ Pre-populates the owner field with the Person corresponding to the logged-in user """
-        """ But does not override this value in case it was provided as GET data """
+        """ 
+        Pre-populates the owner field with the Person corresponding to the logged-in user 
+        But does not override this value in case it was provided as GET data 
+        """
         initial = super(OccurrenceAdmin, self).get_changeform_initial_data(request)
         if "owner" not in initial:
             initial["owner"] = Person.objects.get(userextension__user=request.user)

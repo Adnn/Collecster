@@ -100,19 +100,23 @@ class OccurrenceComposition(OccurrenceCompositionBase):
 #        return cleaned if cleaned else None
 
 class Concept(ConceptBase):
-    """ Specialization of the Concept model, to give it deployment-specific fields without introducing """
-    """ an additional DB table. """  
+    """ 
+    Specialization of the Concept model, to give it deployment-specific fields without introducing 
+    an additional DB table. 
+    """  
 
     developer = models.ForeignKey('Company', blank=True, null=True) # Allows null for the _COMBO concept special case
                                                                     # Also allows blank, for noname/unknown
 
-    name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True)
-    year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True)
+    name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True, 
+                                                    help_text = ("Allows disambiguation when the same name does not referer to the same concept depending on the region."
+                                                                 "(eg. 'Super Mario Bros. 2' is not the same game in Japan and EU/US.)"))
+    year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True,
+                               help_text="Can help disambiguate names, in particular in the case of franchise reboots")
 
 
 class Release(ReleaseBase):
-    """ An abstract base for the Release model, allowing to give it deployment-specific fields without introducing """
-    """ an additional DB table. """  
+    """ Release specialization for advideogame """
 
     collecster_properties = {
         "forbidden_on_material":                ("digitally_distributed", ),
@@ -125,7 +129,11 @@ class Release(ReleaseBase):
     }
 
     immaterial             = models.BooleanField(default=False) 
-    digitally_distributed  = models.BooleanField(default=False) 
+    digitally_distributed  = models.BooleanField(default=False, help_text="a-la Steam") 
+    """
+    This boolean is mainly adressed at software. It allows to indicate that this release is digitally distributed, a-la Steam. 
+    """
+
     alternative_distribution = models.BooleanField(default=False, help_text="If the release was not officially sold in shops, but distributed otherwise (eg. Internet)") 
 
     special_case_release = models.CharField(max_length=1, blank=True, choices=(
@@ -138,6 +146,11 @@ class Release(ReleaseBase):
     ## neither will immaterials
     barcode = models.CharField(max_length=20, blank=True)
     version = models.CharField(max_length=20, blank=True, help_text="Version or model.") 
+    """
+    For software, it can be the actual version number.
+
+    For hardware, it could be a model identifier (eg. for Sega Saturn: Model1 or Model 2)
+    """
 
     release_regions  = models.ManyToManyField("ReleaseRegion", blank=True)
     unsure_region  = models.BooleanField(default=False, help_text="Check if the release region is uncertain.")
@@ -372,17 +385,30 @@ def clean_complement(instance, errors):
 
 
 class PurchaseContext(models.Model):
+    """
+    Records several information detailing the context of a ``Purchase``.
+    This is essentially the selling place: "where" and "how" the purchase was made.
+    """
     class Meta:
         unique_together = ("category", "name", "location")
 
     category = models.CharField(max_length=PurchaseContextCategory.choices_maxlength(),
                                 choices=PurchaseContextCategory.get_choices())
+    """
+    The category of the selling place: *online* or *offline*,
+    with further details regarding the type of the place (shop, secondhand sale, e-shop, ...)
+    """
+    
     name = models.CharField(max_length=60)
+    """ Names the context, using the name of the selling place """
 
     location = models.ForeignKey(Location, blank=True, null=True)
+    """ Location (country, optional city) of the selling place """
     address_complement  = models.CharField(max_length=60, blank=True)
+    """ Free text to give further location details (street, ...) """
 
     url = models.URLField(blank=True)
+    """ For online categories, the url of the service """
 
     def _get_unique_checks(self, exclude=None):
         unique_checks, date_checks = super(PurchaseContext, self)._get_unique_checks(exclude)
@@ -397,8 +423,10 @@ class PurchaseContext(models.Model):
 
 
     def clean(self):
-        """ Online contexts cannot specify a location nor address complement """
-        """ Only contexts with a location can provide an address complement """
+        """ 
+        Online contexts cannot specify a location nor address complement 
+        Only contexts with a location can provide an address complement 
+        """
         errors = {} 
         if PurchaseContextCategory.is_online(self.category):
             # Enforces PurchaseContext::1.a)
@@ -440,7 +468,8 @@ class Purchase(Bundle):
     SHIPPED = "S"
     retrieval          = models.CharField(max_length=1, choices=((PICKUP, "Local pickup"), (FRIEND, "Friend pickup"), (SHIPPED, "Shipped")))
     pickup_person      = models.ForeignKey("supervisor.Person", blank=True, null=True)
-    location           = models.ForeignKey(Location, blank=True, null=True, help_text="The location the object shipped from, or the pickup location.")
+    location           = models.ForeignKey(Location, blank=True, null=True, help_text=("The location the object shipped from, or the pickup location."
+                                                                                       "Not available when buying from a shop."))
     address_complement = models.CharField(max_length=60, blank=True)
 
     def clean(self):
@@ -620,6 +649,7 @@ class BaseSystem(models.Model):
         return "{} {}".format(self.brand, self.name)
 
 class SystemMediaPair(models.Model):
+    """ Gives a name to a media on a given system, which together can be seen as an interface """
     class Meta:
         unique_together = ("system", "media")
 
@@ -634,6 +664,7 @@ class SystemMediaPair(models.Model):
 
 
 class InterfaceDetailBase(models.Model):
+    """ Holds both the list of provided interfaces and the list of required interfaces """
     provides = models.ManyToManyField(SystemMediaPair, through="ProvidedInterface", through_fields=("interface_detail_base", "interface"),
                                       related_name="provided_to_set")
     requires = models.ManyToManyField(SystemMediaPair, through="RequiredInterface", through_fields=("interface_detail_base", "interface"),
@@ -641,14 +672,14 @@ class InterfaceDetailBase(models.Model):
 
 
 class CommonInterfaceDetail(InterfaceDetailBase):
-    """ Listing interfaces that are shared by all the systems advertised by the current specification """
+    """ Lists interfaces that are shared by all the systems advertised by the current specification """
     interfaces_specification = models.OneToOneField("InterfacesSpecification")
     def __str__(self):
         return "Common interfaces in \"{}\"".format(self.interfaces_specification.internal_name)
 
 
 class SystemInterfaceDetail(InterfaceDetailBase):
-    """ Listing interfaces for a specific system advertised by the current specification """
+    """ Records a specific sytem advertised by the current specification, plus lists interfaces for it """
     class Meta:
         unique_together = (("interfaces_specification", "advertised_system"), )
 
@@ -680,8 +711,16 @@ class RequiredInterface(BaseSpecificationInterface):
 
 
 class InterfacesSpecification(models.Model):
-    """ A SystemSpecification defers detailing of the different advertised systems, and their associated interfaces, """
-    """ to this model. It has a one to many relationship with SystemInterfaceDetail. """
+    """
+    A SystemSpecification defers detailing of the different advertised systems, and their associated interfaces,
+    to this model.
+
+    To provide the list of advertised systems and their corresponding interfaces,
+    InterfacesSpecification has a one to many relationship with SystemInterfaceDetail.
+
+    CommonInterfaceDetail list the interfaces that are shared by all systems advertised on this specifcation.
+    """
+
     internal_name = models.CharField(max_length=60, unique=True)
     implicit_system = models.BooleanField(default=False, help_text=("Indicate that this interface specification was not released as a separate system, but implicitly exists"
                                                                     " as soon as all required interfaces are united (eg. Sega Mega-CD 32X)."))
@@ -691,14 +730,24 @@ class InterfacesSpecification(models.Model):
 
 
 class SystemSpecification(models.Model):
-    """ The top level model for technical specification. Release will directly reference an instance of this model """
+    """
+    The top level model for technical specification. Release will directly reference an instance of this model
+
+    The intention of this model is to separate regional lockout plus bios version (which values are directly stored in SystemSpecification)
+    from the detailed interface specification.
+    The interface specification is just a relation, making it shareable:
+    the interface specification should be the same for most combination of bioses and regional versions.
+    """
     # TODO M2M not allowed in unique_together clause, how to enforce ?
     #class Meta:
     #    unique_together = ("regional_lockout", "bios_version", "interface")
 
     regional_lockout     = models.ManyToManyField(LockoutRegion, blank=True)
+    """ Region(s) to which the system is locked. Leave empty for a region free specification. """
     bios_version         = models.CharField(max_length=10, blank=True)
+    """ Optional bios version, for hardware """
     interfaces_specification = models.ForeignKey(InterfacesSpecification)
+    """ Relation to an InterfacesSpecification """
 
     def __str__(self):
         display = "{}".format(self.interfaces_specification)
@@ -725,6 +774,7 @@ class SystemSpecification(models.Model):
 # System variants
 #
 class SystemVariant(models.Model):
+    """ Associates ``Concept`` instances to a variant names, or can indicate that said ``Concept`` has no known variants."""
     system_concept = models.ForeignKey("Concept",
                                        limit_choices_to=Q(primary_nature__in=ConfigNature.system_with_variants())
                                                       | Q(additional_nature_set__nature__in=ConfigNature.system_with_variants()))
@@ -787,9 +837,11 @@ class ConceptRelation(models.Model):
 # Misc
 #
 class Color(models.Model):
-    """ Color is a table listing available color choices (populated by fixture). """
-    """ It appears as a more general solution over the fixed choice field in models, because it allows """
-    """ ManyToOne and ManyToMany relationships very easily"""
+    """ 
+    Color is a table listing available color choices (populated by fixture). 
+    It appears as a more general solution over the fixed choice field in models, because it allows 
+    ManyToOne and ManyToMany relationships very easily
+    """
     name = models.CharField(max_length=30, unique=True)
 
     def __str__(self):
@@ -833,8 +885,10 @@ class StorageUnit(models.Model):
     #    if self.prorietary and not self.brand:
     #        raise ValidationError({"brand": ValidationError("Proprietary units cannot leave this field blank.", code="invalid")})
     def validate_unique(self, exclude=None):
-        """ Needed to prevent adding several brandless units with the same name """
-        """ because a NULL foreign key does not compare equal to NULL """
+        """ 
+        Needed to prevent adding several brandless units with the same name 
+        because a NULL foreign key does not compare equal to NULL 
+        """
         if not self.brand: #if there is a brand, we can rely on the unique_together constraint
             qs = StorageUnit.objects.filter(name=self.name).filter(brand=None)
             if not self._state.adding:
