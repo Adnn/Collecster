@@ -219,6 +219,18 @@ class Release(ReleaseBase):
         return on_tag
             
         
+def clean_dependant_field(instance, master_field_name, slave_field_name):
+    if getattr(instance, slave_field_name) and not getattr(instance, master_field_name):
+        return {
+            slave_field_name: ValidationError("Field only allowed when '{}' is not blank".format(master_field_name),
+                                              code='invalid') 
+        }
+    elif not getattr(instance, slave_field_name) and getattr(instance, master_field_name):
+        return {
+            slave_field_name: ValidationError("Field required when '{}' is not blank".format(master_field_name),
+                                              code='invalid') 
+        }
+    return {}
 
 class Occurrence(OccurrenceBase):
     collecster_properties = {
@@ -227,7 +239,9 @@ class Occurrence(OccurrenceBase):
         "required_on_material": ("origin", ),
     }
 
-    purchase_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    purchase_price  = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    currency        = models.ForeignKey("Currency", blank=True, null=True)
+
     origin = models.CharField(max_length=OccurrenceOrigin.choices_maxlength(), choices=OccurrenceOrigin.get_choices(),
                               blank = True)
     blister = models.BooleanField(help_text="Indicates whether a blister is still present.")
@@ -255,6 +269,11 @@ class Occurrence(OccurrenceBase):
 
     def origin_color(self):
         return OccurrenceOrigin.DATA[self.origin].tag_color
+
+    def clean(self):
+        errors = clean_dependant_field(self, "purchase_price", "currency")
+        if errors:
+            raise ValidationError(errors)
 
 ##
 ## Extra models
@@ -295,6 +314,19 @@ class OccurrenceAnyAttributeDefect(models.Model):
 
     def __str__(self):
         return "{} '{}'".format(type(self).__name__, self.defect_description)
+
+
+class Currency(models.Model):
+    class Meta:
+        verbose_name_plural = "currencies"
+
+    full_name = models.CharField(max_length=64)
+    code      = models.CharField(max_length=4, help_text="ISO 4217")
+    symbol    = models.CharField(max_length=4)
+
+    def __str__(self):
+        return "{} ({})".format(self.code, self.symbol)
+
 
 #
 # Company
@@ -394,6 +426,10 @@ def clean_complement(instance, errors):
     if instance.address_complement and not instance.location:
         errors["location"] =  ValidationError("An address must complement a location.", code="invalid")
 
+def clean_shipping_cost(instance, errors):
+    if instance.shipping_cost and not instance.price:
+        errors["price"] =  ValidationError("A shipping cost must add to a price.", code="dependant")
+
 
 class PurchaseContext(models.Model):
     """
@@ -470,41 +506,44 @@ class PurchaseContext(models.Model):
 
 
 class Purchase(Bundle):
-    price   = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    price       = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Excluding shipping costs.")
     shipping_cost = models.DecimalField(max_digits=6,  decimal_places=2, blank=True, null=True)
+    currency    = models.ForeignKey("Currency", blank=True, null=True)
+
     context = models.ForeignKey(PurchaseContext)
 
     PICKUP = "P"
     FRIEND = "F"
     SHIPPED = "S"
     retrieval          = models.CharField(max_length=1, choices=((PICKUP, "Local pickup"), (FRIEND, "Friend pickup"), (SHIPPED, "Shipped")))
-    pickup_person      = models.ForeignKey("supervisor.Person", blank=True, null=True)
+    pickup_person      = models.ForeignKey("supervisor.Person", blank=True, null=True, help_text="Only when retrieval is 'Friend pickup'.")
     location           = models.ForeignKey(Location, blank=True, null=True, help_text=("The location the object shipped from, or the pickup location."
-                                                                                       "Not available when buying from a shop."))
+                                                                                       " Not available when buying from a shop."))
     address_complement = models.CharField(max_length=60, blank=True)
 
     def clean(self):
-        # The only way I found to check if the context was set
-        try:
-            self.context
-        except PurchaseContext.DoesNotExist:
-            return
-
         def forbidden_field(field_name, availability_clause):
             if getattr(self, field_name) not in Purchase._meta.get_field(field_name).empty_values:
                 errors[field_name] = ValidationError("Field only available for {}.".format(availability_clause),
                                                      code="invalid")
 
         errors = {}
-        if self.context.category != PurchaseContextCategory.INTERNET_ADS:
-            #map(forbidden_field, ("retrieval", "location", "address_complement")) # TODO why does not that work ???
-            # Enforces Purchase::2)
-            for field in ("location", "address_complement"):
-                forbidden_field(field, "internet advertisements context")
-        else:
-            # Enforces Purchase::1)
-            clean_complement(self, errors)
+        errors.update(clean_dependant_field(self, "price", "currency"))
+        clean_shipping_cost(self, errors)
 
+        # The only way I found to check if the context was set is to try and catch the exception
+        try:
+            if self.context.category != PurchaseContextCategory.INTERNET_ADS:
+                #map(forbidden_field, ("retrieval", "location", "address_complement")) # TODO why does not that work ???
+                # Enforces Purchase::2)
+                for field in ("location", "address_complement"):
+                    forbidden_field(field, "internet advertisements context")
+            else:
+                # Enforces Purchase::1)
+                clean_complement(self, errors)
+        except PurchaseContext.DoesNotExist:
+            pass
+   
         if self.retrieval == Purchase.FRIEND:
             # Enforces Purchase::3.a)
             if not self.pickup_person:

@@ -317,6 +317,8 @@ admin.site.register(TagRegion)
 
 admin.site.register(Color)
 
+admin.site.register(Currency)
+
 admin.site.register(StorageUnit)
 
 admin.site.register(Donation, AnyBundleAdmin)

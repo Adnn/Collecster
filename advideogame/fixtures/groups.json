@@ -305,6 +305,21 @@
                 "controller"
             ],
             [
+                "add_currency",
+                "advideogame",
+                "currency"
+            ],
+            [
+                "change_currency",
+                "advideogame",
+                "currency"
+            ],
+            [
+                "delete_currency",
+                "advideogame",
+                "currency"
+            ],
+            [
                 "add_demo",
                 "advideogame",
                 "demo"
