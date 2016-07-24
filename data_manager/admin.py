@@ -208,7 +208,7 @@ class OccurrenceAnyAttributeForm(forms.ModelForm):
 
     # on the model, release_corresponding_entry is a property, which does not map nicely to ModelForm fields.
     # we have to handle this field manually (see __init__)
-    release_corresponding_entry = forms.CharField(label="Attribute", required=False, widget=widgets.SimpleLabelWidget)
+    release_corresponding_entry = forms.CharField(label="Attribute", required=False, widget=widgets.LabelWidget)
 
     def __init__(self, *args, **kwargs):
         super(OccurrenceAnyAttributeForm, self).__init__(*args, **kwargs)
