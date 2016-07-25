@@ -824,12 +824,16 @@ class SystemSpecification(models.Model):
 # System variants
 #
 class SystemVariant(models.Model):
+    class Meta:
+        unique_together = ("system_concept", "variant_name")
+        #The variant_name alone cannot be unique, because all "no_variant" system variants will have the same empty name
+
     """ Associates ``Concept`` instances to a variant names, or can indicate that said ``Concept`` has no known variants."""
     system_concept = models.ForeignKey("Concept",
                                        limit_choices_to=Q(primary_nature__in=ConfigNature.system_with_variants())
                                                       | Q(additional_nature_set__nature__in=ConfigNature.system_with_variants()))
     no_variant = models.BooleanField(default=False, help_text="Set to true indicated that the corresponding concept has no variants.")
-    variant_name = models.CharField(max_length=32, blank=True, unique=True)
+    variant_name = models.CharField(max_length=32, blank=True)
 
     def __str__(self):
         return (("{system} has no variant" if self.no_variant else "{variant} [{system}]")
