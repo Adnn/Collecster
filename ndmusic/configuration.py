@@ -7,6 +7,9 @@ import collections
 ##
 ## Specifics
 ##
+class ConceptCategory:
+    EMPTY       = ()
+
 class ReleaseCategory:
     EMPTY       = ()
 
@@ -32,8 +35,7 @@ class ConfigNature(ConfigNature):
     COMBO = "_COMBO"
     RECORD = "REC"
 
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "tag_color", "release_category", "occurrence_category", "automatic_attributes"])
     DATA = collections.OrderedDict((
-        (COMBO,     DataTuple(COMBO,    UIGroup._HIDDEN,    "grey", ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    (), )),
-        (RECORD,    DataTuple('Record', UIGroup._TOPLEVEL,  "blue", ReleaseCategory.EMPTY,     OccurrenceCategory.EMPTY,    automatic_attributes, )),
+        (COMBO,     NatureData(COMBO,       UIGroup._HIDDEN,    "grey", ConceptCategory.EMPTY,  ReleaseCategory.EMPTY,  OccurrenceCategory.EMPTY,   (), )),
+        (RECORD,    NatureData("Record",    UIGroup._TOPLEVEL,  "blue", ConceptCategory.EMPTY,  ReleaseCategory.EMPTY,  OccurrenceCategory.EMPTY,   automatic_attributes, )),
     ))

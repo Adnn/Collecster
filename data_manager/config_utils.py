@@ -29,6 +29,9 @@ def self_software(release):
     return implicit_self(release) if material else ()
 
 
+NatureData = collections.namedtuple("NatureData", ["ui_value", "ui_group", "tag_color",
+                                                   "concept_category", "release_category", "occurrence_category",
+                                                   "automatic_attributes"])
 class ConfigNature:
     """ 
     Use should extend this class by deriving it from itself (http://stackoverflow.com/a/15526901/1027706) 

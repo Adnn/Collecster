@@ -7,6 +7,26 @@ import collections
 ##
 ## Specifics
 ##
+class ConceptSpecific(object):
+    """ ConceptSpecific classes are added to Concept instances depending on their nature(s) """
+
+    class AbstractBase(models.Model):
+        class Meta:
+            abstract = True
+        concept = models.OneToOneField('Concept')
+
+        def get_parent_instance(self):
+            return self.concept
+
+    #class CustomCon(AbstractBase):
+
+ConSp = ConceptSpecific
+
+class ConceptCategory:
+    EMPTY   = ()
+    #CUSTOM  = (ConSp.CustomCon,)
+
+
 class ReleaseSpecific(object):
     """ ReleaseSpecific classes are added to Release instances depending on their nature(s) """
 
@@ -14,6 +34,9 @@ class ReleaseSpecific(object):
         class Meta:
             abstract = True
         release = models.ForeignKey('Release')
+
+        def get_parent_instance(self):
+            return self.release
 
     #class CustomRel(AbstractBase):
 
@@ -31,6 +54,9 @@ class OccurrenceSpecific(object):
         class Meta:
             abstract = True
         occurrence = models.ForeignKey('Occurrence')
+
+        def get_parent_instance(self):
+            return self.occurrence
 
     #class CustomOcc(AbstractBase):
    
@@ -56,8 +82,8 @@ class ConfigNature(ConfigNature):
     CONSOLE = "CONSOLE"
     GAME = "GAME"
 
-    DataTuple = collections.namedtuple("DataTuple", ["ui_value", "ui_group", "tag_color", "release_category", "occurrence_category", "automatic_attributes"])
     DATA = collections.OrderedDict((
-        #(CONSOLE,   DataTuple('Console',    UIGroup._TOPLEVEL,  "red",      ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,      automatic_self )),
-        #(GAME,      DataTuple('Game',       UIGroup.SOFT,       "green",    ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL,  automatic_self )),
+                        #       "ui_value", "ui_group",         "tag_color","concept_category",     "release_category",         "occurrence_category",          "automatic_attributes"]
+        #(CONSOLE,   NatureData('Console',  UIGroup._TOPLEVEL,  "red",      ConceptCategory.CONSOLE, ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,     automatic_self )),
+        #(GAME,      NatureData('Game',     UIGroup.SOFT,       "green",    ConceptCategory.SOFTWARE,ReleaseCategory.SOFTWARE,  OccurrenceCategory.OPERATIONAL, automatic_self )),
     ))
