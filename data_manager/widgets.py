@@ -13,16 +13,23 @@ class LabelWidget(forms.widgets.TextInput):
             html = u"LABEL WIDGET RENDER: EMPTY ERROR"
         else:
             html = u"{}{}".format(super(LabelWidget, self).render(name, value, dict(hidden=1, **attrs)),
-                                  value)
+                                  self.get_display_value(value))
         return utils.safestring.SafeText(html)
 
+    def get_display_value(self, value):
+        # Nota: to be overriden when another behaviour is needed (see labelwidget_factory)
+        return value
 
 #    def bound_data(self, data, initial):
 #        return initial
 
 def labelwidget_factory(Model):
     classname = "{}{}".format(Model.__name__, "LabelWidget")
-    return type(classname, (LabelWidget,), {"model": Model})
+
+    def get_display_value(self, value):
+        return self.model.objects.get(pk=value)
+
+    return type(classname, (LabelWidget,), {"get_display_value": get_display_value, "model": Model})
 
 
 class SimpleLabelWidget(forms.widgets.TextInput):
