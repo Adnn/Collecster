@@ -53,19 +53,16 @@ def ajax_concept_admin_formsets(request):
 def ajax_release_admin_formsets(request, concept_id):
     release_adm = ReleaseAdmin(Release, admin.site)
 
-    request_with_payload = request
-    request_with_payload.collecster_payload = {
-        "concept_id": int(concept_id),
-    }
+    utils_payload.set_request_payload(request, "concept_id", int(concept_id))
 
     ## The specifics
-    request_with_payload.collecster_payload["inlines_groups"] = ("specific",)
-    rendered_formsets = render_admin_formsets(get_admin_formsets(release_adm, request_with_payload))
+    utils_payload.set_request_payload(request, "inlines_groups", ("specific",))
+    rendered_formsets = render_admin_formsets(get_admin_formsets(release_adm, request))
     specifics_div = "<div id={}>{}</div>".format("collecster_specifics", "\n".join(rendered_formsets))
 
     ## Other inlines marked for refresh
-    request_with_payload.collecster_payload["inlines_groups"] = ReleaseAdmin.collecster_refresh_inline_classes
-    rendered_attributes = render_admin_formsets(get_admin_formsets(release_adm, request_with_payload))
+    utils_payload.set_request_payload(request, "inlines_groups", ReleaseAdmin.collecster_refresh_inline_classes)
+    rendered_attributes = render_admin_formsets(get_admin_formsets(release_adm, request))
 
     return HttpResponse("{}\n{}".format(specifics_div, rendered_attributes[0]))
 
@@ -73,10 +70,8 @@ def ajax_release_admin_formsets(request, concept_id):
 def ajax_occurrence_admin_formsets(request, release_id):
     occurrence_adm = OccurrenceAdmin(Occurrence, admin.site)
 
-    request.collecster_payload = {
-        "release_id": int(release_id),
-        "concept_id": Release.objects.get(pk=release_id).concept.pk,
-    }
+    utils_payload.set_request_payload(request, "release_id", int(release_id))
+    utils_payload.set_request_payload(request, "concept_id", Release.objects.get(pk=release_id).concept.pk)
 
     ## The specifics
     utils_payload.set_request_payload(request, "inlines_groups", ("specific",))
