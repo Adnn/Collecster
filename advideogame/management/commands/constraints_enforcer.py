@@ -86,7 +86,7 @@ def model_cleaner(model_class):
 #####
 # Main entry point
 #####
-def enforce_main():
+def enforce_main(command):
 
     ##
     ## Concepts
@@ -139,6 +139,31 @@ def enforce_main():
         for err in immaterial_errors:
             print("{} on imaterial Release '{}'.".format(err, release))
 
+        ## Special case rules
+        if release.special_case_release:
+            # Enforces SpecialCase_Release::1)
+            if release.nested_releases.count():
+                command.warn("Release(s) were nested under the special case release '{}'".format(release))
+
+            if release.special_case_release == "L" : # loose
+                # Enforces SpecialCase_Release::2)
+                if release.releasecomposition_set.exists():
+                    command.warn("Release '{}' is *loose*, yet it is nested under other release(s): {}"
+                                    #.format(release, release.releasecomposition_set.all()))
+                                    .format(release, Release.objects.filter(nested_releases=release)))
+                
+        #
+        # Regions
+        #
+        for parent_release in [release_compo.from_release for release_compo in release.releasecomposition_set.all()]:
+            # Enforces RELEASE_REGIONS::2) 
+            if ( release.release_regions.exists() 
+                 and not utils.is_region_superset(release.release_regions.all(), parent_release.release_regions.all()) ):
+                command.error("Release '{}' release-regions are {}. Yet it is nested under '{}' whose release-regions "
+                              "{} are not strictly included"
+                                .format(release, release.release_regions.all(),
+                                        parent_release, parent_release.release_regions.all()))
+        
 
     ##
     ## Occurrences
@@ -244,6 +269,37 @@ def enforce_main():
         if not occurrence.release.is_material():
             if not OccurrenceComposition.objects.filter(to_occurrence=occurrence).exists():
                 print("Occurrence '{occ}' is immaterial, but is not nested under another occurrence.".format(occ=occurrence))
+
+    #
+    # PLATFORM
+    #
+
+    # Enforces PLATFORM::1)
+    for required_interface in RequiredInterface.objects.filter(reused_interface__isnull=False):
+        command.error("The required interface index #{}, found in '{}', is not allowed to reuse another interface."
+                        .format(required_interface.pk, utils.find_interface_detail(required_interface)))
+    
+    ReuseTuple = collections.namedtuple("ReuseTuple", ("reusing_specinterface", "reused_mediapair"))
+    specs_with_reuse = {}
+    # First, generate a lookup table 'specs_with_reuse', associating each InterfaceSpecification to both
+    # a list of its reusing interface and a list of its reused interfaces
+    for provided_interface in ProvidedInterface.objects.filter(reused_interface__isnull=False):
+        # { InterfaceSpecification: ([ReusingBaseSpecificationInterface], [ReusedSystemMediaPair])  }
+        data = specs_with_reuse.setdefault(utils.find_interface_detail(provided_interface).interfaces_specification,
+                                           ReuseTuple([], []))
+        data.reusing_specinterface.append(provided_interface)
+        data.reused_mediapair.append(provided_interface.reused_interface)
+
+    # Use the lookup table to find any reused interface that would itself reuse an interface
+    for interface_spec, reuse_tuple in specs_with_reuse.items():
+        # Enforces PLATFORM::2)
+        for provided_interface in [provided_interface for provided_interface in reuse_tuple.reusing_specinterface
+                                                      if provided_interface.interface in reuse_tuple.reused_mediapair
+                                                      if provided_interface.interface != provided_interface.reused_interface]:
+            command.error("The interface index #{pk}, provided by '{spec}' is reused in this same specification, " \
+                          "so it is not allowed to itself reuse {mp} ."
+                            .format(pk=provided_interface.pk, spec=interface_spec, mp=provided_interface.reused_interface))
+
 
     ## More composition
     # Enforces COMPOSITION::1)

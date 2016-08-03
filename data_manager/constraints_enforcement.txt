@@ -118,6 +118,14 @@ Data model consistency
     Model-level: unique_together on TagToOccurrence
 
 = ADVIDEOGAME =
+
+== Prices ==
+1) 'Currency' and 'Price' fields must either be both filled or both blank.
+
+== SpecialCase_Release ==
+1) A Release with SpecialCase field not blank should not have nested release(s) (it's a warning)
+2) A Release that is **loose** should not be nested under another release. (it's a warning)
+
 == OccurrencePicture==
 1.a) OccurrencePicture should have a generic relation to a ReleaseAttribute or a CustomReleaseAttribute associated with the Release
 of the related Occurrence.
@@ -126,6 +134,8 @@ of the related Occurrence.
 
 == RELEASE_REGIONS ==
 1) It is not allowed to specify at the same time a release region and any of its nested regions, as the parent regions implies all the regions it contains.
+2) A nested release, if it specifies release-regions, must have release-regions that are a superset of its parent's release-regions.
+  (Becausee the nested release is distributed at least in all the regions of its parent, within the parent).
 
 
 == PurchaseContext ==
@@ -141,7 +151,13 @@ of the related Occurrence.
     otherwise the location of the purchase is always the same location as the context itself.
 3.a) The field pickup_person is mandatory when retrieval is friend pickup.
 3.b) The field pickup_person is forbidden when retrieval is not friend pickup.
-4) The field shipping_cost is forbidden when retrieval is not 'shipped'
+4.a) The field shipping_cost is forbidden when retrieval is not 'shipped'.
+4.b) The field shipping_cost is forbidden when the field price is left blank.
+
+== PLATFORM ==
+1) A *required* interface cannot reuse another interface.
+2) A *provided* interface that is reused in the **same** InterfacesSpecification (but not by itself) cannot be itself
+   reusing another interface (i.e., there shoud be a single "canonical" reused interface, no chaining)
 
 = Tweaking the Admin interface to fit the application =
 

@@ -12,4 +12,10 @@ class Command(BaseCommand):
         super(Command, self).__init__(*args, **kwargs)
 
     def handle(self, *args, **options):
-        enforce_main()
+        enforce_main(self)
+
+    def warn(self, message):
+        self.stdout.write("[Warning] {}".format(message))
+
+    def error(self, message):
+        self.stderr.write("[Error] {}".format(message))

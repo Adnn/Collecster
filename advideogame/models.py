@@ -271,6 +271,7 @@ class Occurrence(OccurrenceBase):
         return OccurrenceOrigin.DATA[self.origin].tag_color
 
     def clean(self):
+        # Enforces Price::1)
         errors = clean_dependant_field(self, "purchase_price", "currency")
         if errors:
             raise ValidationError(errors)
@@ -528,7 +529,9 @@ class Purchase(Bundle):
                                                      code="invalid")
 
         errors = {}
+        # Enforces Price::1)
         errors.update(clean_dependant_field(self, "price", "currency"))
+        # Enforces Purchase::4.b)
         clean_shipping_cost(self, errors)
 
         # The only way I found to check if the context was set is to try and catch the exception
@@ -554,7 +557,7 @@ class Purchase(Bundle):
             forbidden_field("pickup_person", "friend pickups")
 
         if self.retrieval != Purchase.SHIPPED:
-            # Enforces Purchase::4)
+            # Enforces Purchase::4.a)
             forbidden_field("shipping_cost", "shipped purchases")
 
         if errors:
@@ -724,6 +727,7 @@ class InterfaceDetailBase(models.Model):
 class CommonInterfaceDetail(InterfaceDetailBase):
     """ Lists interfaces that are shared by all the systems advertised by the current specification """
     interfaces_specification = models.OneToOneField("InterfacesSpecification")
+
     def __str__(self):
         return "Common interfaces in \"{}\"".format(self.interfaces_specification.internal_name)
 
