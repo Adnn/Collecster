@@ -26,6 +26,10 @@ class ConceptSpecific(object):
         def get_parent_instance(self):
             return self.concept
 
+        def __str__(self):
+           return "{} specific for concept: {}".format(self.__class__.__name__, self.get_parent_instance())
+
+
     class Remote(AbstractBase): # for consoles and accessories
         battery_type = models.ForeignKey("BatteryType", blank=True, null=True)
 
@@ -69,6 +73,8 @@ class ReleaseSpecific(object):
         def get_parent_instance(self):
             return self.release
 
+        def __str__(self):
+           return "{} specific for release: {}".format(self.__class__.__name__, self.get_parent_instance())
 
     class Combo(AbstractBase):
         brand = models.ForeignKey('Company', blank=True, null=True)
@@ -77,9 +83,6 @@ class ReleaseSpecific(object):
         colors = models.ManyToManyField("Color", help_text="Principal color(s).")
         manufacturer = models.ForeignKey('Company', blank=True, null=True) # DEB (in cases of accessories, not consoles)
         #model = models.CharField(max_length=20, blank=True)  ## Probably useless, since there is already 'version'
-
-        def __str__(self):
-           return "Hardware specific for release: {}".format(self.release)
 
     class Software(AbstractBase):
         publisher   = models.ForeignKey("Company", blank=True, null=True, related_name="published_software_set")
@@ -125,6 +128,7 @@ class ReleaseSpecific(object):
             if no_variant_qs.count():
                 form.fields["system_variant"].initial = no_variant_qs[0]
 
+
 RelSp = ReleaseSpecific
 
 
@@ -152,6 +156,8 @@ class OccurrenceSpecific(object):
         def get_parent_instance(self):
             return self.occurrence
 
+        def __str__(self):
+           return "{} specific for occurrence: {}".format(self.__class__.__name__, self.get_parent_instance())
 
     class OperationalOcc(AbstractBase):
         YES = "Y"

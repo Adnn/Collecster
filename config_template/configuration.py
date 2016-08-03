@@ -18,6 +18,9 @@ class ConceptSpecific(object):
         def get_parent_instance(self):
             return self.concept
 
+        def __str__(self):
+           return "{} specific for concept: {}".format(self.__class__.__name__, self.get_parent_instance())
+
     #class CustomCon(AbstractBase):
 
 ConSp = ConceptSpecific
@@ -38,6 +41,9 @@ class ReleaseSpecific(object):
         def get_parent_instance(self):
             return self.release
 
+        def __str__(self):
+           return "{} specific for release: {}".format(self.__class__.__name__, self.get_parent_instance())
+
     #class CustomRel(AbstractBase):
 
 RelSp = ReleaseSpecific
@@ -57,6 +63,9 @@ class OccurrenceSpecific(object):
 
         def get_parent_instance(self):
             return self.occurrence
+
+        def __str__(self):
+           return "{} specific for occurrence: {}".format(self.__class__.__name__, self.get_parent_instance())
 
     #class CustomOcc(AbstractBase):
    
