@@ -352,8 +352,8 @@ class ReleaseCompositionBase(models.Model):
                                                                    # because we can access it through the 'nested_releases' field.
     """ The parent in the composition relation (i.e., the container). """
 
-    to_release      = models.ForeignKey("Release") # Reverse relation implicitly named "release_composition_set"
-    """ The container element. """
+    to_release      = models.ForeignKey("Release") # Reverse relation implicitly named "releasecomposition_set"
+    """ The contained element. """
 
     def clean(self):
         # Enforces COMPOSITION::1)
