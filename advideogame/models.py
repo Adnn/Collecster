@@ -254,7 +254,7 @@ class Occurrence(OccurrenceBase):
     def never_user_upload(instance, filename):
         raise Exception("Attempt to upload '{}' as tag_file. This field cannot be edited by the user.".format(filename))
 
-    tag_file = models.FileField(null=True, upload_to=never_user_upload) # Handled internally (never editable in the form)
+    tag_file = models.FileField(null=True, blank=True, upload_to=never_user_upload) # Handled internally (never editable in the form)
 
     def embedded_immaterial_is_known(self):
         return hasattr(self, "release")

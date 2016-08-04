@@ -260,7 +260,7 @@ def enforce_main(command):
         #
         # Enforces TAGTOOCCURRENCE::1.a)
         if not TagToOccurrence.objects.filter(occurrence=occurrence).exists():
-            print("Occurrence '{occ}' does not have a TagToOccurrence instance associated to it.".format(occ=occurrence))
+            command.error("Occurrence '{occ}' does not have a TagToOccurrence instance associated to it.".format(occ=occurrence))
 
         #
         # IMMATERIAL special rules
@@ -268,7 +268,7 @@ def enforce_main(command):
         # Enforces IMMATERIAL.2)
         if not occurrence.release.is_material():
             if not OccurrenceComposition.objects.filter(to_occurrence=occurrence).exists():
-                print("Occurrence '{occ}' is immaterial, but is not nested under another occurrence.".format(occ=occurrence))
+                command.warn("Occurrence '{occ}' is immaterial, but is not nested under another occurrence.".format(occ=occurrence))
 
     #
     # PLATFORM
