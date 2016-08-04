@@ -507,7 +507,7 @@ class PurchaseContext(models.Model):
 
 
 class Purchase(Bundle):
-    price       = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Excluding shipping costs.")
+    price       = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Including shipping costs.")
     shipping_cost = models.DecimalField(max_digits=6,  decimal_places=2, blank=True, null=True)
     currency    = models.ForeignKey("Currency", blank=True, null=True)
 
