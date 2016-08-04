@@ -1,0 +1,29 @@
+[
+{
+    "model": "advideogame.currency",
+    "pk": 1,
+    "fields": {
+        "full_name": "Euro",
+        "code": "EUR",
+        "symbol": "\u20ac"
+    }
+},
+{
+    "model": "advideogame.currency",
+    "pk": 2,
+    "fields": {
+        "full_name": "Pound sterling",
+        "code": "GBP",
+        "symbol": "\u00a3"
+    }
+},
+{
+    "model": "advideogame.currency",
+    "pk": 3,
+    "fields": {
+        "full_name": "U.S. dollar",
+        "code": "USD",
+        "symbol": "$"
+    }
+}
+]
