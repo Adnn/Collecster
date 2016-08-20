@@ -164,6 +164,16 @@ Additionally to the general :ref:`data_manager_usage_recommandations`, some are 
    * several wireless pads sold in the same packaging
    * a software distributed on several medias (because it does not fit on a single one, or for different systems)
 
+* The photos should be rotated to be presented as standing "up". In particular, for side labels they should be presented
+  as if standing on a shelf (not necessarily to make the label easily readable).
+
+* Barcodes are entered without blank spaces.
+
+* For immaterial :instance:`release`\s embedded in physical objects, it is recommended to be minimalist with data entered.
+  Usually, it could be limitied to the :instance:`concept`. (no platform, no date, most of the times not attributes).
+  In particular, not trying to set a publisher if there is not a distinct one from the embedding :instance:`occurrence`.
+
+
 .. note::
    This approach is chosen because the case is exceptional, and it leverages existing logic instead of requiring
    special case handling. It has drawbacks, notably that it does not duplicate the fields that should be separately
