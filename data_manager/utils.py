@@ -5,7 +5,7 @@ from data_manager import utils_id
 
 from .models import *
 from .configuration import ConfigNature
-from .forms_admins import PropertyAwareSaveInitialDataModelForm
+from .forms_admins import PropertyAwareSaveEmptyDataModelForm
 
 from django import forms
 from django.contrib import admin
@@ -31,10 +31,11 @@ class OneFormFormSet(BaseInlineFormSet):
         self.validate_max = True
 
 
-## Note: inherits from SaveInitialDataModelForm: in a situation where the model for a specific has defaults
+## Note: inherits from SaveEmptyDataModelForm: in a situation where the model for a specific has defaults
 ## for each required field, we want it to be saved to DB even if the user leaves all fields to default.
+## If All fields are optional, and none is filled, also save it.
 ## Also inherits from PropertyAware, so "collecster_properties" rule are available on specifics.
-class SpecificForm(PropertyAwareSaveInitialDataModelForm):
+class SpecificForm(PropertyAwareSaveEmptyDataModelForm):
     def get_base_instance(self):
         """ Needs to forward the base instance as the instance to which the specific as a relation. """
         return self.instance.get_parent_instance()

@@ -99,8 +99,8 @@ class PropertyAwareModelForm(forms.ModelForm):
             self.add_error(field_name, error)
 
 
-class PropertyAwareSaveInitialDataModelForm(PropertyAwareModelForm, SaveInitialDataModelForm):
-    """ Provides the functionnality of bot PropertyAware and SaveInitialData model forms """
+class PropertyAwareSaveEmptyDataModelForm(PropertyAwareModelForm, SaveEmptyDataModelForm):
+    """ Provides the functionnality of bot PropertyAware and SaveEmptyData model forms """
     pass
 
 ##########
