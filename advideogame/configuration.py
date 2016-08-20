@@ -219,6 +219,7 @@ class ConfigNature(ConfigNature):
     GAME = "GAME"
     ADD_ON = "ADD_ON"
     MOD = "MOD"
+    COMPILATION = "COMPILATION"
     DEMO = "DEMO"
     OS = "OS"
     WEB_BROWSER = "WEB_BROWSER"
@@ -276,6 +277,7 @@ class ConfigNature(ConfigNature):
         (GAME,              NatureData("Game",              UIGroup.SOFT,       "green",    ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (ADD_ON,            NatureData("AddOn",             UIGroup.SOFT,       "seagreen", ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (MOD,               NatureData("Mod",               UIGroup.SOFT,       "seagreen", ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
+        (COMPILATION,       NatureData("Compilation",       UIGroup.SOFT,       "green",    ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (DEMO,              NatureData("Demo",              UIGroup.SOFT,       "palegreen",ConceptCategory.EMPTY,      ReleaseCategory.DEMO,       OccurrenceCategory.OPERATIONAL, automatic_self )),
         (OS,                NatureData("Os",                UIGroup.SOFT,       "purple",   ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (WEB_BROWSER,       NatureData("Web browser",       UIGroup.SOFT,       "purple",   ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
