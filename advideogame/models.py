@@ -792,6 +792,9 @@ class SystemSpecification(models.Model):
     The interface specification is just a relation, making it shareable:
     the interface specification should be the same for most combination of bioses and regional versions.
     """
+    class Meta:
+        ordering = ["interfaces_specification__internal_name", "bios_version"]
+
     # TODO M2M not allowed in unique_together clause, how to enforce ?
     #class Meta:
     #    unique_together = ("regional_lockout", "bios_version", "interface")
