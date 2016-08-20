@@ -184,6 +184,7 @@ class AttributeBase(AbstractAttribute):
     class Meta:
         abstract = True
         unique_together = ("category", "name")
+        ordering = ("category", "name")
 
 
 ##########

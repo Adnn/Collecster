@@ -281,16 +281,6 @@
         }
     },
     {
-        "pk": 27,
-        "model": "advideogame.attribute",
-        "fields": {
-            "category": 3,
-            "value_type": "RTN",
-            "description": "",
-            "name": "manual: jewel box"
-        }
-    },
-    {
         "pk": 28,
         "model": "advideogame.attribute",
         "fields": {
@@ -308,6 +298,56 @@
             "value_type": "RTN",
             "description": "",
             "name": "warranty"
+        }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 30,
+        "fields": {
+            "category": 2,
+            "name": "seal brand",
+            "description": "The branded seal found on the opening side of some games",
+            "value_type": "PRS"
+        }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 31,
+        "fields": {
+            "category": 2,
+            "name": "cardboard strapping",
+            "description": "a piece of cardboard that goes around an item (eg. strapping along 4 edges of a game box)",
+            "value_type": "RTN"
+        }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 32,
+        "fields": {
+            "category": 3,
+            "name": "insert back: jewel box",
+            "description": "",
+            "value_type": "RTN"
+        }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 33,
+        "fields": {
+            "category": 3,
+            "name": "insert cover: cartridge box",
+            "description": "A printed paper, usually kept behind a transparent plastic film",
+            "value_type": "RTN"
+        }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 34,
+        "fields": {
+            "category": 2,
+            "name": "plastic cd sleeve",
+            "description": "",
+            "value_type": "RTN"
         }
     }
 ]
