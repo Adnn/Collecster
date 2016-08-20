@@ -181,7 +181,7 @@ def enforce_main(command):
         # ATTRIBUTES
         #
         generic_release_attributes = utils.retrieve_noncustom_custom_release_attributes(occurrence.release.pk)
-        generic_occurrence_attributes = OccurrenceAnyAttribute.objects.filter(occurrence=occurrence)
+        generic_occurrence_attributes = OccurrenceAnyAttribute.objects.filter(occurrence=occurrence).order_by("pk")
         for index, (release_att, occurrence_att) \
         in enumerate(itertools.zip_longest(generic_release_attributes, generic_occurrence_attributes)):
             corresponding_att = occurrence_att.release_corresponding_entry if occurrence_att else None
