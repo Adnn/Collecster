@@ -22,3 +22,4 @@ proc_name = "collecster"
 workers   = 3
 bind      = ["localhost:9090"]
 loglevel  = "debug"
+timeout   = 90
