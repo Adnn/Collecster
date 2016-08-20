@@ -83,6 +83,22 @@ def populate_occurrence_picture_attributes_choices(formset, request, obj):
         form.fields["any_attribute"].choices = choices
         if form.instance.attribute_id:
             form.fields["any_attribute"].initial = "{}_{}".format(form.instance.attribute_type.pk, form.instance.attribute_id)
+
+    def empty_form(self):
+        form = super(OccurrencePictureFormSet, self).empty_form
+        form.fields["any_attribute"].choices = choices
+        return form
+
+    # The empty_formset property is used when clicking the "Add another Occurrence picture" in the web interface
+    # "patches" the property by subclassing, as described on SO: http://stackoverflow.com/a/31591589/1027706
+    class PatchedFormset(formset.__class__):
+        @property
+        def empty_form(self):
+            form = super(PatchedFormset, self).empty_form
+            form.fields["any_attribute"].choices = choices
+            return form
+    formset.__class__ = PatchedFormset
+
     
 class OccurrencePictureForm(forms.ModelForm):
     class Meta:
