@@ -11,7 +11,7 @@ from .models import *
 from django.contrib import admin
 
 ##
-## Edit the data_manager admin
+## Edit the data_manager admin
 ##
 class ConceptAdmin(ConceptAdmin):
     inlines = () # Disable additional natures

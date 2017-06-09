@@ -8,7 +8,7 @@ from django.db import transaction
 
 
 ##
-## This is a custom management command, to delete Collecster users.
+## This is a custom management command, to delete Collecster users.
 ##
 class Command(BaseCommand):
     help = "Deletes a user, removing its supervisor.UserCollection, and the associated supervisor.Person, supervisor.UserExtension and auth.User."

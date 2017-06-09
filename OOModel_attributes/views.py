@@ -49,7 +49,7 @@ def add_instance(request):
         else:
             attribute_formset = InstanceAttributeFormset(prefix="instance_attributes")
 
-        # Save to DB
+        # Save to DB
         if instance_form.is_valid() and attribute_formset.is_valid():
             saved_instance = instance_form.save()
             attribute_formset.instance = saved_instance
@@ -88,13 +88,13 @@ def ajax_admin_formset(request, release_id):
     release_attributes = retrieve_attributes(release_id)
     initial_attributes = [ {"release_attribute": val} for val in [attribute.id for attribute in release_attributes]]
 
-        ## It is not enough to render the correct formset class directly !
+        ## It is not enough to render the correct formset class directly !
     #formset = FormsetClass( initial=initial_attributes )
     #formset = FormsetClass()
     #assign_attribute_names(formset, release_attributes)
     #return HttpResponse(formset.as_p())
 
-        ## Getting the formset returned by the inline is not better
+        ## Getting the formset returned by the inline is not better
     #inline = InstanceAttributeInline(Instance, admin.site)
     #formset = inline.get_formset(request)
     ##formset = inline.get_inline_formsets(request)

@@ -15,7 +15,7 @@ from django.forms.models import modelform_factory
 from functools import partial, partialmethod
 from collections import OrderedDict
 
-## TODEL ##
+## TODEL ##
 #import wdb
 
 
@@ -65,7 +65,7 @@ class ReleaseAnyAttributeFormset(forms.BaseInlineFormSet):
             data = form.cleaned_data
 
             # Note: this formset should work with both ReleaseAttribute and ReleaseCustomAttribute, which do not have the same "attribute" definition
-            # We first try to retrieve the attribute definition from a ReleaseCustomAttribute, and if empty we try for a ReleaseAttribute
+            # We first try to retrieve the attribute definition from a ReleaseCustomAttribute, and if empty we try for a ReleaseAttribute
             # This order is important, as ("", "") does not evaluat false, but "" does.
             attribute = (data.get("category", ""), data.get("name", ""))
             if attribute == ("", ""):
@@ -132,12 +132,12 @@ class ReleaseCompositionInline(admin.TabularInline):
 
 class ReleaseForm(PropertyAwareModelForm):
     ## Override the partial_date_precision field for two customizations :
-    ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
-    ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
+    ## 1) Changes the use widget to be a RadioSelect (customized for single line rendering)
+    ## 2) Do not display an emtpy value even though the model field allows blank (the choices do not contain the emtpy value)
     partial_date_precision = forms.ChoiceField(choices=ReleaseBase._meta.get_field("partial_date_precision").choices, required=False,
                                                widget=widgets.RadioSelectOneLine)
         
-    ## Would be less intrusive, but does not allow to control the choices proposed by the widget
+    ## Would be less intrusive, but does not allow to control the choices proposed by the widget
     #class Meta:
     #    widgets = {"partial_date_precision": widgets.RadioSelectOneLine} 
 
@@ -284,7 +284,7 @@ class OccurrenceAdmin(CollecsterModelAdmin):
     def post_save_model(self, request, obj, form, change):
         if not change:
             # TODO The user_occurrence_id could be made more compact, by taking the next id available
-            # for the corresponding creator, not the local occurrence id.
+            # for the corresponding creator, not the local occurrence id.
             TagToOccurrence(user_creator=obj.created_by, user_occurrence_id=obj.pk, occurrence=obj).save()
 
     def get_changeform_initial_data(self, request):

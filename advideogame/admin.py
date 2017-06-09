@@ -16,7 +16,7 @@ from django.utils.html import format_html
 from django.contrib import admin
 
 ##
-## Edit the data_manager admin
+## Edit the data_manager admin
 ##
 
 ## Concept name scoping ##
@@ -183,7 +183,7 @@ def tag_link(self, instance):
     else:
         return "-" # What was displayed by default by the readonly UrlField when the tag was not set
 
-## Not usefull anymore since tag_url UrlField is now tag_file FileField
+## Not usefull anymore since tag_url UrlField is now tag_file FileField
 #OccurrenceAdmin.tag_link = tag_link # Has to be a method on the model or the ModelAdmin
 OccurrenceAdmin.collecster_readonly_edit = OccurrenceAdmin.collecster_readonly_edit + ("tag_file",)
 OccurrenceAdmin.exclude = OccurrenceAdmin.exclude + ("tag_file",)
@@ -195,7 +195,7 @@ class ReleasePictureInline(admin.TabularInline):
 
 ReleaseAdmin.collecster_dynamic_inline_classes["pictures"] = (ReleasePictureInline,)
 
-## Release attributes ##
+## Release attributes ##
 ReleaseAttributeForm._forbidden_on_immaterial.append(models.Q(category__name="content", name="self"))
 
 ## Release urls ##
@@ -207,7 +207,7 @@ class ReleaseUrlInline(admin.TabularInline):
 ReleaseAdmin.collecster_dynamic_inline_classes["urls"] = (ReleaseUrlInline,)
 ReleaseAdmin.collecster_dynamic_inline_classes.move_to_end("urls", last=False)
 
-## Validates the selected regions ##
+## Validates the selected regions ##
 class ReleaseFormRegions(ReleaseForm):
     """ 
     Inherit from ReleaseForm and assign it as the ReleaseAdmin form 
@@ -248,7 +248,7 @@ class AnyBundleAdmin(CollecsterModelAdmin):
     inlines = (BundleCompositionInline, BundlePictureInline,)
 
 
-## System specifications ##
+## System specifications ##
 class ProvidedInterfaceInline(admin.TabularInline):
    model = ProvidedInterface
    extra = 1

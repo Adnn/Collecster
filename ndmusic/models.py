@@ -15,7 +15,7 @@ import collections
 ## Forwarding most base models
 ##
 
-# Does not allow for additional natures.
+# Does not allow for additional natures.
 # Yet this class name is used by some of the data_manager code, so it is still defined, but as abstract.
 class ConceptNature(ConceptNatureBase):
     class Meta:

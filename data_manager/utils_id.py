@@ -15,7 +15,7 @@ def get_concept_id(request, release=None, occurrence=None):
         return occurrence.release.concept.pk
     else:
         concept_id = utils_payload.get_request_payload(request, "concept_id", 0)
-        ## This is not possible anymore if we want to make this file not include the models
+        ## This is not possible anymore if we want to make this file not include the models
         #if not concept_id:
         #    release_id = utils_payload.get_request_payload(request, "release_id", 0)
         #    if release_id:

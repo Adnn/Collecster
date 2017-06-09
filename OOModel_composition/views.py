@@ -19,7 +19,7 @@ def ajax_admin_formset(request, release_id):
                    {"inline_admin_formset": wrapped_formset})
 
 
-    ## Edge case factorized in utils.composition_queryset, when id==0
+    ## Edge case factorized in utils.composition_queryset, when id==0
 #def ajax_empty_admin_formset(request):
 #    inst_adm = InstanceAdmin(Instance, admin.site)
 #    inst_adm.inlines[0].extra = 0

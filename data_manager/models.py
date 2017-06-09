@@ -19,7 +19,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 ## Nota: this function would implement the material consistency checks at the DB model level.
 ## Sadly, there is a limitation for ManyToMany fields, which are throwing a ValueError when trying to retrieve them
 ## on an instance not yet saved in the DB, making those fields not enforcable at the DB model level.
-## Instead, this check is now run at the form level (eg. see PropertyAwareModelForm).
+## Instead, this check is now run at the form level (eg. see PropertyAwareModelForm).
 def check_material_consistency(model_instance, is_material):
     errors_dict = check_property_consistency_impl(model_instance, is_material, "material", getattr, required=model_instance.required_on_material) 
     errors_dict.update( check_property_consistency_impl(model_instance, not is_material, "non_material", getattr, forbidden=model_instance.forbidden_on_non_material) )
@@ -489,7 +489,7 @@ class OccurrenceCompositionBase(models.Model):
     from_occurrence = models.ForeignKey("Occurrence", related_name="+") # "+" disable the reverse relation: not needed here,
                                                                       # because we can access it through the 'nested_occurrences' field.
      ## This one has to be optional: if a nested occurrence is absent, we store a blank to_occurrence:
-     ## (We store empty composition to maintain the same order than the corresponding release compositions)
+     ## (We store empty composition to maintain the same order than the corresponding release compositions)
      ## Unique, because any occurrence can be nested in at most one parent occurrence.
     to_occurrence   = models.OneToOneField("Occurrence", blank=True, null=True, related_name="occurrence_composition")
     # Note: Because of the OneToMany relation here (One parent to many nested occurrences), it would have been possible

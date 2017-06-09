@@ -12,7 +12,7 @@ def compose(*args):
     return tuple([element for tupl in args for element in tupl])
 
 def get_attribute_category(category_name):
-    from . import models # Circular import from models otherwise
+    from . import models # Circular import from models otherwise
     return models.AttributeCategory.objects.get(name=category_name)
 
 def get_attribute(category_name, attribute_name):

@@ -12,7 +12,7 @@ from django.db import transaction
 import getpass, sys
 
 ##
-## This is a custom management command, creating a new auth User, plus a supervisor.UserExtension and supervisor.Person
+## This is a custom management command, creating a new auth User, plus a supervisor.UserExtension and supervisor.Person
 ## the code is derived from createsuperuser command.
 ##  see: https://github.com/django/django/blob/1.9/django/contrib/auth/management/commands/createsuperuser.py
 ##

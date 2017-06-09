@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group
 
 
 ##
-## This is a custom management command, creating a new supervisor.UserCollection for existing user and deployment.
+## This is a custom management command, creating a new supervisor.UserCollection for existing user and deployment.
 ##
 class Command(BaseCommand):
     help = "Adds supervisor.UserCollection for the given user."

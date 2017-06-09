@@ -128,7 +128,7 @@ class CustomSaveModelAdmin(admin.ModelAdmin):
         return UserExtension.objects.get(user=request.user)
 
     def save_model(self, request, obj, form, change):
-        # If obj has a "created_by" field provided by AbstractRecordOwnership, and this is adding a new object (not editing one)
+        # If obj has a "created_by" field provided by AbstractRecordOwnership, and this is adding a new object (not editing one)
         if issubclass(obj.__class__, AbstractRecordOwnership) and not change:
             obj.created_by = self.user_from_request(request)
         super(CustomSaveModelAdmin, self).save_model(request, obj, form, change)

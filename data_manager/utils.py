@@ -14,7 +14,7 @@ from django.forms.models import BaseInlineFormSet, modelformset_factory
 
 import functools, collections
 
-## TODEL
+## TODEL
 #import wdb
 
 
@@ -32,7 +32,7 @@ class OneFormFormSet(BaseInlineFormSet):
 
 
 ## Note: inherits from SaveEmptyDataModelForm: in a situation where the model for a specific has defaults
-## for each required field, we want it to be saved to DB even if the user leaves all fields to default.
+## for each required field, we want it to be saved to DB even if the user leaves all fields to default.
 ## If All fields are optional, and none is filled, also save it.
 ## Also inherits from PropertyAware, so "collecster_properties" rule are available on specifics.
 class SpecificForm(PropertyAwareSaveEmptyDataModelForm):
@@ -100,7 +100,7 @@ def get_concept_nature_set(request, obj):
 
     if not nature_set and request.method == "POST":
         formset = ConceptNatureFormSet(request.POST, prefix="additional_nature_set")
-        formset.is_valid() # populate the cleaned_data member of each form
+        formset.is_valid() # populate the cleaned_data member of each form
         for form in formset:
             if form.cleaned_data.get("nature"):
                 nature_set.append(form.cleaned_data.get("nature"))
@@ -174,7 +174,7 @@ def populate_occurrence_attributes(formset, request, obj):
     # but the associated attribute value would still be the one from the DB, causing a mismatch.
     #formset.initial = [{"release_corresponding_entry": attrib} for attrib in attributes]
 
-    # Instead, we create a list of all Release***Attribute assigned to the correponding release, and remove from this list
+    # Instead, we create a list of all Release***Attribute assigned to the correponding release, and remove from this list
     # the Release***Attribute which already have a matchin Occurrence***Attribute saved to the DB.
     attribute_list = list(attributes)
 
@@ -214,7 +214,7 @@ def occurrence_composition_queryset(formset, request, obj):
             release_compo, in_db = get_or_initial_release_corresponding_entry(form, release_compositions, "release_composition")
 
             release = release_compo.to_release
-            #form.empty_permitted=False ## Does not help with empty forms either
+            #form.empty_permitted=False ## Does not help with empty forms either
             form.fields["to_occurrence"].queryset = (
                 Occurrence.objects.filter(release=release)  # only propose occurrences of the right release
                                   .filter(Q(occurrence_composition__isnull=True) # not already nested in another occurrence

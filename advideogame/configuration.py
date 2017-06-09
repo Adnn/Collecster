@@ -43,7 +43,7 @@ class ConceptSpecific(object):
         force_feedback  = models.BooleanField()
         rumble_feedback = models.BooleanField()
 
-        #turbo    = models.BooleanField() ## same thing as autofire, is not it ?
+        #turbo    = models.BooleanField() ## same thing as autofire, is not it ?
         autofire = models.BooleanField()
         slow     = models.BooleanField()
 
@@ -210,12 +210,12 @@ class ConfigNature(ConfigNature):
 
     COMBO = "_COMBO"
 
-    # Systems
+    # Systems
     CONSOLE = "CONSOLE"
     CONSOLE_CHIP = "CONSOLE_CHIP" # Console-on-chip
     HANDHELD_CONSOLE = "HANDHELD_CONSOLE"
 
-    # Software
+    # Software
     GAME = "GAME"
     ADD_ON = "ADD_ON"
     MOD = "MOD"

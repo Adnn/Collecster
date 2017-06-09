@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 from .constraints_enforcer import enforce_main
 
 ##
-## This is a wrapper around constraints_enforcer.py
+## This is a wrapper around constraints_enforcer.py
 ##
 class Command(BaseCommand):
     help = "Checks that the data stored with advideogame is consistent with the constraints."

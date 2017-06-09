@@ -154,7 +154,7 @@ class Release(ReleaseBase):
     """
 
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
-    ## neither will immaterials
+    ## neither will immaterials
     barcode = models.CharField(max_length=20, blank=True)
     version = models.CharField(max_length=20, blank=True, help_text="Version or model.") 
     """
@@ -345,7 +345,7 @@ class Company(models.Model):
 
     name = models.CharField(max_length=60, unique=True)
     services = models.ManyToManyField(CompanyService)
-    # Perhaps there is actually a field that give the "type" of the structure, which could be a group, a person, a studio...
+    # Perhaps there is actually a field that give the "type" of the structure, which could be a group, a person, a studio...
     is_individual = models.BooleanField(default=False, verbose_name="Is it a single person name ?")
 
     def __str__(self):
@@ -395,7 +395,7 @@ class PurchaseContextCategory:
     INTERNET_ADS  = "ADS"
     SHOP = "SHP"
     SECONDHAND = "SEC"
-    WORD_MOUTH = "WOM" # Bouche à oreille, en discutant quoi
+    WORD_MOUTH = "WOM" # Bouche a oreille, en discutant quoi
 
     DATA = collections.OrderedDict((
         ("Online", (

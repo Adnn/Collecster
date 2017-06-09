@@ -11,7 +11,7 @@ urlpatterns = [
 
     url(r'^view_scripts/app_name.js$', views.app_name_script),
 
-    # Those urls were added to allow writting data-import code. Commented until another use could be found for them.
+    # Those urls were added to allow writting data-import code. Commented until another use could be found for them.
     #url(r'^import_help/release_specific_classes/concept/$', views.release_specific_classes),
     #url(r'^import_help/occurrence_specific_classes/concept/$', views.occurrence_specific_classes),
 ]

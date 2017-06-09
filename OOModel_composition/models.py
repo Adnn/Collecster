@@ -16,7 +16,7 @@ from django.db import models
 
 
     ##
-    ## Note: The ObjectDescription approach was having SubObject and Release both inherits from the concrete ObjectDescription
+    ## Note: The ObjectDescription approach was having SubObject and Release both inherits from the concrete ObjectDescription
     ##  It was decided it was too complicated to introduce polymorphism on this central model for the rare cases when it will be needed.
     ##  Just make a special hardcoded edge case "_subobject" to be set as the Release of an Instance that is logically a SubObject.
     ##
