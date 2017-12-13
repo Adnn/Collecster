@@ -23,7 +23,9 @@ def generate_qrcode(occurrence, tag_to_occurrence):
     user_occurrence_id = tag_to_occurrence.user_occurrence_id 
     data = struct.pack("<BHBII", reserved, user_collection_id, objecttype_id, user_guid, user_occurrence_id)
 
-    return pyqrcode.create(data, version=1, error="M", mode="binary")
+    # This method will call date.decode(encoding). Default encoding being utf-8, it fails with some bytes
+    # Uses latin_1, which should not alter the byte sequence.
+    return pyqrcode.create(data, version=1, error="M", mode="binary", encoding="latin_1")
 
 
 def generate_tag(occurrence):
