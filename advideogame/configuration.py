@@ -267,12 +267,12 @@ class ConfigNature(ConfigNature):
     TRANSIT_CONTAINER = "TRANSIT_CONTAINER" # A hard carry case or a bag
 
     DATA = collections.OrderedDict((
-                                    # "ui_value",           "ui_group",         "tag_color","concept_category",         "release_category",         "occurrence_category",          "automatic_attributes"]
+                            # "ui_value",                   "ui_group",         "tag_color","concept_category",         "release_category",         "occurrence_category",          "automatic_attributes"]
         (COMBO,             NatureData(COMBO,               UIGroup._HIDDEN,    "grey",     ConceptCategory.EMPTY,      ReleaseCategory.COMBO,      OccurrenceCategory.EMPTY,       (),            )),
 
         (CONSOLE,           NatureData("Console",           UIGroup._TOPLEVEL,  "red",      ConceptCategory.EMPTY,      ReleaseCategory.CONSOLE_VAR,OccurrenceCategory.CONSOLE,     automatic_self )),
         (CONSOLE_CHIP,      NatureData("Console-on-chip",   UIGroup._TOPLEVEL,  "red",      ConceptCategory.EMPTY,      ReleaseCategory.CONSOLE,    OccurrenceCategory.CONSOLE,     automatic_self )),
-        (HANDHELD_CONSOLE,  NatureData("Handheld Console",  UIGroup._TOPLEVEL,  "red",      ConceptCategory.HANDHELD,    ReleaseCategory.CONSOLE,   OccurrenceCategory.CONSOLE,     automatic_self )),
+        (HANDHELD_CONSOLE,  NatureData("Handheld Console",  UIGroup._TOPLEVEL,  "red",      ConceptCategory.HANDHELD,   ReleaseCategory.CONSOLE,    OccurrenceCategory.CONSOLE,     automatic_self )),
 
         (GAME,              NatureData("Game",              UIGroup.SOFT,       "green",    ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (ADD_ON,            NatureData("AddOn",             UIGroup.SOFT,       "seagreen", ConceptCategory.EMPTY,      ReleaseCategory.SOFTWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),

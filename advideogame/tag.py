@@ -34,7 +34,11 @@ def generate_tag(occurrence):
 
     tag_to_occurrence = advideogame.models.TagToOccurrence.objects.get(occurrence=occurrence)
     
-    working = advideogame.models.OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
+    # Some Concept Natures do not have associate an OperationanOcc with the OccurrenceCategory (see Configuration.py)
+    try:
+        working = advideogame.models.OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
+    except advideogame.models.OccurrenceSpecific.OperationalOcc.DoesNotExist:
+        working = None
 
     template_file = "v2.html"
     template = loader.get_template("tag/{}".format(template_file))
