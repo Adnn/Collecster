@@ -20,6 +20,8 @@ INSTALLED_APPS = (
     #'OOModel_attributes',
     #'OOModel_composition',
     #'validate_min',
+
+    "django_archive",
 )
 
 # The secret key is found in $DJANGO_SECRET_KEY env var.

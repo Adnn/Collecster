@@ -1,12 +1,13 @@
 Django==1.9
-Pillow==3.1.1
+Pillow==6.1.0
 PyQRCode==1.1
 dj-database-url==0.3.0
 dj-static==0.0.6
 django-toolbelt==0.0.1
 gunicorn==19.4.1
-psycopg2==2.6.1
+psycopg2==2.8.3
 pypng==0.0.18
 setproctitle==1.1.10
 simplejson==3.8.1
 static3==0.6.1
+django-archive==0.1.6
