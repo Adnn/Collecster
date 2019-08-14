@@ -35,12 +35,29 @@ Example command:
                -e DJANGO_SU_EMAIL=none                  \
                adnn/collecster 
 
+### Backups
+
+Collecster relies on django-backup project to provide `backup` and `restore` management commands
+Different settings controling the backup process are available in Collecster/local_settings.py,
+including the default folder for backups
+
+    # Making a backup
+    docker exec ${CONTAINER} python3 manage.py archive
+
+    # Restoring from a backup
+    docker exec ${CONTAINER} python3 manage.py restore ${ARCHIVE_BASENAME}
+
+
+### Running out of Docker (manual deployment)
+
+Please refer to `docs/installation`
+
+## Build
+
 ### Building the container
 
 **Reminder:** This is optional, since the container publicly available from docker hub 
 
     docker build -t adnn/collecster .
 
-### Running out of Docker (manual deployment)
 
-Please refer to `docs/installation`

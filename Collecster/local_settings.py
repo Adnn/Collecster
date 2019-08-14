@@ -29,6 +29,13 @@ import os
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 
+# django-archive settings
+ARCHIVE_DIRECTORY = "/Collecster/backups"
+ARCHIVE_FORMAT    = "bz2"
+ARCHIVE_MEDIA_POLICY = "all_files"
+ARCHIVE_DB_INDENT    = 2
+
+
 ##
 ## From here: copied from https://devcenter.heroku.com/articles/django-app-configuration#database-configuration
 ##

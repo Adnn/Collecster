@@ -10,4 +10,4 @@ pypng==0.0.18
 setproctitle==1.1.10
 simplejson==3.8.1
 static3==0.6.1
-django-archive==0.1.6
+django-archive-adnn==0.2.0
