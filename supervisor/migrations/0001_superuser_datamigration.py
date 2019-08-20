@@ -1,12 +1,15 @@
 import os
 from django.db import migrations
 
+
 class Migration(migrations.Migration):
 
     # Could be empty, this does not actually depend on any migration in this application
     # But that will avoid this migratin being considered initial
     # see: https://docs.djangoproject.com/en/2.2/topics/migrations/#initial-migrations
     dependencies = [
+        # Will ensure the required "auth" migrations are run
+        ('supervisor', '0001_initial'),
     ] 
 
     def generate_superuser(apps, schema_editor):
