@@ -32,7 +32,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 # django-archive settings
 ARCHIVE_DIRECTORY = "/Collecster/backups"
 ARCHIVE_FORMAT    = "bz2"
-ARCHIVE_MEDIA_POLICY = "all_files"
+ARCHIVE_MEDIA_POLICY = "filefield_targets"
 ARCHIVE_DB_INDENT    = 2
 
 
