@@ -38,3 +38,5 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["gunicorn", "-c", "gunicorn_conf.py", "Collecster.wsgi"]
 
+EXPOSE 80
+
