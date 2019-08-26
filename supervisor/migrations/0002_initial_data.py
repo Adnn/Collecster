@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('supervisor', '0001_initial'),
+        ('supervisor', '0001_superuser_datamigration'),
     ]
 
     operations = [

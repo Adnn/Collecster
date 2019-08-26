@@ -20,11 +20,20 @@ INSTALLED_APPS = (
     #'OOModel_attributes',
     #'OOModel_composition',
     #'validate_min',
+
+    "django_archive",
 )
 
 # The secret key is found in $DJANGO_SECRET_KEY env var.
 import os
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+
+
+# django-archive settings
+ARCHIVE_DIRECTORY = "/Collecster/backups"
+ARCHIVE_FORMAT    = "bz2"
+ARCHIVE_MEDIA_POLICY = "filefield_targets"
+ARCHIVE_DB_INDENT    = 2
 
 
 ##
