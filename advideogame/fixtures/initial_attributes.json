@@ -349,5 +349,15 @@
             "description": "",
             "value_type": "RTN"
         }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 35,
+        "fields": {
+            "category": 2,
+            "name": "foam bag",
+            "description": "A white flexible protective material, a few millimeters thick",
+            "value_type": "RTN"
+        }
     }
 ]
