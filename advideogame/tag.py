@@ -62,7 +62,7 @@ def generate_tag(occurrence):
     qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
 
     tag_filename = os.path.join(directory, "v{}.html".format(tag_version))
-    with open(tag_filename , "w") as f: #TODO some date and time ?
+    with open(tag_filename, "w", encoding="utf-8") as f: #TODO some date and time ?
         f.write(template.render(context))
 
     # Prune the media root, if any, from the returned filename.
