@@ -359,5 +359,15 @@
             "description": "A white flexible protective material, a few millimeters thick",
             "value_type": "RTN"
         }
+    },
+    {
+        "model": "advideogame.attribute",
+        "pk": 36,
+        "fields": {
+            "category": 1,
+            "value_type": "PRS",
+            "description": "",
+            "name": "cord-220v UK"
+        }
     }
 ]

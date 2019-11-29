@@ -1,6 +1,6 @@
 from .config_utils import *
 
-from data_manager import utils_id 
+from data_manager import utils_id
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -47,7 +47,7 @@ class ConceptSpecific(object):
         autofire = models.BooleanField()
         slow     = models.BooleanField()
 
-    class DirectionalController(AbstractBase): 
+    class DirectionalController(AbstractBase):
         direction_input_type = models.ManyToManyField("InputType") # DEB
 
 
@@ -258,6 +258,7 @@ class ConfigNature(ConfigNature):
     PROTECTIVE_CASE =   "PROTECTIVE_CASE" # Anything that fits on a material device, allowing to use the device while attached
     RAM_PACK =          "RAM_PACK"
     REGION_UNLOCK =     "REGION_UNLOCK"
+    RF_UNIT =           "RF_UNIT"
     RUMBLE_PACK =       "RUMBLE_PACK" # A rumble pack to extend a controller, NOT for controllers with builtin rumble feedback
     SCANNER =           "SCANNER"
     SCREEN_MAIN =       "SCREEN_MAIN"
@@ -315,6 +316,7 @@ class ConfigNature(ConfigNature):
         (PROTECTIVE_CASE,   NatureData("Protective case",   UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.HARDWARE,   OccurrenceCategory.EMPTY,       automatic_self )),
         (RAM_PACK,          NatureData("Ram pack",          UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.RAM_MEMORY, OccurrenceCategory.OPERATIONAL, automatic_self )),
         (REGION_UNLOCK,     NatureData("Region unlock",     UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
+        (RF_UNIT,           NatureData("RF unit (TV)",      UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (RUMBLE_PACK,       NatureData("Rumble pack",       UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (SCANNER,           NatureData("Scanner",           UIGroup.ACCESSORY,  "blue",     ConceptCategory.EMPTY,      ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
         (SCREEN_MAIN,       NatureData("Screen main",       UIGroup.ACCESSORY,  "blue",     ConceptCategory.REMOTE,     ReleaseCategory.HARDWARE,   OccurrenceCategory.OPERATIONAL, automatic_self )),
@@ -326,9 +328,9 @@ class ConfigNature(ConfigNature):
 
     @classmethod
     def system_with_variants(cls):
-        """ 
-        Method that is specific to the advideogame application. 
-        It returns all natures whose release specific tuple contains Variant 
+        """
+        Method that is specific to the advideogame application.
+        It returns all natures whose release specific tuple contains Variant
         """
         return [nature for nature, data_tuple in cls.DATA.items()
                        if RelSp.Variant in data_tuple.release_category]
