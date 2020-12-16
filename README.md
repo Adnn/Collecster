@@ -7,7 +7,7 @@ Please refere to `docs/` for user documentation
 ## Usage
 
 It is recommended to run Collecster from the Docker container,
-publicly available from docker hub as `aadnn/collecter`
+publicly available from docker hub as `adnn/collecster`
 
 The deployment and runtime rely on the following environment variables:
 
