@@ -94,21 +94,21 @@ class OccurrenceComposition(OccurrenceCompositionBase):
 ##
 
 #class BlankIsNullURLField(models.URLField):
-#    ## Not called when the value is left blank, which is ironic 
+#    ## Not called when the value is left blank, which is ironic
 #    def clean(self, value, model_instance, ll):
 #        cleaned = super(BlankIsNullURLField, self).clean(value, model_instance)
 #        return cleaned if cleaned else None
 
 class Concept(ConceptBase):
-    """ 
-    Specialization of the Concept model, to give it deployment-specific fields without introducing 
-    an additional DB table. 
-    """  
+    """
+    Specialization of the Concept model, to give it deployment-specific fields without introducing
+    an additional DB table.
+    """
 
     developer = models.ForeignKey('Company', blank=True, null=True) # Allows null for the _COMBO concept special case
                                                                     # Also allows blank, for noname/unknown
 
-    name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True, 
+    name_scope_restriction = models.ManyToManyField("ReleaseRegion", blank=True,
                                                     help_text = ("Allows disambiguation when the same name does not referer to the same concept depending on the region."
                                                                  "(eg. 'Super Mario Bros. 2' is not the same game in Japan and EU/US.)"))
     year = models.DecimalField(max_digits=4, decimal_places=0, blank=True, null=True,
@@ -128,13 +128,13 @@ class Release(ReleaseBase):
         "required_on_region_mandatory":         ("release_regions", ),
     }
 
-    immaterial             = models.BooleanField(default=False) 
-    digitally_distributed  = models.BooleanField(default=False, help_text="a-la Steam") 
+    immaterial             = models.BooleanField(default=False)
+    digitally_distributed  = models.BooleanField(default=False, help_text="a-la Steam")
     """
-    This boolean is mainly adressed at software. It allows to indicate that this release is digitally distributed, a-la Steam. 
+    This boolean is mainly adressed at software. It allows to indicate that this release is digitally distributed, a-la Steam.
     """
 
-    alternative_distribution = models.BooleanField(default=False, help_text="If the release was not officially sold in shops, but distributed otherwise (eg. Internet)") 
+    alternative_distribution = models.BooleanField(default=False, help_text="If the release was not officially sold in shops, but distributed otherwise (eg. Internet)")
 
     special_case_release = models.CharField(max_length=1, blank=True, choices=(
             ("L", "loose"),
@@ -156,7 +156,7 @@ class Release(ReleaseBase):
     ## Barcode is not mandatory because some nested release will not have a barcode (eg. pad with a console)
     ## neither will immaterials
     barcode = models.CharField(max_length=20, blank=True)
-    version = models.CharField(max_length=20, blank=True, help_text="Version or model.") 
+    version = models.CharField(max_length=20, blank=True, help_text="Version or model.")
     """
     For software, it can be the actual version number.
 
@@ -196,7 +196,7 @@ class Release(ReleaseBase):
 
     def tag_regions(self):
         return list(collections.OrderedDict.fromkeys([region.tag_region for region in self.release_regions.all()]))
-        
+
     def compatible_systems(self):
         on_tag = []
         if self.system_specification:
@@ -204,7 +204,7 @@ class Release(ReleaseBase):
             #for system_interface_detail in SystemInterfaceDetail.objects.filter(interfaces_specification=interfaces_specification):
             for system_interface_detail in interfaces_specification.systeminterfacedetail_set.all():
                 advertised_system_tag_override = []
-                # By default, we would display the system_interface_detail advertised system on the tag 
+                # By default, we would display the system_interface_detail advertised system on the tag
                 # Yet it is possible that one of the provided/required interface overrides this value with its own abbreviated name
                 # The following loop checks if the "on_tag" flag is set for any of those interfaces
                 for through_instance in [through for ThroughModel in (ProvidedInterface, RequiredInterface,)
@@ -217,18 +217,18 @@ class Release(ReleaseBase):
                 else:
                     on_tag.append(system_interface_detail.advertised_system.abbreviated_name)
         return on_tag
-            
-        
+
+
 def clean_dependant_field(instance, master_field_name, slave_field_name):
     if getattr(instance, slave_field_name) and not getattr(instance, master_field_name):
         return {
             slave_field_name: ValidationError("Field only allowed when '{}' is not blank".format(master_field_name),
-                                              code='invalid') 
+                                              code='invalid')
         }
     elif not getattr(instance, slave_field_name) and getattr(instance, master_field_name):
         return {
             slave_field_name: ValidationError("Field required when '{}' is not blank".format(master_field_name),
-                                              code='invalid') 
+                                              code='invalid')
         }
     return {}
 
@@ -263,9 +263,12 @@ class Occurrence(OccurrenceBase):
         return self.release.is_embedded_immaterial()
 
     def admin_post_save(self):
-        if self.is_material() and not self.tag_file:
+        if self.is_taggable() and not self.tag_file:
             self.tag_file = tag.generate_tag(self)
             self.save()
+
+    def is_taggable(self):
+        return self.is_material()
 
     def origin_color(self):
         return OccurrenceOrigin.DATA[self.origin].tag_color
@@ -388,7 +391,7 @@ class Location(models.Model):
 
     def __str__(self):
         return '['+self.country+'] ' + self.city + ("("+self.post_code+")" if self.post_code else "")
- 
+
 
 class PurchaseContextCategory:
     INTERNET_SHOP = "NET"
@@ -446,7 +449,7 @@ class PurchaseContext(models.Model):
     The category of the selling place: *online* or *offline*,
     with further details regarding the type of the place (shop, secondhand sale, e-shop, ...)
     """
-    
+
     name = models.CharField(max_length=60)
     """ Names the context, using the name of the selling place """
 
@@ -466,16 +469,16 @@ class PurchaseContext(models.Model):
                     mut_fields = list(fields)
                     mut_fields.remove("location")
                     unique_checks[index] = (cls, tuple(mut_fields),)
-        
+
         return unique_checks, date_checks
 
 
     def clean(self):
-        """ 
-        Online contexts cannot specify a location nor address complement 
-        Only contexts with a location can provide an address complement 
         """
-        errors = {} 
+        Online contexts cannot specify a location nor address complement
+        Only contexts with a location can provide an address complement
+        """
+        errors = {}
         if PurchaseContextCategory.is_online(self.category):
             # Enforces PurchaseContext::1.a)
             if not self.url:
@@ -546,7 +549,7 @@ class Purchase(Bundle):
                 clean_complement(self, errors)
         except PurchaseContext.DoesNotExist:
             pass
-   
+
         if self.retrieval == Purchase.FRIEND:
             # Enforces Purchase::3.a)
             if not self.pickup_person:
@@ -565,7 +568,7 @@ class Purchase(Bundle):
 
 
     def __str__(self):
-        return "{} {}: ({})".format(self.arrival_date, self.context, self.get_content_string()) 
+        return "{} {}: ({})".format(self.arrival_date, self.context, self.get_content_string())
 
 
 class Donation(Bundle):
@@ -600,7 +603,7 @@ class PictureDetail():
     @classmethod
     def get_choices(cls):
         return [(key, value[0]) for key, value in cls.DICT.items()]
-   
+
     @classmethod
     def choices_maxlength(cls):
         return 3
@@ -706,7 +709,7 @@ class SystemMediaPair(models.Model):
     class Meta:
         unique_together = ("system", "media")
 
-    system = models.ForeignKey(BaseSystem) 
+    system = models.ForeignKey(BaseSystem)
     media  = models.CharField(max_length=32)
     wireless = models.BooleanField(default=False)
 
@@ -817,7 +820,7 @@ class SystemSpecification(models.Model):
 
         if self.bios_version:
            display = "{} (bios: {})".format(display, self.bios_version)
-        return display 
+        return display
 
     def clean(self):
         try:
@@ -825,7 +828,7 @@ class SystemSpecification(models.Model):
                 raise ValidationError({"interfaces_specification": ValidationError("Cannot correspond to an implicit system.", code="invalid")})
         except InterfacesSpecification.DoesNotExist:
             pass
-            
+
 
 #
 # System variants
@@ -898,9 +901,9 @@ class ConceptRelation(models.Model):
 # Misc
 #
 class Color(models.Model):
-    """ 
-    Color is a table listing available color choices (populated by fixture). 
-    It appears as a more general solution over the fixed choice field in models, because it allows 
+    """
+    Color is a table listing available color choices (populated by fixture).
+    It appears as a more general solution over the fixed choice field in models, because it allows
     ManyToOne and ManyToMany relationships very easily
     """
     name = models.CharField(max_length=30, unique=True)
@@ -915,7 +918,7 @@ class BatteryType(models.Model):
     def __str__(self):
         return self.code
 
-     
+
 class InputType(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
@@ -946,9 +949,9 @@ class StorageUnit(models.Model):
     #    if self.prorietary and not self.brand:
     #        raise ValidationError({"brand": ValidationError("Proprietary units cannot leave this field blank.", code="invalid")})
     def validate_unique(self, exclude=None):
-        """ 
-        Needed to prevent adding several brandless units with the same name 
-        because a NULL foreign key does not compare equal to NULL 
+        """
+        Needed to prevent adding several brandless units with the same name
+        because a NULL foreign key does not compare equal to NULL
         """
         if not self.brand: #if there is a brand, we can rely on the unique_together constraint
             qs = StorageUnit.objects.filter(name=self.name).filter(brand=None)
@@ -957,14 +960,14 @@ class StorageUnit(models.Model):
             if qs.exists():
                 raise ValidationError("A non-proprietary unit with this name already exists.", code="invalid")
         super(StorageUnit, self).validate_unique(exclude)
-                
+
 
     def __str__(self):
         if self.brand:
             return "[{}] {}".format(self.brand, self.name)
         else:
             return self.name
-        
+
 
 class CollectionLabel(models.Model):
     class Meta:

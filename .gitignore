@@ -1,13 +1,16 @@
+# Development #
+sqlite.db
+
 # Vim #
 *.swp
 *.swo
 
-# OS X#
+# OS X#
 ## system ##
 *.DS_Store
 
 # Windows #
-## system ##
+## system ##
 Thumbs.db
 
 # Django #
@@ -16,7 +19,7 @@ media/
 staticfiles/
 venv
 
-#*/local_settings.py 
+#*/local_settings.py
 
 
     # from: https://github.com/github/gitignore/blob/master/Python.gitignore
