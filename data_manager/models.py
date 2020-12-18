@@ -141,6 +141,9 @@ class ConceptBase(AbstractRecordOwnership):
     primary_nature      = models.CharField(max_length=ConfigNature.choices_maxlength(), choices=ConfigNature.get_choices())
 
     def __str__(self):
+        return unicode(self).encode("utf-8")
+
+    def __unicode__(self):
         return "{}{}".format(self.common_name if self.common_name else self.distinctive_name,
                              " ({})".format(self.year) if self.year else "")
 
