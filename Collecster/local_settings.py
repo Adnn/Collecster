@@ -17,9 +17,6 @@ INSTALLED_APPS = (
     "supervisor",
     "advideogame.apps.AdvideogameConfig",
     #"ndmusic.apps.NdmusicConfig",
-    #'OOModel_attributes',
-    #'OOModel_composition',
-    #'validate_min',
 
     "django_archive",
 )
