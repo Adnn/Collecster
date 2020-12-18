@@ -61,4 +61,11 @@ Please refer to `docs/installation`
 
     docker build -t adnn/collecster .
 
+### Automation
+
+Docker images are automatically built on [dockerhub](https://hub.docker.com/) when commits are pushed to specific git branches:
+
+* **master**: `adnn/collecster:latest`
+* **develop**: `adnn/collecster:latest-dev`
+* **1.9.3**: `adnn/collecster:1.9.3`
 
