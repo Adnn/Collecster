@@ -19,7 +19,7 @@ The deployment and runtime rely on the following environment variables:
     # Also read during server initialization (i.e. runtime)
     DJANGO_SECRET_KEY=...
     DATABASE_URL="sqlite:///sqlite.db" # Or any other
-    
+
 
 Note: [dj-database URL schema documentation](https://github.com/kennethreitz/dj-database-url#url-schema)
 
@@ -28,12 +28,13 @@ Example command:
     touch sqlite.db # File must exist, otherwise docker creates a directory
     docker run -p 8080:80                               \
                -v $(pwd)/sqlite.db:/sqlite.db           \
+               -v ${pwd}/backups:/Collecster/backups    \
                -e DATABASE_URL="sqlite:////sqlite.db"   \
                -e DJANGO_SECRET_KEY=${SECRET}           \
                -e DJANGO_SU_NAME=admin                  \
                -e DJANGO_SU_PASSWORD=admin              \
                -e DJANGO_SU_EMAIL=none                  \
-               adnn/collecster 
+               adnn/collecster
 
 ### Backups
 
@@ -56,7 +57,7 @@ Please refer to `docs/installation`
 
 ### Building the container
 
-**Reminder:** This is optional, since the container publicly available from docker hub 
+**Reminder:** This is optional, since the container publicly available from docker hub
 
     docker build -t adnn/collecster .
 
