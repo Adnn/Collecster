@@ -27,7 +27,7 @@ img.tag {
 
 svg.bracket {
     width: 24px;
-    /* height: 100%; */ /* because asking for 100% prevents it from filling the height (yeah, least surprising is for morons) http://stackoverflow.com/a/20959601/1027706 */
+    height: 100%;
 }
 
 .complete {
@@ -36,27 +36,28 @@ svg.bracket {
 }
 
 .human_content {
-    margin-top: 27px; /* 28, minus 1 on top and bottom margins to accomodate for the 1px border */
-    margin-bottom: 27px;
+    margin-top: 20px; /* 28, minus 1 on top and bottom margins to accomodate for the 1px border */
+    margin-bottom: 22px;
     margin-left: 12px; /* 14, minus 2 to accomodate for the 1px border on both sides */
-    height: 784px;
+    height: 796px;
     width: 1226px;
 }
 
 .upper_content {
-    height: 532px;
+    height: 547px;
 }
 
 .release_name {
-    height: 392px;
+    height: 384px;
 }
 
 .platform {
-    height: 112px;
+    height: 145px;
+    /*align-items: center;*/ /*The contained elements are going above height when uncommented*/
 }
 
 .region_values {
-    max-width: 191px;
+    max-width: 270px;
 }
 
 .tag_details {
@@ -64,17 +65,17 @@ svg.bracket {
 }
 
 .occurrence {
-    height: 112px;
+    height: 144px;
 }
 
 .sp0 {
-    height: 14px;
+    height: 2px;
 }
 
 .sp1 {
-    height: 28px;
+    height: 18px;
 }
 
 .sp2 {
-    height: 56px;
+    height: 33px;
 }

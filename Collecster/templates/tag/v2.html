@@ -10,6 +10,7 @@
     -->
     <link rel="stylesheet" href="{% static "data_manager/tag/styles/layout.css" %}">
     <link rel="stylesheet" href="{% static "data_manager/tag/styles/style.css" %}">
+    <!--<link rel="stylesheet" href="{% static "data_manager/tag/styles/debug_zones.css" %}">-->
 
     <!--<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>-->
     <script type="text/javascript" src="{% static "data_manager/scripts/jquery-2.1.4.min.js" %}"></script>
@@ -30,13 +31,14 @@
                 <div class="sp1"></div>
 
                 <div class="platform flex">
-                    <div class="region flex jtextfill">
+                    {% if release.tag_regions %}
+                    <div class="region flex">
                         <svg class="bracket" viewBox="0 0 100 100" preserveAspectRatio="none">
                             <polyline vector-effect="non-scaling-stroke" stroke-width="20" stroke="black" fill="none"
                             points="100,0 0,0 0,100 100,100" />
                         </svg>
 
-                        <div class="region_values">
+                        <div class="region_values jtextfill">
                             <!-- span, because it tightly hugs its content -->
                             <span class="tweak">
                                 {{ release.tag_regions|join:" " }}
@@ -50,6 +52,7 @@
                     </div>
 
                     <div style="width:40px;"></div>
+                    {% endif %}
 
                     <div class="systems jtextfill">
                         <div class="tweak">
@@ -57,7 +60,10 @@
                         </div>
                     </div>
 
-                    {% if release.loose %}<div class="loose to_right">l0</div>{% endif %}
+                    {% if release.loose %}
+                    <div style="width:30px;"></div>
+                    <div class="loose to_right">l0</div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -71,14 +77,14 @@
             <div class="sp0"></div>
 
             <div class="occurrence flex">
-                <svg height="112" width="112">
-                    <circle cx="56" cy="56" r="56" fill="{{ occurrence.origin_color }}" />
+                <svg height="144" width="144">
+                    <circle cx="72" cy="72" r="72" fill="{{ occurrence.origin_color }}" />
                 </svg>
-                <div style="width:60px;"></div>
+                <div style="width:55px;"></div>
 
                 {% if working %}
                 <span>W</span>
-                <svg height="112" width="112" viewBox="0 0 100 100">
+                <svg height="144" width="144" viewBox="0 0 100 100">
                     <rect width="100" height="100" vector-effect="non-scaling-stroke" stroke="black" stroke-width="4" fill="none"/>
 
                     {% if working == 'Y' %}
@@ -90,12 +96,14 @@
                     x1="15" y1="10" x2="85" y2="90"/>
                     <line vector-effect="non-scaling-stroke" stroke-linecap="butt" stroke-linejoin="bevel" stroke-width="16" stroke="red"
                     x1="15" y1="90" x2="85" y2="10"/>
-     
+
                     {% endif %}
                 </svg>
+                <div style="width:15px;"></div>
                 {% endif %}
 
                 <div class="to_right">{{ occurrence.owner.nickname }}</div>
+                <div style="width:40px;"></div>
                 <div class="occurrence_id to_right">{{ occurrence.pk }}</div>
             </div>
         </div> <!-- /human_content-->

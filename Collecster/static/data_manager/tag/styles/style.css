@@ -12,7 +12,7 @@
     font-family: 'Liberation Mono'; /*a name to be used later*/
     src: url('fonts/liberation-mono/LiberationMono-Regular.ttf'); /*URL to font*/
 }
- 
+
 @font-face {
     font-family: 'Liberation Sans'; /*a name to be used later*/
     src: url('fonts/liberation-sans/LiberationSans-Regular.ttf'); /*URL to font*/
@@ -22,7 +22,7 @@
     font-family: 'Liberation Sans Italic'; /*a name to be used later*/
     src: url('fonts/liberation-sans/LiberationSans-Italic.ttf'); /*URL to font*/
 }
- 
+
 body {
     /*
     border-style: solid;
@@ -33,7 +33,7 @@ body {
 }
 
 .release_name {
-    font-size: 200px;
+    font-size: 300px;
     font-family: "Liberation Mono Bold";
 }
 
@@ -55,13 +55,7 @@ body {
 .platform {
     color: black;
     font-family: "Liberation Sans Italic";
-    font-size: 101px; /* computed offline with JS for a 112px height of container */
-}
-
-.region {
-    /*display:inline-block;*/
-    /*display:inline-block;*/
-    font-family: "Liberation Sans";
+    font-size: 130px; /* Acts as maximum font size (see textfill.js) */
 }
 
 .region_values {
@@ -70,7 +64,7 @@ body {
 
 .occurrence {
     font-family: "Liberation Mono";
-    font-size: 101px; /* computed offline with JS for a 112px height of container */
+    font-size: 127px; /* computed offline with JS for a 144px height of container */
 
 }
 
