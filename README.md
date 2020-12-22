@@ -69,3 +69,6 @@ Docker images are automatically built on [dockerhub](https://hub.docker.com/) wh
 * **develop**: `adnn/collecster:latest-dev`
 * **1.9.3**: `adnn/collecster:1.9.3`
 
+## Thanks
+
+[FranzPoize](https://github.com/FranzPoize) & [paradoxxxzero](https://github.com/paradoxxxzero) for both moral and technical support!
