@@ -28,7 +28,7 @@ Example command:
     touch sqlite.db # File must exist, otherwise docker creates a directory
     docker run -p 8080:80                               \
                -v $(pwd)/sqlite.db:/sqlite.db           \
-               -v ${pwd}/backups:/Collecster/backups    \
+               -v $(pwd)/backups:/Collecster/backups    \
                -e DATABASE_URL="sqlite:////sqlite.db"   \
                -e DJANGO_SECRET_KEY=${SECRET}           \
                -e DJANGO_SU_NAME=admin                  \
