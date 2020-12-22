@@ -16,7 +16,7 @@ class Deployment(models.Model):
     """
     configuration = models.CharField(max_length=20, unique=True)
     version = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
-    
+
     def __str__(self):
         return "{} v.{}".format(self.configuration, self.version)
 
@@ -36,7 +36,7 @@ class UserCollection(models.Model):
         unique_together = (("user", "user_collection_id"), ("user", "deployment"),)
 
     user = models.ForeignKey("UserExtension")
-    user_collection_id = fields.id_field() #TODO ensure it cannot exceede 4 bytes, as it is encoded in the QR
+    user_collection_id = fields.id_field() #TODO ensure it cannot exceed 2 bytes, as it is encoded in the QR as unsigned short
     deployment = models.ForeignKey(Deployment)
 
     def __str__(self):
@@ -63,7 +63,7 @@ class Person(models.Model):
 
 class UserExtension(models.Model):
     """
-    Extends Django contrib's User model, to attach a globally unique user ID, which allows to unambiguously 
+    Extends Django contrib's User model, to attach a globally unique user ID, which allows to unambiguously
     identify a user accross separate installations.
 
     .. note::
@@ -77,7 +77,7 @@ class UserExtension(models.Model):
     In the case the same person wants to be a user on several distinct installation at the same time,
     it has to use a different ``guid`` on each installation :
 
-    * Since the same :instance:`person` can be assigned to different :instance:`UserExtension`, 
+    * Since the same :instance:`person` can be assigned to different :instance:`UserExtension`,
       the same logic person can use a different user ``guid`` on each distinct Django installation running the same configuration,
       and will still be able to merge them later (having several :instance:`UserExtension` on the destination installation).
     * It would **not possible** to do it by keeping the same ``guid`` but using different ``user_collection_id`` on each installation:
@@ -91,6 +91,6 @@ class UserExtension(models.Model):
     user = models.OneToOneField(User, primary_key=True)
     guid = fields.id_field(unique=True)
     person = models.ForeignKey("Person") # Several users can correspond to the same person
-    
+
     def __str__(self):
         return "{} (guid: {})".format(self.user, self.guid)

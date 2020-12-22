@@ -21,7 +21,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 ## on an instance not yet saved in the DB, making those fields not enforcable at the DB model level.
 ## Instead, this check is now run at the form level (eg. see PropertyAwareModelForm).
 def check_material_consistency(model_instance, is_material):
-    errors_dict = check_property_consistency_impl(model_instance, is_material, "material", getattr, required=model_instance.required_on_material) 
+    errors_dict = check_property_consistency_impl(model_instance, is_material, "material", getattr, required=model_instance.required_on_material)
     errors_dict.update( check_property_consistency_impl(model_instance, not is_material, "non_material", getattr, forbidden=model_instance.forbidden_on_non_material) )
     if errors_dict:
         raise ValidationError(errors_dict)
@@ -36,10 +36,10 @@ def check_property_consistency(model_instance, property_value, property_name, da
             ## Nota: With boolean fields, we want "False" to be allowed on material fields of immaterial instances,
             ## but "False" is not an empty value.
             if data_getter(model_instance, field_name):
-                errors_dict[field_name] = ValidationError("This field is not allowed on %(property)s releases.", 
+                errors_dict[field_name] = ValidationError("This field is not allowed on %(property)s releases.",
                                                           params = {"property": property_name}, code="invalid")
-    
-    if property_value and required: 
+
+    if property_value and required:
         # see: https://github.com/django/django/blob/1.9/django/db/models/base.py#L1147-L1158
         for field_name in required:
             field = model_instance._meta.get_field(field_name)
@@ -52,11 +52,11 @@ def check_property_consistency(model_instance, property_value, property_name, da
 class CollecsterPropertiesHelper(object):
     @staticmethod
     def _split_property(property_name):
-        """ 
-        Splites the property name found on the collecster_properties dictionary, 
-        between the sign (False if "non_" prefix, True otherwise) and the positive property name 
         """
-        splits = property_name.split("_", maxsplit=1) 
+        Splits the property name found on the collecster_properties dictionary,
+        between the sign (False if "non_" prefix, True otherwise) and the positive property name
+        """
+        splits = property_name.split("_", maxsplit=1)
         if (len(splits) == 2) and (splits[0] =="non"):
             return False, splits[1]
         else:
@@ -86,16 +86,16 @@ class CollecsterPropertiesHelper(object):
                 if CollecsterPropertiesHelper.is_property_known(base_instance, property_name):
                     errors.update(check_property_consistency(instance,
                                                              cls.get_property_value(base_instance, property_name),
-                                                             property_name, data_getter, 
+                                                             property_name, data_getter,
                                                              **{instruction: fields}))
         return errors
 
 
 class TagToOccurrenceBase(models.Model):
-    """ 
-    This model makes the link between user occurrence IDs 
-    (which are immutable identifiers assigned to each occurrence, only unique per user) 
-    And the actual application Occurrences kept in the database. 
+    """
+    This model makes the link between user occurrence IDs
+    (which are identifiers -immutable accross installations- assigned to each occurrence. Only unique per user)
+    And the actual application Occurrences kept in the database.
     """
     class Meta:
         abstract = True
@@ -136,8 +136,8 @@ class ConceptBase(AbstractRecordOwnership):
     class Meta:
         abstract = True
 
-    distinctive_name    = models.CharField(max_length=180)  
-    common_name         = models.CharField(max_length= 60, blank=True)  
+    distinctive_name    = models.CharField(max_length=180)
+    common_name         = models.CharField(max_length= 60, blank=True)
     primary_nature      = models.CharField(max_length=ConfigNature.choices_maxlength(), choices=ConfigNature.get_choices())
 
     def __str__(self):
@@ -148,7 +148,7 @@ class ConceptBase(AbstractRecordOwnership):
     def all_nature_tuple(self):
         return ((self.primary_nature,) if self.primary_nature else ()) \
              + tuple([value_dict["nature"] for value_dict in self.additional_nature_set.all().values()])
-    
+
 
 ############
 ## Attribute
@@ -194,9 +194,9 @@ class AttributeBase(AbstractAttribute):
 class ReleaseBase(AbstractRecordOwnership):
     class Meta:
         abstract = True
-    
+
     concept = models.ForeignKey("Concept")
-    name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")  
+    name    = models.CharField(max_length=180, blank=True, verbose_name="Release's name")
 
     partial_date = models.DateField("Date", blank=True, null=True)
     partial_date_precision = models.CharField("Date precision",
@@ -213,11 +213,11 @@ class ReleaseBase(AbstractRecordOwnership):
 
 
     def is_material(self):
-        """ 
+        """
         The notion of immaterial needs to be a core concept, because some core behaviour depends on it
-        eg. define application logic that an immterial cannot have nested elements 
-        Yet not to force having an immaterial field (for cases were there are no immaterials), 
-        it is abstracted through this function which implements a sensible default, but can be overriden. 
+        eg. define application logic that an immterial cannot have nested elements
+        Yet not to force having an immaterial field (for cases were there are no immaterials),
+        it is abstracted through this function which implements a sensible default, but can be overriden.
         """
         if hasattr(self, "immaterial"):
             return not self.immaterial
@@ -229,9 +229,9 @@ class ReleaseBase(AbstractRecordOwnership):
         return self.name if self.name else str(self.concept)
 
     def name_color(self):
-        """ 
-        Returns the color associated to this release, which is based on its nature 
-        Nota that this color will be based on the primary nature only 
+        """
+        Returns the color associated to this release, which is based on its nature
+        Nota that this color will be based on the primary nature only
         """
         return ConfigNature.DATA[self.concept.primary_nature].tag_color;
 
@@ -267,7 +267,7 @@ class ReleaseBase(AbstractRecordOwnership):
             raise ValidationError({"partial_date_precision": ValidationError("The precision must be specified.", code="invalid")})
 
         # Enforces PARTIAL_DATE::2b)
-        errors = {"partial_date": []} 
+        errors = {"partial_date": []}
         if ((self.partial_date_precision == enum.PartialDate.YEAR or self.partial_date_precision == enum.PartialDate.MONTH)
             and self.partial_date.day != 1):
             print(self.partial_date.day)
@@ -281,12 +281,12 @@ class ReleaseBase(AbstractRecordOwnership):
                                                      code="inconsistent"))
         if errors["partial_date"]:
             raise ValidationError(errors)
-        
-        
+
+
 class DistinctionBase(models.Model):
     class Meta:
         abstract = True
-        
+
     name  = models.CharField(max_length=20, unique=True)
     note = models.CharField(max_length=64, blank=True, help_text="Optional details about the meaning of this distinction.")
 
@@ -296,16 +296,16 @@ class DistinctionBase(models.Model):
 class ReleaseDistinctionBase(models.Model):
     class Meta:
         abstract = True
-        
+
     release     = models.ForeignKey("Release")
     distinction = models.ForeignKey("Distinction")
     value       = models.CharField(max_length=30)
 
 
 class ReleaseAttributeBase(models.Model):
-    """ 
-    Maps an Attribute to a Release, with an optional note. 
-    The note is manadatory if the same attribute is present multiple times on the same Release 
+    """
+    Maps an Attribute to a Release, with an optional note.
+    The note is manadatory if the same attribute is present multiple times on the same Release
     """
 
     class Meta:
@@ -322,10 +322,10 @@ class ReleaseAttributeBase(models.Model):
 
 
 class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of AbstractAttribute, direct composition
-    """ 
-    Inherits from AbstractAttribute: the attribute is custom to a single release 
-    Since it is not shared, there is no need for mapping to an external attribute: 
-    this is the attribute itself, mapped to a Release. 
+    """
+    Inherits from AbstractAttribute: the attribute is custom to a single release
+    Since it is not shared, there is no need for mapping to an external attribute:
+    this is the attribute itself, mapped to a Release.
     """
 
     class Meta:
@@ -348,7 +348,7 @@ class ReleaseCustomAttributeBase(AbstractAttribute): # Inherits the fields of Ab
 class ReleaseCompositionBase(models.Model):
     class Meta:
         abstract = True
-        
+
     from_release    = models.ForeignKey("Release", related_name="+") # "+" disable the reverse relation: not needed here,
                                                                    # because we can access it through the 'nested_releases' field.
     """ The parent in the composition relation (i.e., the container). """
@@ -373,7 +373,7 @@ class ReleaseCompositionBase(models.Model):
             raise ValidationError("This composition would introduce a circular dependency.", code='invalid')
         for indirect_composition in ReleaseComposition.objects.filter(from_release=to_release):
             ReleaseComposition.check_circular_dependencies(target, indirect_composition.to_release)
-        
+
 
 
 
@@ -419,7 +419,7 @@ class AbstractReleaseAttributeRelatedBase(models.Model):
     class Meta:
         abstract = True
 
-    @property 
+    @property
     def release_corresponding_entry(self):
         #return self.attribute_object # Actually works, but returns None when the value are not set, which makes it
                                       # differ from other "relation fields", that raise DoesNotExist exceptions.
