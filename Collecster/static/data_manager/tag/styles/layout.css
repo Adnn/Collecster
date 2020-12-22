@@ -21,8 +21,8 @@ body {
 
 img.tag {
     position: absolute;
-    top: 20px;
-    left: 1239px; /* offset of: 1px (the border) + 12px (the human content left margin) + 1226px (the human content content) */
+    top: 7px; /* floor of 840(body)-825(tag) / 2 */
+    left: 1214px; /* offset of: 1px (border) + 12px (human content left margin) + 1201px (human content width) */
 }
 
 svg.bracket {
@@ -40,7 +40,7 @@ svg.bracket {
     margin-bottom: 22px;
     margin-left: 12px; /* 14, minus 2 to accomodate for the 1px border on both sides */
     height: 796px;
-    width: 1226px;
+    width: 1201px; /* 2040(body) - 2*1(borders) - 12 (horizontal margins) - 825(tag) */
 }
 
 .upper_content {

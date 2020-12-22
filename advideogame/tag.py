@@ -2,7 +2,7 @@ import advideogame
 
 from . import utils_path
 
-from supervisor.models import * # for generate_qr_code 
+from supervisor.models import * # for generate_qr_code
 
 from django.conf import settings
 from django.template import loader
@@ -17,10 +17,10 @@ def generate_qrcode(occurrence, tag_to_occurrence):
     #user_guid   = UserExtension.objects.get(person=occurrence.owner).guid
     user_guid = tag_to_occurrence.user_creator.guid
     deployment = Deployment.objects.get(configuration=advideogame.utils_path.get_app_name())
-    user_collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).user_collection_id 
+    user_collection_id = UserCollection.objects.get(user__guid=user_guid, deployment=deployment).user_collection_id
     #TODO Handle the object type when other types will be allowed
     objecttype_id = 1 # There is a single object type at the moment: the occurrence
-    user_occurrence_id = tag_to_occurrence.user_occurrence_id 
+    user_occurrence_id = tag_to_occurrence.user_occurrence_id
     data = struct.pack("<BHBII", reserved, user_collection_id, objecttype_id, user_guid, user_occurrence_id)
 
     # This method will call date.decode(encoding). Default encoding being utf-8, it fails with some bytes
@@ -30,10 +30,10 @@ def generate_qrcode(occurrence, tag_to_occurrence):
 
 def generate_tag(occurrence):
     tag_version = 2
-    qr_filename = "qr_v{}.png".format(tag_version)
+    qr_filename = "qr_v{}.svg".format(tag_version)
 
     tag_to_occurrence = advideogame.models.TagToOccurrence.objects.get(occurrence=occurrence)
-    
+
     # Some Concept Natures do not have associate an OperationanOcc with the OccurrenceCategory (see Configuration.py)
     try:
         working = advideogame.models.OccurrenceSpecific.OperationalOcc.objects.get(occurrence=occurrence.pk).working_condition
@@ -49,7 +49,7 @@ def generate_tag(occurrence):
         "occurrence": occurrence,
         "working": working,
     }
-    
+
     # Here, uses the occurrence PK in the DB, not the tag_occurrence id, because we see this part of the filesystem
     # like a direct extension of the DB.
     # As a consequence, a potential migration of a collection would impose to rename those folders to map to the DB.
@@ -57,9 +57,11 @@ def generate_tag(occurrence):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    QR_MODULE_SIZE=8*4
+    # The QR code is 25 "dots" on each dimension (21 data plus 2 in each quiet zone)
+    # There is a 838px tall zone to fit it. floor(838/25) = 33, resulting size 33*25 = 825px
+    QR_MODULE_SIZE=33
     qr = generate_qrcode(occurrence, tag_to_occurrence)
-    qr.png(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
+    qr.svg(os.path.join(directory, qr_filename), scale=QR_MODULE_SIZE, quiet_zone=2)
 
     tag_filename = os.path.join(directory, "v{}.html".format(tag_version))
     with open(tag_filename, "w", encoding="utf-8") as f: #TODO some date and time ?
@@ -67,4 +69,4 @@ def generate_tag(occurrence):
 
     # Prune the media root, if any, from the returned filename.
     result = tag_filename[len(settings.MEDIA_ROOT)+1:] if settings.MEDIA_ROOT else tag_filename # +1 for the '/'
-    return result 
+    return result
