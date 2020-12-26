@@ -23,9 +23,9 @@
             <div class="upper_content">
 
                 <div class="release_name jtextfill" style="color: {{ release.name_color }};">
-                    <div class="tweak">
+                    <span class="tweak">
                         {{ release.display_name }}
-                    </div>
+                    </span>
                 </div>
 
                 <div class="sp1"></div>
@@ -55,9 +55,9 @@
                     {% endif %}
 
                     <div class="systems jtextfill">
-                        <div class="tweak">
+                        <span class="tweak">
                             {{ release.compatible_systems|join:" " }}
-                        </div>
+                        </span>
                     </div>
 
                     {% if release.loose %}
