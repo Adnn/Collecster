@@ -164,6 +164,12 @@ Additionally to the general :ref:`data_manager_usage_recommandations`, some are 
    * several wireless pads sold in the same packaging
    * a software distributed on several medias (because it does not fit on a single one, or for different systems)
 
+.. note::
+   This approach is chosen because the case is exceptional, and it leverages existing logic instead of requiring
+   special case handling. It has drawbacks, notably that it does not duplicate the fields that should be separately
+   stored for each *self*, as in the example of colors given above.
+   Those information can still be saved in the ``note``, though in a non-structured manner.
+
 * The photos should be rotated to be presented as standing "up". In particular, for side labels they should be presented
   as if standing on a shelf (not necessarily to make the label easily readable).
 
@@ -173,13 +179,24 @@ Additionally to the general :ref:`data_manager_usage_recommandations`, some are 
   Usually, it could be limitied to the :instance:`concept`. (no platform, no date, most of the times not attributes).
   In particular, not trying to set a publisher if there is not a distinct one from the embedding :instance:`occurrence`.
 
+* When an accessory does not have a clear distinct **name** (such as *Virtua Gun*), it should be named following this convention :
 
-.. note::
-   This approach is chosen because the case is exceptional, and it leverages existing logic instead of requiring
-   special case handling. It has drawbacks, notably that it does not duplicate the fields that should be separately
-   stored for each *self*, as in the example of colors given above.
-   Those information can still be saved in the ``note``, though in a non-structured manner.
+  .. code-block:: shell
 
+     $type $system ["official"|$brand] ?($disambiguation)
+
+  * Pad Master System official
+  * Pad Dreamcast InterAct
+  * Pad Mega Drive Gamester (6-buttons)
+
+* Ratings are difficult because they tend to be subjective, but here are some guidelines,
+  taking a Master System cartridge box as example:
+
+  * A: all good
+  * B: some light problems, only apparent under inspection (< 1mm torn-up border of the front cover paper, small indentations, light yellowing)
+  * C: obvious problems. Spots on the cover paper, yellow plastic, small burns. Obvious scratches, visible at arm length.
+  * D: looks bad: torn up plastic, torn up cover paper. Slits and gaps.
+  * E: destroyed: holes, chuncks of plastic missing. Does not close.
 
 Concepts
 --------
@@ -192,7 +209,7 @@ Ultimately, this is the collecter's call to make this decisions, but here are so
 * For **Games**:
   A game, independently of the platform it is released onto, is a single concept
   *as long as it is just a port between the different platforms*.
-  When it is obviously a rewrite despite sharing the same, it is a different concept (like Sonic The Hedgehog 8bit).
+  When it is obviously a rewrite despite sharing the same name, it is a different concept (like Sonic The Hedgehog 8bit).
   Usually a practical criterion to decide can be "is it on the same wikipedia page" ;)
   When there are versions (as in patches of the original game, 1.1 and 1.2, etc... ), they are the same Concept,
   but this version number is a Release field.
@@ -243,7 +260,7 @@ The **variants** system addresses this need, inspired by the **variants** entry 
 Defect
 ------
 
-The **Defect** module provides a way to document defects on entities, or any of they attribute.
+The **Defect** module provides a way to document defects on entities, or any of their attributes.
 It is a very simple module:
 a list of text fields can optionally be attached to any :instance:`attribute` of the :instance:`occurrence`.
 Each such text field can be used to record a discrete defect of the related :instance:`attribute`.
