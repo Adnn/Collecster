@@ -9,7 +9,7 @@ Developer
 applications as configurations
 ******************************
 
-Each configuration (modeling different collections) is implemented as a separate application, that can then be 
+Each configuration (modeling different collections) is implemented as a separate application, that can then be
 installed on the Django server as usual.
 
 A difficulty with this desired behaviour is that even though some models will be the same for several applications,
@@ -19,9 +19,9 @@ It makes it impossible to install a simple common application defining the base 
 specialized configurations installed, as the common applicatin tables would be shared by all configurations.
 
 The chosen solution was to implement base models in *data_manager* application, but **not** installing it.
-Instead, the configuration applications will import *data_manager* content **in their own namespace**, using 
+Instead, the configuration applications will import *data_manager* content **in their own namespace**, using
 the `collecster_exec()` function.
- 
+
 
 ***************
 forms_admins.py
@@ -69,7 +69,7 @@ CollecsterModelAdmin
 ====================
 
 A ``ModelAdmin`` specialization that is used as admin for ``Concept``, ``Release`` and ``Occurrence`` models.
-It allows to implement most of the special features provided by Collecster over the native Django administration. 
+It allows to implement most of the special features provided by Collecster over the native Django administration.
 
 * :ref:`exclude field on addition <collecster_exclude_create>`
 * :ref:`fields read-only on edition, read-and-write on addition <collecster_readonly_edit>`
@@ -119,15 +119,15 @@ Specifics
 
 .. py:module:: advideogame.utils
 
-The specific formsest are generated and displayed asynchronously, when the form fields allowing to generate the list 
+The specific formsest are generated and displayed asynchronously, when the form fields allowing to generate the list
 of specifics (the *trigger fields*) are updated by the user.
- 
+
 The client side logic is implemented in *Collecster/static/data_manager/scripts/form_ajax.js*.
 It notably sets up change callbacks on the *trigger fields*. When the event is fired, it makes a call to a specific
 url of the application.
 
 On the backend, the requested view logic populates the request with a :ref:`collecster_payload` to forward custom data.
-Notably, it sets the *inline_groups* which specifies which entries from the admin class 
+Notably, it sets the *inline_groups* which specifies which entries from the admin class
 :instance:`collecster_refresh_inline_classes` will be rendered (in this case, the value is **specific**).
 Then, calls to `get_admin_formsets` and `render_admin_formsets` generate the resulting HTML, which is sent as the
 response.
@@ -153,7 +153,7 @@ Layout
 ======
 
 The current layout is hardcoded to be printed on *DECAdry* labels reference **DLW1736** (45.7x21.2 mm):
-The layout is based on a 510x210 base raster, which is super-sampled 4 times on each dimension to give 2040x840 pixels image 
+The layout is based on a 510x210 base raster, which is super-sampled 4 times on each dimension to give 2040x840 pixels image
 to be printed at 1200dpi.
 
 It is horizontally split in 2:
@@ -172,7 +172,7 @@ Vertically, the 210 pixels of human content are conceptually divided in 15 rows 
 
 * 1 row spacing
 * the "lower content":
-  
+
   * 1.25 row tag details (tag version, collection name, object type)
   * 1/4 row spacing
   * 2 rows occurrence info (origin, working state, owner, occurrence tag-id)

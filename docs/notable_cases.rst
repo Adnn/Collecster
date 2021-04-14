@@ -48,7 +48,7 @@ Platform cases
 
 * An arcade stick with connectors for different consoles (PS2, Xbox, N64...)
 
-* A gamepad with a single connector, advertised for different systems 
+* A gamepad with a single connector, advertised for different systems
 
 * A console in a pad, that connects directly to the TV and has all games in memory (with no media interface)
 

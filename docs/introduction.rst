@@ -64,7 +64,7 @@ Other notions
 * ``Composition``: A :instance:`release` can optionally be composed of other :instance:`release`\(s).  All :instance:`occurrence`\s materializing this :instance:`release` will have the opportunity to be composed by :instance:`occurrence`\s materializing the appropriate :instance:`release`\s.
 * ``Immaterial``: Is a boolean property of :instance:`release`\s, dictating whether the :instance:`occurrence`\s materializing them are ''material'' or ''virtual''. Some ``Release`` and ``Occurrence`` fields are only available for ''material'' :instance:`release`\s
 .. _tag_glossary:
-* ``Tag``: A special kind of document that can be generated for each material :instance:`occurrence` in a collection. 
+* ``Tag``: A special kind of document that can be generated for each material :instance:`occurrence` in a collection.
   It is intended to be printed and attached to the physical occurrence, to provide some information plus
   a way to match the object against the logic :instance:`occurrence` in the DB.
 
@@ -75,7 +75,7 @@ Features
 * **A friendly and guided top-down approach**: To add a new :instance:`occurrence` to the collection, the corresponding :instance:`concept` is first created (or retrieved if it exists). The :instance:`concept` will adapt the form for the :instance:`release`, that is created next. Finally, the :instance:`occurrence`\'s form is influenced by both previous elements.
 
   * **Dynamic list of fields**: A power-tool is not best described using the same fields than for a handtool.
-    For this reason, the nature(s) of a :instance:`concept` controls which fields are available on the different forms 
+    For this reason, the nature(s) of a :instance:`concept` controls which fields are available on the different forms
     (This is implemented by :ref:`mapping specific to natures <specific_mapping>`.)
   * **Releases are templates for Occurrences**: A :instance:`release` can be seen as a template driving the creation of all :instance:`occurrence` materializing it. Both the ``Attribute`` and  ``Composition`` that are filled-in on a :instance:`release` will automatically create corresponding fields on all :instance:`occurrence`\s of this :instance:`release`: they cascades down from the :instance:`release` to all :instance:`occurrence`\s materializing it.
 
@@ -87,9 +87,9 @@ Features
   or by writing the configuration for a new type of collection from scratch.
   It is possible to make small modifications to the model easily : adding a field is most of the time simply adding one line of code.
   Bigger changes are also permitted, allowing to configure Collecster for your custom collection.
-  Extensiblity means you can easily add more models than the basic "concept/release/occurrence" trinity: 
-  as an example, :ref:`advideogame_user` provides additional models to store information 
-  regarding systems' compatibility, acquisitions, system variants, etc. 
+  Extensiblity means you can easily add more models than the basic "concept/release/occurrence" trinity:
+  as an example, :ref:`advideogame_user` provides additional models to store information
+  regarding systems' compatibility, acquisitions, system variants, etc.
 
   * **Customizable required/forbidden fields**
 

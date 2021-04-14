@@ -111,8 +111,8 @@ Its value is an ordered dictionary, of the form
 .. code:: python
 
         collector_dynamic_inline_classes = OrderedDict((
-            ("specific",         (utils.occurrence_specific_inlines)),        
-            ("group_b",          (AdminInlineClass_1, AdminInlineClass_2,)),        
+            ("specific",         (utils.occurrence_specific_inlines)),
+            ("group_b",          (AdminInlineClass_1, AdminInlineClass_2,)),
             ...
         ))
 
@@ -133,7 +133,7 @@ Group names offer an optional mechanism to only get inline instance for some giv
 collecster_refresh_inline_classes
 ---------------------------------
 
-Defines an optional list of group names from :ref:`collector_dynamic_inline_classes` whose inline formsets will be 
+Defines an optional list of group names from :ref:`collector_dynamic_inline_classes` whose inline formsets will be
 updated on ajax requests.
 
 collecster_instance_callback
@@ -143,8 +143,8 @@ This attribute can be added to :ref:`CollecsterModelAdmin` classes.
 When the `collector_dynamic_inline_classes`_ allowed to dynamically assign new inline **classes** to a ``Form``,
 this attribute allows to dynamically configure **instances** of those inlines when they are constructed.
 
-Its value is a callable, taking three positional arguments: the :instance:`formset` to configure, the :instance:`request` and the (potentially null) model :instance:`object`. The callable does not return any value. 
-As an example, the callable is a good place to dynamically set initial values, or querysets of foreign keys. 
+Its value is a callable, taking three positional arguments: the :instance:`formset` to configure, the :instance:`request` and the (potentially null) model :instance:`object`. The callable does not return any value.
+As an example, the callable is a good place to dynamically set initial values, or querysets of foreign keys.
 
 .. note::
    **developper**: This is handled by ``CollecsterModelAdmin`` override of ``_create_formsets`` method.
@@ -168,7 +168,7 @@ The natures, which are assigned at the :instance:`concept` level, drive several 
 and most notably they control which *specifc*\(s) will be assigned to each of the :ref:`3 base models <three_base_models>`.
 
 Those behaviour are controlled by defining a ``ConfigNature`` class, deriving from ``data_manager.ConfigNature``,
-and with a ``DATA`` member. This member must be an ``OrderedDict`` associating nature database values to an instance 
+and with a ``DATA`` member. This member must be an ``OrderedDict`` associating nature database values to an instance
 of ``data_manager.ConfigNature.DataTuple``.
 
 natures display
@@ -202,14 +202,14 @@ a foreign key to the corresponding base class (i.e. either ``Concept`` or ``Rele
 is the lowercase class name.
 
 .. note::
-   It is recommanded to group ``specific`` models for a given base class under a class (eg. ``ConceptSpecific``), 
+   It is recommanded to group ``specific`` models for a given base class under a class (eg. ``ConceptSpecific``),
    and to have the concrete ``specific`` derive from an ``AbstractBase`` defining the foreign key.
 
 Once the ``specific`` models are defined, they can be grouped in different tuples, called **categories**.
-The ``compose`` function allows to flatten several tuples into one, allowing to easily define a *category* 
+The ``compose`` function allows to flatten several tuples into one, allowing to easily define a *category*
 as a superset of another.
 
-Finally, those *categories* are assigned to corresponding entries in the ``DataTuple`` instances 
+Finally, those *categories* are assigned to corresponding entries in the ``DataTuple`` instances
 associated to the *natures* of interest.
 This way, the associated *natures* will have all the ``specific`` in the assigned *category*.
 

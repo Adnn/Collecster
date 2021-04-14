@@ -14,13 +14,13 @@ The supervisor special application is responsible for managing the different :in
 It knows about all the users, and which collections they have access to.
 
 *****************
-data_manager base 
+data_manager base
 *****************
 
-**data_manager** should be seen as an abstract application, which is not installed on deployments of Collecster, 
+**data_manager** should be seen as an abstract application, which is not installed on deployments of Collecster,
 but which serves as the base on which each :instance:`configuration` is built.
 
-It provides the base logic and several utility functions, alongside the base versions of several models 
+It provides the base logic and several utility functions, alongside the base versions of several models
 that will be specialized by the different configurations to meet their specific requirements.
 
 Models
@@ -114,7 +114,7 @@ Model customizations
 ====================
 
 .. autoclass:: Release
-   :members: 
+   :members:
 
 Color
 -----
@@ -143,13 +143,13 @@ Additionally to the general :ref:`data_manager_usage_recommandations`, some are 
   This usually prevents identifying the actual release it was part of.
   A loose object **should be released** nonetheless (using the **loose** :py:attr:`Release.special_case_release`),
   because it still has platform, color, etc.
- 
+
 * The accessories that are nested in a system pack, distributed without their own packaging, are **not loose**,
-  because the actual release is well identified. They should be marked **nested without discrete box** instead. 
+  because the actual release is well identified. They should be marked **nested without discrete box** instead.
   (see :py:attr:`Release.special_case_release`)
 
- 
-* The different versions of a system (eg. Master System I, Master System II, Sega Merk III) are belonging to a 
+
+* The different versions of a system (eg. Master System I, Master System II, Sega Merk III) are belonging to a
   **single** :instance:`Concept`. Thoses versions are modelled as distinct :ref:`system_variants` by the application.
 
 * For accessories with several parts, the main part is the *self* attributes. Other modules, even connected to it,
@@ -157,7 +157,7 @@ Additionally to the general :ref:`data_manager_usage_recommandations`, some are 
   a distinct attribute).
 
 *  If there are several main parts, the *self* attribute is duplicated,
-   and the ``note`` field is used to disambiguate between the different *self* attributes. In particular, if the 
+   and the ``note`` field is used to disambiguate between the different *self* attributes. In particular, if the
    different main parts have distinct color, it should be recorded in the ``note``.
    This *self* duplication would notably be used in the case of:
 
@@ -201,15 +201,15 @@ Ultimately, this is the collecter's call to make this decisions, but here are so
   The concept is the name of the "serie" (eg. *Sega Flash*) independently of its iteration.
   Iterations make different :instance:`release`\s of the same demo :instance:`concept`,
   iteration number being a ``Release`` field.
-  
+
 * For **Systems**:
-  The concept would be a base system, indepently of its variants 
+  The concept would be a base system, indepently of its variants
   (i.e., Master System is the :instance:`concept` of which both MSI and MSII (and SEGA mark III) would be releases.
   It seems closer to the mental model (when looking for a Master System, the variant is secondary).
   It also gets closer to the image of a concept as something "conceived" once:
   in the SMS example, the architecture of the Master System, and its realisation as a PCB with chips,
   are mostly shared by all non-SoC releases of the SMS.
-  This way, different constructor can indeed manufacture release of the same concept (by licensing the design). 
+  This way, different constructor can indeed manufacture release of the same concept (by licensing the design).
 
 .. note::
    Console-on-chip versions should still be recorded as a distinct :instance:`concept`: it is diverging at the
@@ -272,14 +272,14 @@ A ``SystemSpecification`` allows to list *advertised systems* through ``Interfac
 Each *advertised system* can then be attached lists of *provided* and *required* interfaces, through ``SystemInterfaceDetail``.
 Such interface is the pairing of a ``BaseSystem`` with a *media* name (eg. CD-ROM, cartrdige, controller, ...),
 in a ``SystemMediaPair`` instance.
-Additionally, it is possible to attach some interface(s) to **all** *advertised system* using the ``CommonInterfaceDetail`` 
+Additionally, it is possible to attach some interface(s) to **all** *advertised system* using the ``CommonInterfaceDetail``
 instance attached to the ``InterfaceSpecification``.
 
 .. note::
-   In an ``InterfaceSpecification``, it becomes possible to edit the list of *provided* and *required* interfaces 
+   In an ``InterfaceSpecification``, it becomes possible to edit the list of *provided* and *required* interfaces
    attached to the *advertised system*\s only **after** the :instance:`interface specification` has been saved.
 
-   Saving it makes an *edit interface* link appear in front of each *advertised system*. 
+   Saving it makes an *edit interface* link appear in front of each *advertised system*.
 
 Usage recommendations
 ^^^^^^^^^^^^^^^^^^^^^
@@ -290,9 +290,9 @@ Usage recommendations
   * In case the same ``SystemMediaPair`` is provided by different *advertised system*\s, this interface should not appear
     in each *advertised system* providing it, but only once in the ``CommonInterfaceDetail`` attached to the ``InterfaceSpecification``.
     (eg. With PS3 able to play PS1 games, the PS3 pad interface can be used with both *advertised system*\s).
-  
+
   * On the other hand, if the same physical interface is used as different ``SystemMediaPair``\s by different *advertised system*\s,
-    then in the additional *advertised system*\s the provided interface corresponding to the same physical interface 
+    then in the additional *advertised system*\s the provided interface corresponding to the same physical interface
     should be makred with a *reused interface* to the cannonical interface.
     (eg. Some Wii can also be used to play GameCube games, reusing the same disc interface)
 
@@ -305,11 +305,11 @@ Advertised system(s)
 An *advertised system* is thus attached a list of interfaces through ``SystemInterfaceDetail``.
 It should be noted that the ``BaseSystem`` in those interfaces does not need to match the *advertised system* they are part of.
 
-This nuance can come in handy in some situations.  For example when a system N provides controller retrocompatibility 
+This nuance can come in handy in some situations.  For example when a system N provides controller retrocompatibility
 with controllers of system M while allowing to use them with game of system N: the *advertised system* is system N,
 but one of its interfaces will be controller ports of system M.
 
-The rule of thumb to determine the *advertised system*\s is quite natural. 
+The rule of thumb to determine the *advertised system*\s is quite natural.
 
 * For **systems**, it would be the different software platforms it implements.
 * For **software**, it would be the ``BaseSystem``\s it is compatible with. In particular, if a software is compatible

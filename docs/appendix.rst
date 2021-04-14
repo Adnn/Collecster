@@ -4,5 +4,5 @@ Appendix
 
 .. toctree::
    installation
-   notable_cases 
+   notable_cases
    archived

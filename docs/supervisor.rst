@@ -13,7 +13,7 @@ It also knows about all the users, and which collections they have access to (th
 
 Another feature of the **supervisor** is providing an indirection layer between the application Occurrence stored in the database of a specific deployement, and the logic occurrence owned by a user.
 This makes it is possible to migrate :instance:`occurrence`\s to another Django installation which deploys the corresponding application.
-This migration happens without changing the user's occurrences' **logic** id, whereas the :instance:`occurrence` id in the database could require a modification 
+This migration happens without changing the user's occurrences' **logic** id, whereas the :instance:`occurrence` id in the database could require a modification
 (for example: if the current :instance:`occurrence` id is already used by another :instance:`occurrence` in the destination deployment).
 This immutability of the logic id is essential as this value is made available outside of the system, where the system cannot update its value: eg. printed on a tag.
 
@@ -55,16 +55,16 @@ Use scenarios
 Tag to occurrence
 =================
 
-On a tag, the following information are made available in the QR code (and potentially as human readable text): 
+On a tag, the following information are made available in the QR code (and potentially as human readable text):
 
 * user_collec_id
 * objecttype_id
 * user_guid (important: the creating user, not necessarily the owner)
 * user_occurrence_id.
-  
+
 #. This allows to find the :instance:`UserCollection` from ``user_guid`` and and ``user_collection_id``
 #. The :instance:`UserCollection` directly gives the :instance:`Deployment`, which in turn directly gives the **application** corresponding to this :instance:`Deployment`.
-#. Once the application is known, it is possible to query its ``TagToOccurrence`` model: 
+#. Once the application is known, it is possible to query its ``TagToOccurrence`` model:
    from the ``user_guid`` and the ``user_occurrence_id``, find the :instance:`occurrence` on the local installation.
 
 Adding a user
@@ -75,7 +75,7 @@ Add a :instance:`userextension`, which requires a :instance:`user` and a :instan
 Give the :instance:`user` access to some collections by creating :instance:`usercollection` insances.
 
 .. note::
-   This is a description of the low-level operations of user management. They should never be conducted directly, but through 
+   This is a description of the low-level operations of user management. They should never be conducted directly, but through
    :ref:`users_management` commands.
 
 Collections migration
